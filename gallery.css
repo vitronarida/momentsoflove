@@ -1,0 +1,407 @@
+/* CSS 변수 */
+  :root{
+  --nav-black-hold: 500ms; --nav-black-fade: 500ms;
+  --toc-active-color: rgba(212,175,55,0.90); --toc-active-glow: rgba(212,175,55,0.22);
+  --fog-min-lqip: 1500ms; --fog-hq-fade: 3000ms; --fog-text-delay: 3000ms; --fog-text-fade: 5800ms; --fog-duration: 96s; --fog-scale-min: 1.02; --fog-scale-max: 1.045; --fog-x: -1.6%; --fog-y: -1.0%;
+  --fog-opacity-base: 0.10; --fog-opacity-peak: 0.50;
+  --scene-hq-fade: 2500ms; --scene-text-delay: 2500ms; --scene-text-fade: 2500ms;
+  --nav-after-text-gap: 2500ms; --nav-fade: 1500ms;
+  --menu-fade-in: 600ms; --menu-fade-out: 800ms;
+  --tip-bg: rgba(18,18,18,0.88); --tip-bd: rgba(255,255,255,0.12); --tip-tx: rgba(235,235,235,0.94);
+  --ui-bottom: 6%;
+  --idx-base-bg: rgba(255,255,255,0.045); --idx-base-bd: rgba(255,255,255,0.090); --idx-hover-bd: rgba(255,255,255,0.120);
+  --idx-shadow: 0 14px 30px rgba(0,0,0,0.38); --idx-shadow-hover: 0 18px 44px rgba(0,0,0,0.48);
+  }
+
+  /* 기본 레이아웃 */
+  html, body { margin:0; padding:0; height:100%; }
+  body{ background:#000; }
+  
+  /* 접근성 - Skip Link */
+  .skip-link{ position:absolute; top:-100px; left:0; background:rgba(212,175,55,0.95); 
+  color:#000; padding:12px 20px; z-index:20000; font-family:"Nanum Pen Script", cursive;
+  font-size:20px; text-decoration:none; border-radius:0 0 8px 0; }
+  .skip-link:focus{ top:0; outline:3px solid rgba(212,175,55,1); outline-offset:2px; }
+  
+  /* 접근성 - 포커스 표시 */
+  *:focus-visible{ outline:2px solid rgba(212,175,55,0.8); outline-offset:3px; }
+  .nav-btn:focus-visible, .toc-item:focus-visible, .idx-tile:focus-visible{
+  outline:2px solid rgba(212,175,55,1); outline-offset:2px; }
+
+  .screen{ position:fixed; inset:0; width:100%; height:100%; transition: opacity 600ms ease; background:#000; }
+  .hidden{ opacity:0; pointer-events:none; }
+  .visible{ opacity:1; pointer-events:auto; }
+  #blackout{ position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; 
+  transition: opacity var(--nav-black-fade) ease; z-index:9999; transform: translateZ(0); will-change: opacity; }
+  #blackout.on{ opacity:1; pointer-events:auto; }
+
+  /* 공통 장면 스타일 */
+  .scene{ background:#000; overflow:hidden; }
+  .scene-wrap{ position:relative; width:100%; height:100%; background:#000; }
+  .square-frame{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) translateZ(0);
+  width:min(100vw, 100vh); aspect-ratio: 1 / 1; background:#000; overflow:hidden; }
+
+  /* 작품 채번 */
+  .work-code{ position:absolute; top:calc(6% + 26px); left:50%; transform: translateX(-50%) translateY(-50%) translateZ(0); z-index:55;
+  font-family:"Nanum Pen Script", cursive; font-size:clamp(15px, 1.56vw, 19px); line-height:1;
+  letter-spacing: 0.8px; color: rgba(235,235,235,0.58); padding: 4px 10px; border-radius: 999px;
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.05); opacity:0; pointer-events:none;
+  transition: opacity var(--nav-fade) ease, transform 200ms ease, background 200ms ease; user-select:none; white-space:nowrap;
+  cursor:pointer; 
+  text-shadow: none;
+}
+  .work-code:hover{ transform: translateX(-50%) translateY(calc(-50% + 1px)) scale(0.985) translateZ(0); background: rgba(0,0,0,0.32); border-color: rgba(255,255,255,0.25); box-shadow: 0 0 18px rgba(212,175,55,0.18); }
+  .nav-ready .work-code{ opacity:0.92; pointer-events:auto; }
+  .work-code .page-num{ color: rgba(235,235,235,0.78); font-size: 1em; letter-spacing: 0.3px; }
+
+  .work-code[data-tip]::after{
+  content: attr(data-tip);
+  position:absolute;
+  top: calc(100% + 10px);
+  left:50%;
+  transform: translateX(-50%) translateY(-6px);
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--tip-bg);
+  border: 1px solid var(--tip-bd);
+  color: var(--tip-tx);
+  font-family:"Nanum Pen Script", cursive;
+  font-size:18px;
+  line-height:1.2;
+  white-space:nowrap;
+
+  opacity:0;
+  pointer-events:none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index:9999;
+  }
+  .work-code[data-tip]:hover::after,
+  .work-code[data-tip]:focus-visible::after{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+  }
+
+  /* 네비게이션 버튼 */
+  .nav-btn{ border-radius:999px; display:grid; place-items:center; color:#e6e6e6;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  cursor:pointer; user-select:none;
+  opacity:0; pointer-events:none; transition: opacity var(--nav-fade) ease, transform 200ms ease;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family:"Nanum Pen Script", cursive; }
+  .nav-btn:hover{ opacity:1; transform: scale(1.04) translateZ(0);  box-shadow: 0 3px 8px rgba(0,0,0,0.03);
+}
+
+  .nav-ready .nav-btn{ opacity:0.92; pointer-events:auto; }
+
+  .nav-menu{ position:absolute; top:6%; left:6%; transform: translateZ(0); z-index:60; width:52px; height:52px; }
+
+  .soloToggle{ position:absolute; top:6%; right:6%; z-index:60; width:52px; height:52px; }
+
+  .nav-arrow{ position:absolute; bottom: var(--ui-bottom); transform: translateZ(0); z-index:20;
+  width:52px; height:52px; }
+  .nav-left{ left: 6%; }
+  .nav-right{ right: 6%; }
+  .nav-arrow.disabled{ opacity:0 !important; pointer-events:none !important; cursor:default !important;
+  transform: translateZ(0) !important; color: rgba(235,235,235,0.40) !important; font-size:26px !important;
+  border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.035); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .nav-arrow.disabled svg{ opacity: 0.5; }
+  .nav-ready .nav-arrow.disabled{ opacity:0.92 !important; pointer-events:auto !important; }
+
+  /* 툴팁 */
+  [data-tip]::after{ content: attr(data-tip); position:absolute; padding: 8px 10px; border-radius: 10px;
+  background: var(--tip-bg); border: 1px solid var(--tip-bd); color: var(--tip-tx);
+  font-family:"Nanum Pen Script", cursive; font-size:18px; line-height:1.2; white-space:nowrap;
+  opacity:0; pointer-events:none; transition: opacity 180ms ease, transform 180ms ease; z-index:9999; }
+  .nav-arrow[data-tip]::after{ bottom: calc(100% + 10px); left:50%; transform: translateX(-50%) translateY(6px); }
+  .nav-menu[data-tip]::after, .soloToggle[data-tip]::after{ 
+  top: calc(100% + 10px); left:50%; transform: translateX(-50%) translateY(-6px); }
+  [data-tip]:hover::after, [data-tip]:focus-visible::after{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+  /* UI 모드 */
+  body.ui-hide-all .nav-arrow, body.ui-hide-all .nav-menu, body.ui-hide-all .fog-text, body.ui-hide-all .scene-text,
+  body.ui-hide-all .work-code{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+
+  /* Photo Only 모드 - soloToggle peek */
+  body.ui-hide-all .soloToggle{ opacity:0; visibility:hidden; pointer-events:none;
+    transition: opacity 600ms ease, visibility 600ms ease; }
+  body.ui-hide-all.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease !important; }
+  body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu, body.ui-text-only .work-code{ 
+  opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+  body.ui-text-only .fog-text, body.ui-text-only .scene-text{ pointer-events:none !important; }
+  /* ui-text-only: soloToggle - P모드와 동일하게 숨기고 이벤트 시 표시 */
+  body.ui-text-only .soloToggle{ opacity:0 !important; pointer-events:auto !important; transition: opacity 300ms ease !important; }
+  body.ui-text-only .soloToggle:hover{ opacity:0.92 !important; transform: scale(1.04) translateZ(0) !important; }
+  body.ui-text-only.solo-peek .soloToggle{ opacity:0.92 !important; }
+
+  /* FOG 장면 */
+  .hero{ position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
+  .bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; transform: translateZ(0); }
+  .fog-lqip{ z-index:2; filter: blur(18px); transform: scale(1.06) translateZ(0); opacity:1; transition: opacity 1200ms ease; }
+  .fog-hq{ z-index:3; opacity:0; visibility:hidden; transform: scale(1.01) translateZ(0); transition: opacity var(--fog-hq-fade) ease; }
+  .hero.hq-show .fog-hq{ opacity:1; visibility:visible; }
+  .hero.lqip-hide .fog-lqip{ opacity:0; }
+  .overlay{ position:absolute; inset:0; z-index:4; background: rgba(0,0,0,0.16); pointer-events:none; }
+  .fog{ position:absolute; inset:-12%; z-index:5; background:url("assets/fog-noise.png") repeat; mix-blend-mode:screen;
+  opacity: var(--fog-opacity, var(--fog-opacity-base));
+  transition: opacity 1200ms ease;
+   pointer-events:none; transform: translateZ(0); }
+  .fog.animated{ animation:fogDrift var(--fog-duration) linear infinite; }
+  @keyframes fogDrift{
+  0%  { transform: translate(0,0) scale(var(--fog-scale-min));
+  }
+  50%  { transform: translate(var(--fog-x), var(--fog-y)) scale(var(--fog-scale-max));
+  }
+  100% { transform: translate(0,0) scale(var(--fog-scale-min));
+  }
+  }
+
+  /* 텍스트 스타일 */
+  .fog-text, .scene-text{ position:absolute; left:0; right:0; bottom: var(--ui-bottom);
+  height:52px;
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:0;
+  font-family:"Nanum Pen Script", cursive; font-size:clamp(24px, 2.5vw, 29px); line-height:1.75; color:#e6e6e6;
+  opacity:0; transform: translateY(6px) translateZ(0); pointer-events:none; user-select:none; z-index:6; isolation:isolate;
+  white-space:nowrap; overflow:hidden; }
+  .fog-text > *, .scene-text > *{ max-width:95%; display:inline-block; }
+  .fog-text{ transition: opacity var(--fog-text-fade) ease, transform var(--fog-text-fade) ease; }
+  .scene-text{ transition: opacity var(--scene-text-fade) ease, transform var(--scene-text-fade) ease; z-index:10; }
+  .hero.show-text .fog-text, .scene.show-text .scene-text{ opacity:0.92; transform: translateY(0) translateZ(0); }
+  .scene.show-text .scene-text{ opacity:0.95; }
+
+  /* 이미지 장면 */
+  .scene-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000;
+  opacity:0; visibility:hidden; transition: opacity var(--scene-hq-fade) ease; transform: translateZ(0); }
+  .scene.hq-show .scene-img{ opacity:1; visibility:visible; }
+
+  /* 그라데이션 */
+  .scene .square-frame::after{ content:""; position:absolute; left:0; right:0; bottom:0;
+  height: clamp(420px, 46%, 900px); opacity:0; pointer-events:none; z-index:9; background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.00) 72%);
+  transition: opacity var(--scene-text-fade) ease; }
+  .hero.show-text::after, .scene.show-text .square-frame::after{ opacity:1; }
+  body.ui-hide-all .square-frame::after,
+  .screen.hidden .square-frame::after{ opacity:0 !important; transition:none !important; }
+
+  /* 오버레이 공통 */
+  .overlay-panel{ position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition: opacity var(--menu-fade-in) ease; }
+  .overlay-panel.on{ opacity:1; pointer-events:auto; }
+  .overlay-panel.closing{ transition-duration: var(--menu-fade-out); }
+  .overlay-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,0.55); 
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .panel-box{ position:relative; border-radius:16px; background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 3px 8px rgba(0,0,0,0.03);
+  color:#e6e6e6; transform: translateY(6px) translateZ(0); }
+
+  /* TOC 오버레이 */
+  #tocOverlay{ z-index:10000; }
+  .toc-panel{ width:min(560px, 88vw); padding: 14px 22px 12px; }
+  .toc-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  margin-bottom: 8px; padding-right: 56px; }
+  .toc-title{ font-family:"Nanum Pen Script", cursive; font-size: 26px; line-height:1.1; margin: 0; letter-spacing: 0.2px; }
+  .langToggle{ display:flex; gap:8px; align-items:center; margin-top: 2px; margin-right: 10px; }
+  .langBtn{ width:44px; height:34px; border-radius:999px; display:grid; place-items:center;
+  font-family:"Nanum Pen Script", cursive; font-size:18px; color:#e6e6e6;
+  background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease, transform 180ms ease; }
+  .langBtn:hover{ opacity:1; transform: translateY(-1px); }
+  .langBtn.active{ opacity:1; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.16); }
+
+  .menu-section{ margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.06); padding-left: 20px; }
+  .menu-section:first-of-type{ margin-top: 2px; padding-top: 0; border-top: none; }
+  .menu-h{ font-family:"Nanum Pen Script", cursive; font-size: 26px; line-height: 1.1; 
+  letter-spacing: 0.2px; margin: 0 0 4px 0; color: rgba(235,235,235,0.96); }
+
+  .toc-list{ font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.2;
+  margin:0; padding-left: 0; list-style: none; }
+  .toc-item{ padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
+  .toc-item:last-child{ border-bottom:none; }
+  .toc-bullet{ width:12px; flex: 0 0 12px; font-size:12px; display:inline-block; text-align:center;
+  opacity:0; transform: translateY(-1px); }
+  .toc-item.toc-current .toc-bullet{ opacity:0.95; }
+  .toc-item.toc-current{ color: var(--toc-active-color); text-shadow: 0 0 8px var(--toc-active-glow); }
+  .toc-locked{ opacity:0.45; }
+
+  .toc-close, .index-close{ position:absolute; top: 14px; right: 14px; width: 40px; height: 40px;
+  border-radius: 999px; display:grid; place-items:center; color:#e6e6e6;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.05);
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  font-size: 22px; line-height: 1; z-index: 20; }
+
+  /* 인포 버튼 */
+  .toc-info-btn{ position:absolute; bottom: 14px; right: 14px; width: 36px; height: 36px;
+  border-radius: 999px; display:grid; place-items:center; color: rgba(200,200,200,0.6);
+  background: transparent; border: 1px solid rgba(255,255,255,0.05);
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease; z-index:10; }
+  .toc-info-btn:hover{ color: rgba(235,235,235,0.92); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.035); }
+
+  /* 인포 패널 슬라이드 */
+  .toc-main{ transition: opacity 250ms ease, transform 250ms ease; }
+  .toc-info-panel{ position:absolute; inset:0; padding: 14px 22px 12px;
+  overflow-y:auto; opacity:0; pointer-events:none;
+  transform: translateX(18px); transition: opacity 250ms ease, transform 250ms ease; }
+  .toc-panel.show-info .toc-main{ opacity:0; pointer-events:none; transform: translateX(-18px); }
+  .toc-panel.show-info .toc-info-panel{ opacity:1; pointer-events:auto; transform: translateX(0); }
+  .info-back-btn{ display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font-family:"Nanum Pen Script", cursive; font-size:20px; color: rgba(180,180,180,0.7);
+  border:none; background:none; padding:0; margin-bottom:10px;
+  transition: color 180ms ease; -webkit-tap-highlight-color: transparent; }
+  .info-back-btn:hover{ color: rgba(235,235,235,0.92); }
+  .info-section{ margin-bottom: 14px; }
+  .info-section-h{ font-family:"Nanum Pen Script", cursive; font-size:26px; line-height:1.1;
+  color: rgba(235,235,235,0.92); margin: 0 0 6px 0; padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .info-row{ font-family:"Nanum Pen Script", cursive; font-size:20px; line-height:1.5;
+  color: rgba(210,210,210,0.85); padding: 2px 0 2px 12px; }
+  .info-row kbd{ display:inline-block; padding:1px 6px; border-radius:4px; font-size:0.88em;
+  background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05);
+  font-family:"Nanum Pen Script", cursive; }
+
+  .toc-index-btn{ width:100%; border-radius: 12px; padding: 10px 12px; display:flex;
+  align-items:center; justify-content:space-between; gap:12px; font-family:"Nanum Pen Script", cursive;
+  font-size: 24px; line-height:1.1; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05);
+  color: rgba(230,230,230,0.92); cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; transition: transform 160ms ease, background 160ms ease, opacity 160ms ease; opacity:0.92; }
+  .toc-index-btn:hover{ opacity:1; transform: translateY(-1px); background: rgba(255,255,255,0.035); }
+  .toc-index-btn .hint{ opacity:0.70; font-size: 20px; }
+
+  .menu-sub{ display:grid; gap:3px; font-family:"Nanum Pen Script", cursive; font-size: 22px;
+  line-height: 1.35; color: rgba(230,230,230,0.86); }
+  .menu-sub a{ color: rgba(230,230,230,0.92); text-decoration:none; border-bottom: 1px solid rgba(230,230,230,0.22); width: fit-content; }
+  .menu-sub a:hover{ border-bottom-color: rgba(230,230,230,0.55); }
+  .menu-mid{ margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .menu-mid-h{ font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height: 1.1; margin: 0 0 3px 0; color: rgba(235,235,235,0.92); }
+  .menu-mid-t{ font-family:"Nanum Pen Script", cursive; font-size: 20px; line-height: 1.35; margin: 0; color: rgba(230,230,230,0.80); }
+  .sub-item{ padding-left: 28px; opacity: 0.9; }
+
+  /* INDEX 오버레이 */
+  #indexOverlay{ z-index:10001; }
+  .index-panel{ width:min(720px, 92vw); max-height: min(86vh, 900px); overflow:hidden; padding: 16px 16px 14px; }
+  .index-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  padding: 2px 2px 10px; padding-right: 56px; }
+  .index-title{ font-family:"Nanum Pen Script", cursive; font-size: 26px; line-height:1.1; margin: 0; letter-spacing: 0.2px; }
+  .index-sub{ font-family:"Nanum Pen Script", cursive; font-size: 20px; line-height:1.2; opacity:0.74; margin-top: 6px; padding-left: 20px; }
+  .index-body{ overflow-y:auto; overflow-x:hidden; max-height: calc(min(86vh, 900px) - 92px); padding: 6px 4px 2px; }
+
+  .index-grid{ display:grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+  .idx-head{ grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between;
+  padding: 6px 8px 3px; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.06);
+  font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.1; color: rgba(230,230,230,0.92); }
+
+  .idx-tile{ border-radius: 8px; padding: 2px 3px; background: var(--idx-base-bg);
+  border: 1px solid var(--idx-base-bd); box-shadow: 0 3px 8px rgba(0,0,0,0.03); display:flex; align-items:center; justify-content:center;
+  font-family:"Nanum Pen Script", cursive; font-size: 20px; line-height:1; letter-spacing: 0.1px;
+  color: rgba(245,245,245,0.96); text-shadow: 0 0 6px rgba(0,0,0,0.30); cursor:default; user-select:none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: transform 180ms ease, background 180ms ease, opacity 180ms ease, border-color 180ms ease,
+  box-shadow 220ms ease, color 180ms ease, text-shadow 180ms ease;
+  opacity:0.96; height: 25px; position:relative; transform: translateZ(0); will-change: transform;
+  margin-left: 20px; }
+  .idx-tile.idx-clickable{ cursor:pointer; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.20); 
+  color: rgba(245,245,245,0.98); }
+  .idx-tile.idx-clickable:hover{ opacity:1; transform: translateY(-2px) scale(1.008) translateZ(0);
+  background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.28); box-shadow: 0 3px 8px rgba(0,0,0,0.03);
+  color: rgba(255,255,255,1) !important; text-shadow: 0 0 10px rgba(255,255,255,0.25); }
+  .idx-tile.idx-missing{ cursor:default; opacity:0.55; color: rgba(200,200,200,0.75);
+  background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.04);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.03); transform:none !important; text-shadow: 0 0 6px rgba(0,0,0,0.25); }
+
+  .idx-tile[data-title]::after{ content: attr(data-title); position:absolute; bottom: calc(100% + 10px);
+  left:50%; transform: translateX(-50%) translateY(6px); padding: 8px 10px; border-radius: 10px;
+  background: var(--tip-bg); border: 1px solid var(--tip-bd); color: var(--tip-tx);
+  font-family:"Nanum Pen Script", cursive; font-size:18px; line-height:1.2; white-space:nowrap;
+  opacity:0; pointer-events:none; transition: opacity 180ms ease, transform 180ms ease; z-index:9999;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.03); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .idx-tile[data-title]:hover::after, .idx-tile[data-title]:focus-visible::after{ 
+  opacity:1; transform: translateX(-50%) translateY(0); }
+
+  @keyframes idxPulse{
+  0%  { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
+  50%  { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
+  100% { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
+  }
+  .idx-tile.idx-current{ opacity:1; background: rgba(212,175,55,0.22); border-color: rgba(212,175,55,1); 
+  color: rgba(255,250,230,1); text-shadow: 0 0 10px rgba(212,175,55,0.35); 
+   }
+  .idx-tile.idx-clickable:hover::after, .idx-tile.idx-clickable:focus-visible::after{
+  color: var(--toc-active-color) !important; text-shadow: 0 0 10px var(--toc-active-glow) !important;
+  border-color: rgba(212,175,55,0.32) !important; }
+
+  #tocPrologue, #tocLoveDream, #tocLoveSong, #tocEpilogue, #tocIndex{ cursor:pointer; }
+  #tocPrologue:hover, #tocLoveDream:hover, #tocLoveSong:hover, #tocEpilogue:hover, #tocIndex:hover{ text-decoration: underline; }
+
+  /* tocHome - menu-h와 동일 레벨, 클릭 가능 */
+  .menu-h-home{
+    cursor: pointer;
+    transition: opacity 180ms ease;
+    opacity: 0.88;
+  }
+  .menu-h-home:hover{
+    opacity: 1;
+    text-decoration: underline;
+  }
+  .menu-section-home{
+    padding-bottom: 2px;
+  }
+
+  /* 모바일 터치 최적화 */
+  html{ touch-action:pan-x pan-y; -webkit-text-size-adjust:100%; }
+  body{ overscroll-behavior:none; }
+  .square-frame{ touch-action:none; }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+    .fog.animated{ animation:none !important; }
+  }
+    
+
+/* ===== 054 UPDATE : 하단 화살표 눌림 효과 ===== */
+.nav-arrow.nav-btn:hover{
+  transform: translateY(1px) scale(0.98) translateZ(0);
+  box-shadow: 0 0 18px rgba(212,175,55,0.18);
+}
+
+.nav-arrow.nav-btn:active{
+  transform: translateY(2px) scale(0.95) translateZ(0);
+}
+
+
+
+
+/* ===== 059 UPDATE : 작품 번호 UI 톤 통일 ===== */
+.work-code{
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: 18px;
+}
+
+.work-code:hover{
+  background: rgba(255,255,255,0.035);
+  border-color: rgba(255,255,255,0.05);
+  box-shadow: 0 0 18px rgba(212,175,55,0.18);
+  transform: translateX(-50%) translateY(calc(-50% + 1px)) scale(0.985) translateZ(0);
+}
+
+.work-code span{
+  color: rgba(235,235,235,0.58);
+  text-shadow: none;
+}
+
+
+
+
+/* ===== 064 UPDATE : 버튼 인터랙션 통일 ===== */
+
+.nav-btn:hover{
+  transform: translateY(1px) scale(0.985) translateZ(0) !important;
+  box-shadow: 0 0 18px rgba(212,175,55,0.18);
+}
+
+.nav-btn:active{
+  transform: translateY(2px) scale(0.96) translateZ(0) !important;
+}
