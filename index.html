@@ -12,7 +12,7 @@
 
   <style>
     html, body {
-      margin: 0; height: 100%; min-height: 100dvh;
+      margin: 0; height: 100%;
       background: #000;
       display: grid; place-items: center;
       font-family: "Nanum Pen Script", cursive;
@@ -26,7 +26,7 @@
       background: #2e2e2e;
     }
     .lang-bar {
-      position: absolute; right: 6%; bottom: max(36px, calc(72px + env(safe-area-inset-bottom)));
+      position: absolute; right: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
       display: flex; gap: 10px;
       opacity: 0; transform: translateY(6px);
       transition: opacity 600ms ease, transform 600ms ease;
@@ -34,7 +34,7 @@
     }
     .lang-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
     .device-bar {
-      position: absolute; left: 6%; bottom: max(36px, calc(72px + env(safe-area-inset-bottom)));
+      position: absolute; left: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
       display: flex; gap: 10px;
       opacity: 0; transform: translateY(6px);
       transition: opacity 600ms ease, transform 600ms ease;
