@@ -26,7 +26,7 @@
       background: #2e2e2e;
     }
     .lang-bar {
-      position: absolute; right: 6%; bottom: 6%;
+      position: absolute; right: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
       display: flex; gap: 10px;
       opacity: 0; transform: translateY(6px);
       transition: opacity 600ms ease, transform 600ms ease;

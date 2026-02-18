@@ -828,7 +828,7 @@ const buildTOCHTML = () => {
         <div class="menu-section">
           <h3 class="menu-h">${t.menuH_CONTACT}</h3>
           <div class="menu-sub">
-            <div>E-Mail : <a href="mailto:vitro.narida@gmail.com">vitro.narida@gmail.com</a></div>
+            <div>E-Mail : <a href="mailto:vitronarida@gmail.com">vitro.narida@gmail.com</a></div>
             <div>Instagram : <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener">vitro.narida</a></div>
           </div>
         </div>
