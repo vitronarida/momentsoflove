@@ -24,6 +24,8 @@
       height: min(100vw, 100vh);
       display: grid; place-items: center;
       background: #2e2e2e;
+      padding-bottom: max(env(safe-area-inset-bottom), 18px);
+      box-sizing: border-box;      
     }
     .lang-bar {
       position: absolute; right: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
