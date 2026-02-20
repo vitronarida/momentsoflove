@@ -388,6 +388,7 @@
     /* ===== 클릭/탭 ===== */
     btn.addEventListener("click", () => {
       if (!btn.classList.contains("show")) return;
+      try{sessionStorage.removeItem("gl_mode");}catch(e){}
       if (isMobile) {
         showIcon("unlock");
         setTimeout(() => { location.href = TARGET_URL; }, 320);

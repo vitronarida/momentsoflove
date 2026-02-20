@@ -1,6 +1,7 @@
 'use strict';
 // ===== 인라인 CSS =====
-const CSS_MOBILE = `*, *::before, *::after { box-sizing: border-box; }
+const CSS_MOBILE = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
 html, body {
   margin: 0; padding: 0;
   width: 100%; height: 100%;
@@ -194,6 +195,10 @@ html, body {
 .menu-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 8px; }
 .menu-section:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
 .menu-h { font-size: 20px; color: rgba(235,235,235,0.92); margin: 0 0 2px 0; font-family: "Nanum Pen Script", cursive; }
+.menu-h-link{ display:inline-block; cursor:pointer; }
+.menu-h-link:hover{ text-decoration:underline; text-underline-offset:6px; }
+.menu-h-link:focus{ outline:none; text-decoration:underline; text-underline-offset:6px; }
+
 .toc-list { list-style: none; margin: 0; padding: 0; font-size: 18px; font-family: "Nanum Pen Script", cursive; }
 .toc-item {
   padding: 2px 0 2px 20px;
@@ -204,6 +209,10 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 .toc-item:last-child { border-bottom: none; }
+.toc-item:hover .toc-text{ text-decoration: underline; text-underline-offset: 6px; }
+.menu-h-link{ cursor:pointer; }
+.menu-h-link:hover{ text-decoration: underline; text-underline-offset: 6px; }
+
 .toc-item.toc-current { color: rgba(212,175,55,0.95); text-shadow: 0 0 8px rgba(212,175,55,0.30); }
 .toc-bullet { font-size: 10px; opacity: 0; }
 .toc-item.toc-current .toc-bullet { opacity: 1; }
@@ -254,7 +263,8 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }`;
-const CSS_DESKTOP = `/* CSS 변수 */
+const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+/* CSS 변수 */
   :root{
   --nav-black-hold: 500ms; --nav-black-fade: 500ms;
   --toc-active-color: rgba(212,175,55,0.90); --toc-active-glow: rgba(212,175,55,0.22);
@@ -352,7 +362,7 @@ const CSS_DESKTOP = `/* CSS 변수 */
 
   .nav-menu{ position:absolute; top:6%; left:6%; transform: translateZ(0); z-index:60; width:52px; height:52px; }
 
-  .soloToggle{ position:absolute; top:6%; right:6%; z-index:60; width:52px; height:52px; }
+  .soloToggle{ position:absolute; top:6%; right:6%; z-index:60; width:52px; height:52px; opacity:0; visibility:hidden; }
 
   .nav-arrow{ position:absolute; bottom: var(--ui-bottom); transform: translateZ(0); z-index:20;
   width:52px; height:52px; }
@@ -375,21 +385,35 @@ const CSS_DESKTOP = `/* CSS 변수 */
   [data-tip]:hover::after, [data-tip]:focus-visible::after{ opacity:1; transform: translateX(-50%) translateY(0); }
 
   /* UI 모드 */
-  body.ui-hide-all .nav-arrow, body.ui-hide-all .nav-menu, body.ui-hide-all .fog-text, body.ui-hide-all .scene-text,
+  body.ui-hide-all .fog-text, body.ui-hide-all .scene-text,
   body.ui-hide-all .work-code{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
 
   /* Photo Only 모드 - soloToggle peek */
   body.ui-hide-all .soloToggle{ opacity:0; visibility:hidden; pointer-events:none;
-    transition: opacity 600ms ease, visibility 600ms ease; }
+    transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-hide-all.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
-    transition: opacity 300ms ease !important; }
-  body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu, body.ui-text-only .work-code{ 
+    transition: opacity 300ms ease, visibility 0ms !important; }
+  body.ui-hide-all .nav-arrow, body.ui-hide-all .nav-menu{ opacity:0; visibility:hidden; pointer-events:none;
+    transition: opacity 1200ms ease, visibility 1200ms ease; }
+  body.ui-hide-all.solo-peek .nav-arrow, body.ui-hide-all.solo-peek .nav-menu{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease, visibility 0ms !important; }
+
+  body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu, body.ui-text-only .nav-btn:not(.soloToggle), body.ui-text-only .work-code{ 
   opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+  body.ui-hide-all .nav-btn:not(.soloToggle){ opacity:0; visibility:hidden; pointer-events:none;
+    transition: opacity 1200ms ease, visibility 1200ms ease; }
+  body.ui-hide-all.solo-peek .nav-btn:not(.soloToggle){ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease, visibility 0ms !important; }
   body.ui-text-only .fog-text, body.ui-text-only .scene-text{ pointer-events:none !important; }
-  /* ui-text-only: soloToggle - P모드와 동일하게 숨기고 이벤트 시 표시 */
-  body.ui-text-only .soloToggle{ opacity:0 !important; pointer-events:auto !important; transition: opacity 300ms ease !important; }
+  /* ui-text-only: soloToggle */
+  body.ui-text-only .soloToggle{ opacity:0 !important; visibility:hidden; pointer-events:none;
+    transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-text-only .soloToggle:hover{ opacity:0.92 !important; transform: scale(1.04) translateZ(0) !important; }
-  body.ui-text-only.solo-peek .soloToggle{ opacity:0.92 !important; }
+  body.ui-text-only.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease, visibility 0ms !important; }
+  body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu{ transition: opacity 1200ms ease, visibility 1200ms ease; }
+  body.ui-text-only.solo-peek .nav-arrow, body.ui-text-only.solo-peek .nav-menu{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease, visibility 0ms !important; }
 
   /* FOG 장면 */
   .hero{ position:relative; width:100%; height:100%; background:#000; overflow:hidden; }
@@ -473,6 +497,10 @@ const CSS_DESKTOP = `/* CSS 변수 */
   margin:0; padding-left: 0; list-style: none; }
   .toc-item{ padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
   .toc-item:last-child{ border-bottom:none; }
+.toc-item:hover .toc-text{ text-decoration: underline; text-underline-offset: 6px; }
+.menu-h-link{ cursor:pointer; }
+.menu-h-link:hover{ text-decoration: underline; text-underline-offset: 6px; }
+
   .toc-bullet{ width:12px; flex: 0 0 12px; font-size:12px; display:inline-block; text-align:center;
   opacity:0; transform: translateY(-1px); }
   .toc-item.toc-current .toc-bullet{ opacity:0.95; }
@@ -535,6 +563,7 @@ const CSS_DESKTOP = `/* CSS 변수 */
 
   /* INDEX 오버레이 */
   #indexOverlay{ z-index:10001; }
+  #aboutOverlay{ z-index:10002; }
   .index-panel{ width:min(720px, 92vw); max-height: min(86vh, 900px); overflow:hidden; padding: 16px 16px 14px; }
   .index-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
   padding: 2px 2px 10px; padding-right: 56px; }
@@ -543,6 +572,33 @@ const CSS_DESKTOP = `/* CSS 변수 */
   .index-body{ overflow-y:auto; overflow-x:hidden; max-height: calc(min(86vh, 900px) - 92px); padding: 6px 4px 2px; }
 
   .index-grid{ display:grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+#indexGrid.about-mode{ display:block !important; }
+#indexGrid.about-mode .about-body,
+#aboutGrid.about-mode .about-body{
+  padding: 6px 6px 0 6px;
+  font-family:"Nanum Pen Script", cursive;
+  font-size: 22px;
+  line-height: 1.6;
+  color: rgba(235,235,235,0.90);
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+#indexGrid.about-mode .about-body p,
+#aboutGrid.about-mode .about-body p{
+  margin: 0 0 18px 0;
+}
+#indexGrid.about-mode .about-body p:last-child,
+#aboutGrid.about-mode .about-body p:last-child{ margin-bottom:0; }
+
+#aboutOverlay .index-panel{
+  width: min(340px, 62vw);
+  padding: 20px 24px 32px;
+}
+#aboutGrid{
+  display: block !important;
+  width: 100%;
+}
+
   .idx-head{ grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between;
   padding: 6px 8px 3px; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.06);
   font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.1; color: rgba(230,230,230,0.92); }
@@ -587,7 +643,6 @@ const CSS_DESKTOP = `/* CSS 변수 */
   border-color: rgba(212,175,55,0.32) !important; }
 
   #tocPrologue, #tocLoveDream, #tocLoveSong, #tocEpilogue, #tocIndex{ cursor:pointer; }
-  #tocPrologue:hover, #tocLoveDream:hover, #tocLoveSong:hover, #tocEpilogue:hover, #tocIndex:hover{ text-decoration: underline; }
 
   /* tocHome - menu-h와 동일 레벨, 클릭 가능 */
   .menu-h-home{
@@ -758,7 +813,18 @@ const INDEX_ROWS = [
 
 const LANG_TEXTS = {
   KR:{tocTitle:"메뉴",menuH_TOC:"목차",menuH_INDEX:"색인",menuH_CONTACT:"연락처",
-      menuH_ABOUT:"작품 소개",menuH_COPY:"저작권",
+      menuH_ABOUT:"작가의 말",aboutTitle:"작가의 말",aboutBody:`narida.
+
+내리다의 옛말.
+
+빛이 내리고,
+마음이 내리고,
+꿈이 내리는 세상에
+
+당신이 내려오면,
+
+세상과 마음은 서로에게 스며들고,
+모든 순간은 아름답게 수놓아집니다.`,menuH_COPY:"저작권",
       homeText:"사랑의 모든 순간은 당신으로 열립니다",
       prologue:"프롤로그",lovedream:"사랑의 꿈 (일부 공개)",lovesong:"사랑의 노래",
       resonance:"사랑의 공명 (잠김)",dance:"사랑의 춤 (잠김)",chorus:"사랑의 합창 (잠김)",
@@ -770,7 +836,18 @@ const LANG_TEXTS = {
       infoP:"사진만 보기",infoT:"사진 + 텍스트 보기",infoA:"전체 UI 보기",
       infoEsc:"닫기 / 전체 UI 복귀",copyright:"© Vitro Narida. All rights reserved."},
   EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Index",menuH_CONTACT:"Contact",
-      menuH_ABOUT:"About",menuH_COPY:"Copyright",
+      menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`narida.
+
+An old Korean word for to descend.
+
+Where light descends,
+where the heart descends,
+where dreams descend.
+
+When you descend into this world,
+
+the world and the heart soften into one another,
+and every moment is delicately woven.`,menuH_COPY:"Copyright",
       homeText:"Every moment of love opens with you.",
       prologue:"Prologue",lovedream:"Love Dream (Selection)",lovesong:"Love Song",
       resonance:"Love Resonance (locked)",dance:"Love Dance (locked)",chorus:"Love Chorus (locked)",
@@ -820,7 +897,7 @@ const buildTOCHTML = () => {
           </ul>
         </div>
         <div class="menu-section">
-          <h3 class="menu-h" id="menuH_INDEX" style="cursor:pointer;">${t.menuH_INDEX}</h3>
+          <h3 class="menu-h menu-h-link" id="menuH_INDEX">${t.menuH_INDEX}</h3>
           <div class="menu-sub">
             <div id="tocIndex" style="cursor:pointer;">${t.indexList}</div>
           </div>
@@ -828,7 +905,7 @@ const buildTOCHTML = () => {
         <div class="menu-section">
           <h3 class="menu-h">${t.menuH_CONTACT}</h3>
           <div class="menu-sub">
-            <div>E-Mail : <a href="mailto:vitronarida@gmail.com">vitro.narida@gmail.com</a></div>
+            <div>E-Mail : <a href="mailto:vitro@narida.art">vitro@narida.art</a></div>
             <div>Instagram : <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener">vitro.narida</a></div>
           </div>
         </div>
@@ -849,6 +926,19 @@ const buildTOCHTML = () => {
           <div class="toc-close" id="indexClose">✕</div>
         </div>
         <div class="index-grid" id="indexGrid"></div>
+      </div>
+    </div>
+    <div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="aboutBackdrop"></div>
+      <div class="index-panel">
+        <div class="toc-handle"></div>
+        <div class="toc-header" style="margin-bottom:8px;">
+          <div>
+            <h2 class="index-title" id="aboutTitle"></h2>
+          </div>
+          <div class="toc-close" id="aboutClose">✕</div>
+        </div>
+        <div class="index-grid about-mode" id="aboutGrid"></div>
       </div>
     </div>`;
   } else {
@@ -871,6 +961,9 @@ const buildTOCHTML = () => {
               <div class="langBtn${curLang==="KR"?" active":""}" id="langKR" role="button" tabindex="0">KR</div>
             </div>
           </div>
+          <div class="menu-section">
+            <h3 class="menu-h menu-h-link" id="menuH_ABOUT" tabindex="0">${t.menuH_ABOUT}</h3>
+          </div>
           <div class="menu-section menu-section-home">
             <h3 class="menu-h menu-h-home" id="tocHome" tabindex="0">${t.homeText}</h3>
           </div>
@@ -887,23 +980,14 @@ const buildTOCHTML = () => {
             </ul>
           </div>
           <div class="menu-section">
-            <h3 class="menu-h" id="menuH_INDEX">${t.menuH_INDEX}</h3>
-            <ul class="toc-list">
-              <li class="toc-item" id="tocIndex" style="cursor:pointer;">
-                <span class="toc-bullet">●</span><span class="toc-text">${t.indexList}</span>
-              </li>
-            </ul>
+            <h3 class="menu-h menu-h-link" id="menuH_INDEX" tabindex="0">${t.menuH_INDEX}</h3>
           </div>
           <div class="menu-section">
             <h3 class="menu-h" id="menuH_CONTACT">${t.menuH_CONTACT}</h3>
             <div class="menu-sub" id="tocMeta">
-              <div class="sub-item">E-Mail : <a href="mailto:vitro.narida@gmail.com">vitro.narida@gmail.com</a></div>
+              <div class="sub-item">E-Mail : <a href="mailto:vitro@narida.art">vitro@narida.art</a></div>
               <div class="sub-item">Instagram : <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener noreferrer">vitro.narida</a></div>
             </div>
-          </div>
-          <div class="menu-section">
-            <h3 class="menu-h" id="menuH_ABOUT">${t.menuH_ABOUT}</h3>
-            <div class="menu-sub"><div class="sub-item" id="aboutLine">${t.homeText}</div></div>
           </div>
           <div class="menu-section">
             <h3 class="menu-h" id="menuH_COPY">${t.menuH_COPY}</h3>
@@ -941,6 +1025,20 @@ const buildTOCHTML = () => {
         </div>
         <div class="index-body">
           <div class="index-grid" id="indexGrid"></div>
+        </div>
+      </div>
+    </div>
+    <div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="aboutBackdrop"></div>
+      <div class="index-panel panel-box" role="dialog" aria-modal="true">
+        <div class="index-close" id="aboutClose" aria-label="Close">✕</div>
+        <div class="index-header">
+          <div>
+            <h2 class="index-title" id="aboutTitle"></h2>
+          </div>
+        </div>
+        <div class="index-body">
+          <div class="index-grid about-mode" id="aboutGrid"></div>
         </div>
       </div>
     </div>
@@ -1005,18 +1103,58 @@ const IndexManager = {
     TOCManager.close();
     renderIndex();
     const ov=document.getElementById("indexOverlay");
+    if(ov){ ov.style.display="flex"; }
     ov.classList.add("on"); ov.setAttribute("aria-hidden","false");
   },
   close: () => {
     const ov=document.getElementById("indexOverlay");
     ov.classList.remove("on"); ov.setAttribute("aria-hidden","true");
+    const grid=document.getElementById("indexGrid");
+    grid?.classList.remove("about-mode");
+    // ✅ 잔상 방지: 페이드아웃 종료 후 내용 정리
+    setTimeout(()=>{
+      if(ov) ov.style.display="none";
+      if(grid && grid.classList.contains("about-mode")==false){ /* noop */ }
+      // about 모드였든 아니든, 잔상 방지 차원에서 내부를 정리
+      if(grid){ grid.innerHTML = ""; }
+    }, 420);
+  }
+};
+
+const AboutManager = {
+  open: () => {
+    TOCManager.close();
+    const t = LANG_TEXTS[curLang] || LANG_TEXTS.KR;
+    const ov = document.getElementById("aboutOverlay");
+    const titleEl = document.getElementById("aboutTitle");
+    const grid = document.getElementById("aboutGrid");
+    if (!ov || !titleEl || !grid) return;
+
+    titleEl.textContent = t.aboutTitle || t.menuH_ABOUT || "";
+
+    const parts = String(t.aboutBody||"").trim().split(/\n\s*\n/);
+    const bodyHTML = parts.map(p => `<p>${p.replace(/\n/g,"<br>")}</p>`).join("");
+    grid.innerHTML = `<div class="about-body">${bodyHTML}</div>`;
+
+    ov.style.display="flex";
+    ov.classList.add("on");
+    ov.setAttribute("aria-hidden","false");
+  },
+  close: () => {
+    const ov = document.getElementById("aboutOverlay");
+    if (!ov) return;
+    ov.classList.remove("on");
+    ov.setAttribute("aria-hidden","true");
+    setTimeout(() => {
+      ov.style.display = "none";
+    }, 420);
   }
 };
 
 // ===== 언어 전환 =====
 const setLang = (l) => {
   saveLang(l);
-  // 페이지 reload로 TOC HTML 재생성 (언어 반영)
+  try{sessionStorage.removeItem("gl_mode");}catch(e){}
   location.reload();
 };
 
@@ -1026,6 +1164,8 @@ const bindCommon = () => {
   document.getElementById("tocClose")?.addEventListener("click", TOCManager.close);
   document.getElementById("indexBackdrop")?.addEventListener("click", IndexManager.close);
   document.getElementById("indexClose")?.addEventListener("click", IndexManager.close);
+  document.getElementById("aboutBackdrop")?.addEventListener("click", AboutManager.close);
+  document.getElementById("aboutClose")?.addEventListener("click", AboutManager.close);
   document.getElementById("langKR")?.addEventListener("click", ()=>setLang("KR"));
   document.getElementById("langEN")?.addEventListener("click", ()=>setLang("EN"));
 
@@ -1039,9 +1179,12 @@ const bindCommon = () => {
   const tocIndex=document.getElementById("tocIndex");
   tocIndex?.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();IndexManager.open();});
   document.getElementById("menuH_INDEX")?.addEventListener("click",IndexManager.open);
+  document.getElementById("menuH_ABOUT")?.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();AboutManager.open();});
+  document.getElementById("menuH_ABOUT")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();AboutManager.open();}});
+  document.getElementById("menuH_INDEX")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();IndexManager.open();}});
 
   const homeEl=document.getElementById("tocHome")||document.getElementById("menuH_HOME");
-  homeEl?.addEventListener("click",(e)=>{e.preventDefault();TOCManager.close();setTimeout(()=>goTo("../index.html"),200);});
+  homeEl?.addEventListener("click",(e)=>{e.preventDefault();TOCManager.close();try{sessionStorage.removeItem("gl_mode");}catch(e){}setTimeout(()=>goTo("../index.html"),200);});
 };
 
 // =========================================
@@ -1088,11 +1231,16 @@ if (isMobile) {
   const navBar = document.createElement("div"); navBar.className = "nav-bar";
 
   const leftBtn = document.createElement("div");
-  leftBtn.className = "nav-btn" + (SC.prevURL ? "" : " disabled");
-  leftBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>`;
-  if (SC.prevURL) leftBtn.addEventListener("click", ()=>goTo(SC.prevURL));
-
-  const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
+  if (!SC.prevURL && SC.pageNum===1) {
+    leftBtn.className = "nav-btn";
+    leftBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>`;
+    leftBtn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();AboutManager.open();});
+  } else {
+    leftBtn.className = "nav-btn" + (SC.prevURL ? "" : " disabled");
+    leftBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>`;
+    if (SC.prevURL) leftBtn.addEventListener("click", ()=>goTo(SC.prevURL));
+  }
+const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   menuBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>`;
   menuBtn.addEventListener("click", TOCManager.open);
 
@@ -1129,8 +1277,9 @@ if (isMobile) {
   document.addEventListener("keydown",(e)=>{
     const menuOn=document.getElementById("tocOverlay").classList.contains("on");
     const indexOn=document.getElementById("indexOverlay").classList.contains("on");
-    if(e.key==="Escape"){if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
-    if(menuOn||indexOn)return;
+    const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
+    if(e.key==="Escape"){if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
+    if(menuOn||indexOn||aboutOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -1168,25 +1317,17 @@ if (isMobile) {
 
   const uiBtn=document.createElement("div");
   uiBtn.className="soloToggle nav-btn";
-  uiBtn.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>`;
+  uiBtn.style.opacity="0";
+  uiBtn.style.visibility="hidden";
   (function(){
-    const MODES=["all","phototext","photo"]; // 모두 -> 사진+텍스트 -> 사진만
-    const tipKR={all:"보기 모드: 사진만", phototext:"보기 모드: 사진+텍스트", photo:"보기 모드: 모두"};
-    const tipEN={all:"View: Photo only", phototext:"View: Photo + Text", photo:"View: All"};
-    const apply=(m)=>{
-      document.body.classList.remove("view-all","view-phototext","view-photo");
-      document.body.classList.add("view-"+m);
-      localStorage.setItem("viewMode", m);
-      uiBtn.setAttribute("data-tip", (curLang==="KR"?tipKR:tipEN)[m]);
-      window.__refreshViewModeTip = ()=> uiBtn.setAttribute("data-tip",(curLang==="KR"?tipKR:tipEN)[localStorage.getItem("viewMode")||"all"]);
+    const MODES=["all","phototext","photo"];
+    const tipKR={all:"보기 모드: 사진+텍스트", phototext:"보기 모드: 사진만", photo:"보기 모드: 전체"};
+    const tipEN={all:"View: Photo + Text", phototext:"View: Photo only", photo:"View: All"};
+    const modeToTip={1:"photo",2:"phototext"};
+    window.__refreshViewModeTip = ()=>{
+      const m=modeToTip[uiMode]||"all";
+      uiBtn.setAttribute("data-tip",(curLang==="KR"?tipKR:tipEN)[m]);
     };
-    const saved=localStorage.getItem("viewMode");
-    apply(MODES.includes(saved)?saved:"all");
-    uiBtn.addEventListener("click", ()=>{
-      const cur=(localStorage.getItem("viewMode")||"all");
-      const next=MODES[(MODES.indexOf(cur)+1)%MODES.length];
-      apply(next);
-    });
   })();
 
   sq.append(workCode,menuBtn,uiBtn);
@@ -1220,6 +1361,15 @@ if (isMobile) {
         : (url ? (dir==="left" ? "Previous" : "Next") : (dir==="left" ? "No previous" : "No next"))
     );
     if(!url){
+      // 첫 작품(이전 없음)에서는 좌측 버튼을 '작품 소개'로 사용
+      if(dir==="left" && SC.pageNum===1){
+        btn.setAttribute("data-tip", curLang==="KR" ? "작가의 말" : "About");
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>`;
+        btn.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();AboutManager.open();});
+        btn.addEventListener("touchend",(e)=>{e.preventDefault();AboutManager.open();});
+        btn.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();AboutManager.open();}});
+        return btn;
+      }
       btn.classList.add("disabled");
       btn.innerHTML=dir==="left"
         ?`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"/></svg>`
@@ -1285,20 +1435,23 @@ if (isMobile) {
   }
 
   // UI 모드
-  let uiMode=0;
-  try{uiMode=parseInt(localStorage.getItem("gl_mode"))||0;}catch(e){}
+  let uiMode=2;
   const uiIcons={
-    0:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>`,
-    1:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>`,
-    2:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>`
+    1:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>`,
+    2:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>`
   };
   const applyUIMode=()=>{
     document.body.classList.toggle("ui-hide-all",uiMode===1);
     document.body.classList.toggle("ui-text-only",uiMode===2);
-    try{localStorage.setItem("gl_mode",uiMode);}catch(e){}
-    document.querySelectorAll(".soloToggle").forEach(b=>b.innerHTML=uiIcons[uiMode]);
+    document.body.classList.add("ui-mode-ready");
+    document.querySelectorAll(".soloToggle").forEach(b=>{
+      b.innerHTML=uiIcons[uiMode];
+      b.style.opacity="";
+      b.style.visibility="";
+    });
+    if(window.__refreshViewModeTip) window.__refreshViewModeTip();
   };
-  document.querySelectorAll(".soloToggle").forEach(b=>b.addEventListener("click",()=>{uiMode=(uiMode+1)%3;applyUIMode();}));
+  document.querySelectorAll(".soloToggle").forEach(b=>b.addEventListener("click",()=>{uiMode=uiMode===2?1:2;applyUIMode();}));
   applyUIMode();
 
   // 데스크탑 전용 이벤트
@@ -1312,10 +1465,11 @@ if (isMobile) {
   document.addEventListener("keydown",(e)=>{
     const menuOn=document.getElementById("tocOverlay").classList.contains("on");
     const indexOn=document.getElementById("indexOverlay").classList.contains("on");
+    const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
     if(e.key==="Escape"){
+      if(aboutOn){e.preventDefault();AboutManager.close();return;}
       if(indexOn){e.preventDefault();IndexManager.close();return;}
       if(menuOn){e.preventDefault();TOCManager.close();return;}
-      if(uiMode!==0){e.preventDefault();uiMode=0;applyUIMode();return;}
       return;
     }
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
@@ -1323,15 +1477,14 @@ if (isMobile) {
     if(e.key==="h"||e.key==="H"){e.preventDefault();if(!menuOn)TOCManager.open();setTimeout(()=>document.querySelector(".toc-panel")?.classList.add("show-info"),50);return;}
     if(e.key==="p"||e.key==="P"){e.preventDefault();uiMode=1;applyUIMode();return;}
     if(e.key==="t"||e.key==="T"){e.preventDefault();uiMode=2;applyUIMode();return;}
-    if(e.key==="a"||e.key==="A"){e.preventDefault();uiMode=0;applyUIMode();return;}
-    if(menuOn||indexOn)return;
+    if(menuOn||indexOn||aboutOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
 
   // Photo Only 피크
   let peekTimer=null;
-  const showPeek=()=>{if(uiMode===0)return;document.body.classList.add("solo-peek");clearTimeout(peekTimer);peekTimer=setTimeout(()=>document.body.classList.remove("solo-peek"),2000);};
+  const showPeek=()=>{document.body.classList.add("solo-peek");clearTimeout(peekTimer);peekTimer=setTimeout(()=>document.body.classList.remove("solo-peek"),2000);};
   document.addEventListener("mousemove",showPeek);
   document.addEventListener("click",showPeek);
   document.addEventListener("touchstart",showPeek,{passive:true});
