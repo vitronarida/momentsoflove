@@ -759,7 +759,9 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 
 .nav-btn:active{
   transform: translateY(2px) scale(0.96) translateZ(0) !important;
-}`;
+}
+/* 3페이지: 하단 ripple이 sq 경계 아래로 삐져나올 수 있도록 */
+#pragueScreen .square-frame{ overflow:visible; }`;
 
 (function(){
 
