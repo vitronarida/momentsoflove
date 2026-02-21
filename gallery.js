@@ -1415,7 +1415,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
       window.addEventListener("pageshow",(e)=>{
-        if(e.persisted){ img._rippleStarted=false; startRipple(); }
+        if(e.persisted){ location.reload(); }
       });
     }
   } else {
