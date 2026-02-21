@@ -761,7 +761,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   transform: translateY(2px) scale(0.96) translateZ(0) !important;
 }
 /* 3페이지: 하단 ripple이 sq 경계 아래로 삐져나올 수 있도록 */
-#pragueScreen .square-frame{ overflow:visible; }`;
+`;
 
 (function(){
 
@@ -1591,7 +1591,7 @@ window.addEventListener("unload", ()=>{});
 
 // ===== 프라하 반영 일렁임 효과 =====
 function initRipple(img, sq) {
-  const RIPPLE_RATIO = 0.41;
+  const RIPPLE_RATIO = 0.43; /*0.41*/
   const FID = "prague-ripple";  // 고정 ID - bfcache 복귀 시에도 참조 유지
 
   // 기존 요소 정리
@@ -1625,7 +1625,7 @@ function initRipple(img, sq) {
 
   const rippleEl = document.createElement("div");
   rippleEl.setAttribute("data-ripple-el", "prague");
-  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
+  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
   clone.style.cssText = `position:absolute;object-fit:none;filter:url(#${FID});`;
