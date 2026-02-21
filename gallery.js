@@ -1536,7 +1536,8 @@ function initRipple(img, sq) {
   rippleEl.style.cssText = "position:absolute; pointer-events:none; z-index:11; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
-  clone.style.cssText = "position:absolute; object-fit:none; filter:url(#prague-ripple);";
+  const filterRef = `url(${location.href.split('#')[0]}#prague-ripple)`;
+  clone.style.cssText = `position:absolute; object-fit:none; filter:${filterRef};`;
   rippleEl.appendChild(clone);
   sq.appendChild(rippleEl);
 
