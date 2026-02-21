@@ -1414,8 +1414,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       window.addEventListener("pageshow",(e)=>{
         if(e.persisted){
           img._rippleStarted=false;
-          // 두 번의 rAF로 렌더링 사이클을 거친 후 재실행 - filter resolve 보장
-          requestAnimationFrame(()=>requestAnimationFrame(()=>startRipple()));
+          startRipple();
+          // visibilitychange 강제 발생 - alt+tab 효과와 동일
+          setTimeout(()=>{
+            document.dispatchEvent(new Event("visibilitychange"));
+          }, 100);
         }
       });
     }
@@ -1665,28 +1668,13 @@ function initRipple(img, sq) {
   document.addEventListener("fullscreenchange", handleUpdate);
 
   let t = 0;
-  let animRunning = false;
   const animate = () => {
-    if (!animRunning) return;
     turb.setAttribute("baseFrequency", `${(0.010+Math.sin(t*0.7)*0.002).toFixed(4)} ${(0.028+Math.cos(t*0.5)*0.003).toFixed(4)}`);
     disp.setAttribute("scale", (5+Math.sin(t*0.5)*2).toFixed(2));
     t += 0.016;
     requestAnimationFrame(animate);
   };
-  const startAnimate = () => { if (!animRunning) { animRunning = true; animate(); } };
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) { animRunning = false; startAnimate(); }
-  });
-  setTimeout(() => {
-    // filter 강제 재적용 - 브라우저 렌더링 캐시 무효화
-    const f = clone.style.filter;
-    clone.style.filter = "none";
-    requestAnimationFrame(() => {
-      clone.style.filter = f;
-      rippleEl.style.opacity = "1";
-      startAnimate();
-    });
-  }, 300);
+  setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 300);
 }
 // ===== lpl_04 상단 일렁임 효과 =====
 function initRippleTop(img, sq) {
