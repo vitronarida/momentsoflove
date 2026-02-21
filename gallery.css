@@ -182,6 +182,8 @@
   .hero.show-text::after, .scene.show-text .square-frame::after{ opacity:1; }
   body.ui-hide-all .square-frame::after,
   .screen.hidden .square-frame::after{ opacity:0 !important; transition:none !important; }
+  #pragueScreen.scene{ overflow:visible; }
+  #pragueScreen .square-frame{ overflow:visible; clip-path:inset(0 0 0 0); }
 
   /* 오버레이 공통 */
   .overlay-panel{ position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center;
