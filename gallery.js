@@ -1368,15 +1368,15 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
-    if(!isMobile&&SC.id==="prague"){
-      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRipple(img,sq);};
+    if(!isMobile&&(SC.id==="prague"||SC.id==="dreams")){
+      const fn = SC.id==="prague" ? initRipple : initRippleTop;
+      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;fn(img,sq);};
       if(img.complete&&img.naturalWidth>0){startRipple();}
-      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
-    }
-    if(!isMobile&&SC.id==="dreams"){
-      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRippleTop(img,sq);};
-      if(img.complete&&img.naturalWidth>0){startRipple();}
-      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
+      else{
+        img.addEventListener("load",startRipple,{once:true});
+        const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);startRipple();}},16);
+        img.addEventListener("load",()=>clearInterval(poll),{once:true});
+      }
     }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
