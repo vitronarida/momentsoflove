@@ -1415,10 +1415,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         if(e.persisted){
           img._rippleStarted=false;
           startRipple();
-          // visibilitychange 강제 발생 - alt+tab 효과와 동일
+          // 강제 repaint - bfcache 복귀 시 filter 재적용
           setTimeout(()=>{
-            document.dispatchEvent(new Event("visibilitychange"));
-          }, 100);
+            const el = document.querySelector("[data-ripple-el]");
+            if(el){ el.style.display="none"; requestAnimationFrame(()=>{ el.style.display=""; }); }
+          }, 50);
         }
       });
     }
