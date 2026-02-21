@@ -1649,8 +1649,7 @@ function initRipple(img, sq) {
     rippleEl.style.zIndex = "10";
     rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
     rippleEl.style.maskImage       = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
-    rippleEl.style.transform = `scaleX(${((sqW+200)/sqW).toFixed(4)})`;
-    rippleEl.style.transformOrigin = "bottom center";
+    rippleEl.style.transform = "";
 
     clone.style.width  = `${rw + OFFSET*2}px`;
     clone.style.height = `${rh + OFFSET*2}px`;
