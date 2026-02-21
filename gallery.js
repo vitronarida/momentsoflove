@@ -1346,6 +1346,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
+    if(SC.id==="prague"){
+      const startRipple=()=>initRipple(img,sq);
+      if(img.complete&&img.naturalWidth>0) startRipple();
+      else img.addEventListener("load",startRipple,{once:true});
+    }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
@@ -1494,3 +1499,129 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 bindCommon();
 
 })();
+
+// ===== 프라하 반영 일렁임 효과 (CSS SVG filter) =====
+function initRipple(img, sq) {
+  const RIPPLE_RATIO = 0.41; // 하단 45%
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+  svg.style.cssText = "position:absolute; overflow:hidden;";
+  const defs = document.createElementNS(svgNS, "defs");
+  const filter = document.createElementNS(svgNS, "filter");
+  filter.setAttribute("id", "prague-ripple");
+  filter.setAttribute("x", "-5%"); filter.setAttribute("y", "-5%");
+  filter.setAttribute("width", "110%"); filter.setAttribute("height", "110%");
+  filter.setAttribute("color-interpolation-filters", "sRGB");
+  const turb = document.createElementNS(svgNS, "feTurbulence");
+  turb.setAttribute("type", "turbulence");
+  turb.setAttribute("baseFrequency", "0.015 0.04");
+  turb.setAttribute("numOctaves", "2");
+  turb.setAttribute("seed", "3");
+  turb.setAttribute("result", "noise");
+  const disp = document.createElementNS(svgNS, "feDisplacementMap");
+  disp.setAttribute("in", "SourceGraphic");
+  disp.setAttribute("in2", "noise");
+  disp.setAttribute("scale", "0");
+  disp.setAttribute("xChannelSelector", "R");
+  disp.setAttribute("yChannelSelector", "G");
+  filter.append(turb, disp);
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+  sq.appendChild(svg);
+
+  // rippleEl: 경계선 아래 영역, filter 적용 clone
+  const rippleEl = document.createElement("div");
+  rippleEl.style.cssText = "position:absolute; pointer-events:none; z-index:11; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
+  const clone = img.cloneNode(false);
+  clone.removeAttribute("id");
+  clone.style.cssText = "position:absolute; object-fit:none; filter:url(#prague-ripple);";
+  rippleEl.appendChild(clone);
+  sq.appendChild(rippleEl);
+
+  // 핵심: 원본 img를 z-index:12로 올리고, 경계선 아래는 clipPath로 숨김
+  // → 원본이 경계선 위를 항상 덮어서 파도가 경계선 위로 절대 안 나옴
+  img.style.zIndex = "12";
+
+  const syncPosition = () => {
+    const sqH = sq.offsetHeight;
+    const sqW = sq.offsetWidth;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    if (!iw || !ih) return;
+
+    const fit = (getComputedStyle(img).objectFit || "contain").toLowerCase();
+    const scale = (fit === "cover") ? Math.max(sqW / iw, sqH / ih) : Math.min(sqW / iw, sqH / ih);
+    
+    const rw = iw * scale;
+    const rh = ih * scale;
+    const rx = (sqW - rw) / 2;
+    const ry = (sqH - rh) / 2;
+    
+    const rippleH = rh * RIPPLE_RATIO;
+    const rippleTop = ry + rh - rippleH;
+
+    // 1. rippleEl 설정 (물결이 보일 하단 영역 박스)
+    rippleEl.style.left = "0px";
+    rippleEl.style.width = `${sqW}px`;
+    rippleEl.style.top = `${rippleTop}px`;
+    rippleEl.style.height = `${rippleH}px`;
+    rippleEl.style.overflow = "hidden"; // 여유분이 프레임 밖으로 안 나가게
+rippleEl.style.transform = "scale(1.05)"; 
+rippleEl.style.transformOrigin = "bottom center";
+
+// ✅ 경계선을 부드럽게 만드는 마스크 추가
+// 위쪽 15% 영역을 투명하게 날려서 원본 이미지와 부드럽게 겹치게 합니다.
+rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
+rippleEl.style.maskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
+
+// ✅ 오버랩을 위해 위치를 살짝 위로 올림 (Gutter 확보)
+// 경계선이 겹쳐야 하므로 rippleTop 계산 결과에서 5~10px 정도 빼줍니다.
+const overlapGutter = 10; 
+rippleEl.style.top = `${rippleTop - overlapGutter}px`;
+rippleEl.style.height = `${rippleH + overlapGutter}px`;
+
+
+
+    // 2. 검은 테두리 방지를 위한 여유분(OFFSET) 설정
+    // 필터 scale이 22이므로 30 정도면 충분합니다.
+    const OFFSET = 30; 
+
+    // 3. clone 설정 (핵심: rippleEl 내부에서 원본과 위치를 정확히 맞춤)
+    // 원본보다 사방으로 OFFSET만큼 크게 만듭니다.
+    clone.style.width  = `${rw + (OFFSET * 2)}px`; 
+    clone.style.height = `${rh + (OFFSET * 2)}px`;
+    
+    // rippleEl 내부에서의 상대 위치 계산
+    // 1) 좌측: 원본의 rx에서 OFFSET만큼 왼쪽으로 더 이동
+    clone.style.left = `${rx - OFFSET}px`;
+    
+    // 2) 상단: rippleEl의 시작점(rippleTop)과 원본 시작점(ry)의 차이를 계산하고 OFFSET 보정
+    // rippleEl 안에서 이미지를 위로 끌어올려 원본 하단부와 겹치게 만듭니다.
+    const relativeTop = rippleTop - ry;
+    clone.style.top = `-${relativeTop + OFFSET}px`;
+
+    // 4. 레이어 순서 보장
+    rippleEl.style.zIndex = "10";
+    img.style.zIndex = "1";
+};
+
+  syncPosition();
+  window.addEventListener("resize", syncPosition);
+
+  let t = 0;
+  const animate = () => {
+    const bf1 = 0.013 + Math.sin(t * 0.7) * 0.003;
+    const bf2 = 0.038 + Math.cos(t * 0.5) * 0.005;
+    turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
+    const sc = 8 + Math.sin(t * 1.1) * 3;
+    disp.setAttribute("scale", sc.toFixed(2));
+    t += 0.016;
+    requestAnimationFrame(animate);
+  };
+
+  setTimeout(() => {
+    rippleEl.style.opacity = "1";
+    animate();
+  }, 200);
+}

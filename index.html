@@ -31,7 +31,7 @@
       position: absolute; right: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
       display: flex; gap: 10px;
       opacity: 0; transform: translateY(6px);
-      transition: opacity 600ms ease, transform 600ms ease;
+      transition: opacity 2000ms ease, transform 2000ms ease;
       pointer-events: none;
     }
     .lang-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -39,7 +39,7 @@
       position: absolute; left: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
       display: flex; gap: 10px;
       opacity: 0; transform: translateY(6px);
-      transition: opacity 600ms ease, transform 600ms ease;
+      transition: opacity 2000ms ease, transform 2000ms ease;
       pointer-events: none;
     }
     .device-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
@@ -82,12 +82,29 @@
       background: rgba(255,255,255,0.10);
     }
     .wrap { text-align: center; }
-    .line {
+    .line-wrap {
+      text-align: center;
+    }
+    #line {
       font-size: clamp(24px, 6.2vw, 42px);
       line-height: 1.55; letter-spacing: 0.2px;
       white-space: pre-wrap; word-break: keep-all;
     }
-    .cursor { display: none; }
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: rgba(220,220,220,0.85);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+    .cursor.blinking {
+      animation: blink 1.4s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
 
     /* ===== 툴팁 ===== */
     [data-tooltip] { position: relative; }
@@ -134,15 +151,21 @@
       border: 1px solid rgba(255,255,255,0.18);
       cursor: pointer; user-select: none;
       -webkit-tap-highlight-color: transparent;
-      opacity: 0.40;
+      opacity: 0;
       pointer-events: none;
-      transition: opacity 650ms ease, background 150ms ease, box-shadow 150ms ease;
+      transition: opacity 1200ms ease, background 150ms ease, box-shadow 150ms ease;
     }
     .lock-btn.show {
-      position: relative;  /* ::before/::after 기준 */
+      position: relative;
       pointer-events: auto;
-      animation: breathe 2.8s ease-in-out infinite,
-                 glow    2.8s ease-in-out infinite;
+      animation: fadeInBreath 2s ease-in-out 1 forwards,
+                 breathe      2.8s ease-in-out 2s infinite,
+                 glow         2.8s ease-in-out 2s infinite;
+    }
+    @keyframes fadeInBreath {
+      0%   { opacity: 0;    }
+      100% { opacity: 0.70; }
+    }
     }
     @keyframes breathe {
       0%, 100% { opacity: 0.70; }
@@ -165,10 +188,10 @@
       stroke: rgba(200,200,200,0.90);
     }
 
-    /* 타이머 침: 2초에 1바퀴 */
-    @keyframes spin-minute {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+    /* 타이핑 중 점 ripple */
+    @keyframes dot-ripple {
+      0%   { transform: scale(0.1); opacity: 0.7; }
+      100% { transform: scale(1);   opacity: 0; }
     }
 
     /* 펄스 링 */
@@ -181,6 +204,36 @@
     @keyframes glow {
       0%, 100% { box-shadow: 0 0 6px  2px rgba(255,255,255,0.10); }
       50%       { box-shadow: 0 0 18px 6px rgba(255,255,255,0.22); }
+    }
+
+    /* 도트 ripple wrapper */
+    .dot-wrap {
+      position: relative;
+      width: 68px; height: 68px;
+      display: grid; place-items: center;
+    }
+    .dot-wrap .dot-core {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: rgba(220,220,220,0.90);
+      position: relative; z-index: 1;
+    }
+    .dot-wrap .dot-ring {
+      position: absolute;
+      width: 68px; height: 68px;
+      border-radius: 999px;
+      background: rgba(220,220,220,0.18);
+      transform: scale(0.1);
+      opacity: 0;
+    }
+    .dot-wrap.active .dot-ring:nth-child(1) {
+      animation: dot-ripple 2s ease-out infinite;
+    }
+    .dot-wrap.active .dot-ring:nth-child(2) {
+      animation: dot-ripple 2s ease-out 0.7s infinite;
+    }
+    .dot-wrap.active .dot-ring:nth-child(3) {
+      animation: dot-ripple 2s ease-out 1.4s infinite;
     }
 
     /* 펄스 링 — 버튼 감싸는 wrapper */
@@ -258,29 +311,15 @@
         </button>
       </div>
 
-      <div class="line" id="line"></div>
+      <div class="line-wrap">
+        <span id="line"></span>
+      </div>
 
       <div class="lock-wrap" id="lockWrap">
       <button class="lock-btn" id="enterBtn" type="button" aria-label="Enter" data-tooltip="">
 
-        <!-- 타이핑 중: 타이머 (침 회전) -->
-        <svg id="svgClock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(220,220,220,0.95)">
-          <!-- 상단 버튼 -->
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 3h3"/>
-          <!-- 타이머 원 테두리 (고정) -->
-          <circle cx="12" cy="13.5" r="8" stroke="rgba(220,220,220,0.95)" stroke-width="1.5" fill="none"/>
-          <!-- 회전하는 침 -->
-          <line
-            x1="12" y1="13.5" x2="12" y2="8"
-            stroke="rgba(220,220,220,0.95)" stroke-width="1.5" stroke-linecap="round"
-            style="transform-origin:12px 13.5px; animation:spin-minute 2s linear infinite;">
-          </line>
-          <!-- 중심 점 -->
-          <circle cx="12" cy="13.5" r="0.8" fill="rgba(220,220,220,0.95)"/>
-        </svg>
-
-        <!-- 타이핑 완료: Lock (숨쉬는 깜빡임) -->
-        <svg id="svgLock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display:none;">
+        <!-- 타이핑 완료: Lock -->
+        <svg id="svgLock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
         </svg>
 
@@ -299,11 +338,10 @@
       KR: "모든 사랑의 순간은 당신으로 열립니다",
       EN: "Every moment of love opens with you"
     };
-    const TYPE_INTERVAL = 130;
+    const TYPE_INTERVAL = () => 120 + Math.random() * 160;
 
     const el        = document.getElementById("line");
     const btn       = document.getElementById("enterBtn");
-    const svgClock  = document.getElementById("svgClock");
     const svgLock   = document.getElementById("svgLock");
     const svgUnlock = document.getElementById("svgUnlock");
     const langBar   = document.querySelector(".lang-bar");
@@ -311,7 +349,6 @@
 
     /* 아이콘 전환 헬퍼 */
     const showIcon = (name) => {
-      svgClock.style.display  = name === "clock"  ? "" : "none";
       svgLock.style.display   = name === "lock"   ? "" : "none";
       svgUnlock.style.display = name === "unlock" ? "" : "none";
     };
@@ -357,27 +394,102 @@
     document.getElementById("btnEN").dataset.tooltip      = TT.en;
     document.getElementById("enterBtn").dataset.tooltip   = TT.enter;
 
-    /* ===== 타이핑 (Clock 회전 중) ===== */
-    let i = 0;
-    function tick() {
-      i++;
-      el.textContent = TEXT.slice(0, i);
-      if (i < TEXT.length) return setTimeout(tick, TYPE_INTERVAL);
+    /* ===== 타이핑 중 Enter/Esc → 바로 이동 ===== */
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === "Escape") {
+        try{sessionStorage.removeItem("gl_mode");}catch(err){}
+        location.href = TARGET_URL;
+      }
+    });
 
-      // 타이핑 완료 → Clock 멈추고 Lock으로 전환
-      const cur = document.createElement("span");
-      cur.className = "cursor"; cur.textContent = "▍";
+    /* ===== 타이핑 ===== */
+    const words = TEXT.split(" ");
+    let wordIdx = 0, charIdx = 0, typed = "";
+
+    const lockWrapEl = document.getElementById("lockWrap");
+    lockWrapEl.style.visibility = "hidden";
+
+    // 커서 요소
+    const cur = document.createElement("span");
+    cur.className = "cursor";
+    el.appendChild(cur);
+
+    const renderText = () => {
+      el.textContent = typed;
       el.appendChild(cur);
+    };
 
-      setTimeout(() => {
+    // 단어 끝에서 커서 2~3번 랜덤 깜빡임 후 콜백
+    const blinkOnce = (cb) => {
+      const times = 1 + Math.floor(Math.random() * 2); // 1 or 2
+      let count = 0;
+      const doBlink = () => {
+        cur.style.opacity = "0";
+        setTimeout(() => {
+          cur.style.opacity = "1";
+          count++;
+          if (count < times) setTimeout(doBlink, 300);
+          else cb();
+        }, 300);
+      };
+      cur.style.opacity = "1";
+      setTimeout(doBlink, 300);
+    };
+
+    const typeChar = () => {
+      const word = words[wordIdx];
+      charIdx++;
+      typed = words.slice(0, wordIdx).join(" ") + (wordIdx > 0 ? " " : "") + word.slice(0, charIdx);
+      renderText();
+
+      if (charIdx < word.length) {
+        // 단어 내 계속 타이핑
+        return setTimeout(typeChar, TYPE_INTERVAL());
+      }
+
+      // 단어 완성
+      if (wordIdx < words.length - 1) {
+        // 다음 단어로
+        blinkOnce(() => {
+          wordIdx++;
+          charIdx = 0;
+          setTimeout(typeChar, 150);
+        });
+      } else {
+        // 마지막 단어 완성 → 계속 깜빡이다가 자물쇠 뜰 때 사라짐
+        blinkOnce(() => {
+          cur.style.opacity = "";
+          cur.classList.add("blinking");
+          startShowLock();
+        });
+      }
+    };
+
+    const startShowLock = () => {
+      let shown = false;
+      const showLock = () => {
+        if (shown) return;
+        shown = true;
+        clearTimeout(autoTimer);
+        document.removeEventListener("mousemove", showLock);
+        document.removeEventListener("keydown", showLock);
+        document.removeEventListener("touchstart", showLock);
+        cur.classList.remove("blinking");
+        cur.style.opacity = "0";
         showIcon("lock");
+        lockWrapEl.style.visibility = "";
         btn.classList.add("show");
-        document.getElementById("lockWrap").classList.add("show");
+        lockWrapEl.classList.add("show");
         langBar?.classList.add("show");
         deviceBar?.classList.add("show");
-      }, 260);
-    }
-    setTimeout(tick, 240);
+      };
+      const autoTimer = setTimeout(showLock, 10000);
+      document.addEventListener("mousemove", showLock);
+      document.addEventListener("keydown", showLock);
+      document.addEventListener("touchstart", showLock, {passive:true});
+    };
+
+    setTimeout(typeChar, 400);
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */
     if (!isMobile) {
