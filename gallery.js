@@ -1415,9 +1415,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         if(e.persisted){
           img._rippleStarted=false;
           startRipple();
-          setTimeout(()=>{
-            document.dispatchEvent(new Event("fullscreenchange"));
-          }, 50);
+          // syncPosition 강제 재호출 - F11 토글과 동일한 효과
+          setTimeout(()=>window.dispatchEvent(new Event("resize")), 50);
+          setTimeout(()=>window.dispatchEvent(new Event("resize")), 200);
         }
       });
     }
@@ -1604,7 +1604,7 @@ function initRipple(img, sq) {
   const filter = document.createElementNS(NS, "filter");
   filter.setAttribute("id", FID);
   filter.setAttribute("x","-20%"); filter.setAttribute("y","-20%");
-  filter.setAttribute("width","120%"); filter.setAttribute("height","120%");
+  filter.setAttribute("width","140%"); filter.setAttribute("height","140%");
   filter.setAttribute("color-interpolation-filters","sRGB");
   const turb = document.createElementNS(NS, "feTurbulence");
   turb.setAttribute("type","turbulence");
