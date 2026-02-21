@@ -1415,10 +1415,8 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         if(e.persisted){
           img._rippleStarted=false;
           startRipple();
-          // 강제 repaint - bfcache 복귀 시 filter 재적용
           setTimeout(()=>{
-            const el = document.querySelector("[data-ripple-el]");
-            if(el){ el.style.display="none"; requestAnimationFrame(()=>{ el.style.display=""; }); }
+            document.dispatchEvent(new Event("fullscreenchange"));
           }, 50);
         }
       });
