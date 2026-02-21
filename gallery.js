@@ -908,9 +908,12 @@ and every moment is delicately woven.`,menuH_COPY:"Copyright",
 
 const goTo = (url) => {
   if (!url) return;
+  // 타임스탬프 추가로 bfcache 완전 무력화
+  const sep = url.includes("?") ? "&" : "?";
+  const dest = url + sep + "_t=" + Date.now();
   const bo = document.getElementById("blackout");
-  if (bo) { bo.classList.add("on"); setTimeout(() => { location.href = url; }, 200); }
-  else { location.href = url; }
+  if (bo) { bo.classList.add("on"); setTimeout(() => { location.href = dest; }, 200); }
+  else { location.href = dest; }
 };
 
 // ===== TOC HTML 생성 (버전별) =====
