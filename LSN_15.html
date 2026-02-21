@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>작가의 말 | Moments of Love</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --pad-x: clamp(18px, 4vw, 56px);
+      --pad-b: calc(24px + env(safe-area-inset-bottom));
+      --txt: rgba(235,235,235,0.86);
+      --soft: rgba(235,235,235,0.70);
+      --fade-delay: 900ms;
+      --fade-dur: 1400ms;
+    }
+    html,body{ height:100%; margin:0; background:#000; overflow:hidden;
+      font-family:"Nanum Pen Script", cursive; -webkit-text-size-adjust:100%;
+    }
+    .bg{
+      position:fixed; inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 60%, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 55%),
+        linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.22));
+      pointer-events:none;
+    }
+    .grain{
+      position:fixed; inset:-20%;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.10;
+      transform:translateZ(0);
+      pointer-events:none;
+    }
+    .wrap{
+      position:fixed; inset:0;
+      display:grid;
+      place-items:end center;
+      padding: 0 var(--pad-x) var(--pad-b) var(--pad-x);
+    }
+    .card{
+      width:min(720px, 100%);
+      color:var(--txt);
+      font-size:clamp(18px, 2.6vw, 26px);
+      line-height:1.75;
+      text-align:left;
+
+      opacity:0;
+      transform: translateY(8px);
+      transition: opacity var(--fade-dur) ease, transform var(--fade-dur) ease;
+      will-change: opacity, transform;
+    }
+    body.ready .card{ opacity:1; transform: translateY(0); }
+    .title{ color:var(--soft); letter-spacing:0.02em; margin:0 0 14px 0; font-size:clamp(20px, 2.9vw, 30px); }
+    .p{ margin:0; }
+    .gap{ height:22px; }
+
+    .back{
+      position:fixed;
+      left: max(14px, env(safe-area-inset-left));
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      color: rgba(235,235,235,0.72);
+      font-size:18px;
+      text-decoration:none;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,0.14);
+      border-radius:999px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .back:hover{ text-decoration:underline; text-underline-offset:6px; }
+
+    @media (prefers-reduced-motion: reduce){
+      .card{ transition:none; transform:none; opacity:1; }
+      body{ overflow:auto; }
+    }
+  </style>
+<style>html,body{background:#000;}</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grain"></div>
+
+  <a class="back" href="javascript:history.back()">←</a>
+
+  <div class="wrap">
+    <div class="card" aria-label="작가의 말">
+      <p class="title">narida.</p>
+      <p class="p">내리다의 옛말.</p>
+      <div class="gap"></div>
+
+      <p class="p">
+        빛이 내리고,<br>
+        마음이 내리고,<br>
+        꿈이 내리는 세상에
+      </p>
+
+      <div class="gap"></div>
+
+      <p class="p" style="color:rgba(235,235,235,0.70);">당신이 내려오면,</p>
+
+      <div class="gap"></div>
+
+      <p class="p">
+        세상과 마음은 서로에게 스며들고,<br>
+        모든 순간은 아름답게 수놓아집니다.
+      </p>
+
+      <div class="gap"></div>
+
+      <p class="p" style="color:rgba(235,235,235,0.86);">Moments of Love.</p>
+      <p class="p">모든 사랑의 순간은<br>당신으로 열립니다.</p>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => document.body.classList.add('ready'), 900);
+    });
+  </script>
+</body>
+</html>
