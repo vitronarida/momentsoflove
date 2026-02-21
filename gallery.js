@@ -1607,6 +1607,7 @@ rippleEl.style.height = `${rippleH + overlapGutter}px`;
     img.style.zIndex = "1";
 };
 
+
   syncPosition();
   window.addEventListener("resize", syncPosition);
 
