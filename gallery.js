@@ -1612,10 +1612,15 @@ function initRipple(img, sq) {
   disp.setAttribute("xChannelSelector","R");
   disp.setAttribute("yChannelSelector","G");
   filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
+  // 기존 ripple 정리 (bfcache 재진입 시 중복 방지)
+  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
+  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
+  svg.setAttribute("data-ripple-svg", "prague");
   document.body.appendChild(svg);
 
   // rippleEl은 sq 안에 - 좌표 계산 단순
   const rippleEl = document.createElement("div");
+  rippleEl.setAttribute("data-ripple-el", "prague");
   rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
@@ -1691,9 +1696,15 @@ function initRippleTop(img, sq) {
   disp.setAttribute("xChannelSelector","R");
   disp.setAttribute("yChannelSelector","G");
   filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
+
+  // 기존 ripple 정리
+  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
+  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
+  svg.setAttribute("data-ripple-svg", "dreams");
   document.body.appendChild(svg);
 
   const rippleEl = document.createElement("div");
+  rippleEl.setAttribute("data-ripple-el", "dreams");
   rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
