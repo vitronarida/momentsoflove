@@ -1412,7 +1412,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
       window.addEventListener("pageshow",(e)=>{
-        if(e.persisted){img._rippleStarted=false;startRipple();}
+        if(e.persisted){
+          img._rippleStarted=false;
+          // 두 번의 rAF로 렌더링 사이클을 거친 후 재실행 - filter resolve 보장
+          requestAnimationFrame(()=>requestAnimationFrame(()=>startRipple()));
+        }
       });
     }
   } else {
@@ -1673,7 +1677,16 @@ function initRipple(img, sq) {
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) { animRunning = false; startAnimate(); }
   });
-  setTimeout(() => { rippleEl.style.opacity = "1"; startAnimate(); }, 300);
+  setTimeout(() => {
+    // filter 강제 재적용 - 브라우저 렌더링 캐시 무효화
+    const f = clone.style.filter;
+    clone.style.filter = "none";
+    requestAnimationFrame(() => {
+      clone.style.filter = f;
+      rippleEl.style.opacity = "1";
+      startAnimate();
+    });
+  }, 300);
 }
 // ===== lpl_04 상단 일렁임 효과 =====
 function initRippleTop(img, sq) {
