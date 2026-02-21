@@ -1412,13 +1412,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
       window.addEventListener("pageshow",(e)=>{
-        if(e.persisted){
-          img._rippleStarted=false;
-          startRipple();
-          // syncPosition 강제 재호출 - F11 토글과 동일한 효과
-          setTimeout(()=>window.dispatchEvent(new Event("resize")), 50);
-          setTimeout(()=>window.dispatchEvent(new Event("resize")), 200);
-        }
+        if(e.persisted){ img._rippleStarted=false; startRipple(); }
       });
     }
   } else {
@@ -1594,11 +1588,16 @@ if(SC.id==="prague"||SC.id==="dreams"){
 // ===== 프라하 반영 일렁임 효과 =====
 function initRipple(img, sq) {
   const RIPPLE_RATIO = 0.41;
-  const FID = "prague-ripple-" + Math.random().toString(36).substr(2,6);
+  const FID = "prague-ripple";  // 고정 ID - bfcache 복귀 시에도 참조 유지
 
-  // SVG를 body에 붙임 - sq/wrap의 overflow 제한 완전 우회, url(#ID) 참조 보장
+  // 기존 요소 정리
+  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
+  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
+
+  // SVG를 sq 안에 - bfcache 복귀 시 DOM에 그대로 남아있음
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("data-ripple-svg", "prague");
   svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
   const defs = document.createElementNS(NS, "defs");
   const filter = document.createElementNS(NS, "filter");
@@ -1618,13 +1617,8 @@ function initRipple(img, sq) {
   disp.setAttribute("xChannelSelector","R");
   disp.setAttribute("yChannelSelector","G");
   filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
-  // 기존 ripple 정리 (bfcache 재진입 시 중복 방지)
-  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
-  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
-  svg.setAttribute("data-ripple-svg", "prague");
-  document.body.appendChild(svg);
+  sq.appendChild(svg);
 
-  // rippleEl은 sq 안에 - 좌표 계산 단순
   const rippleEl = document.createElement("div");
   rippleEl.setAttribute("data-ripple-el", "prague");
   rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
