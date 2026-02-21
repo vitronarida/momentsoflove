@@ -904,7 +904,16 @@ and every moment is delicately woven.`,menuH_COPY:"Copyright",
       infoEsc:"Close / Restore Full UI",copyright:"© Vitro Narida. All rights reserved."}
 };
 
-const goTo = (url) => { if (url) location.href = url; };
+const goTo = (url) => {
+  if (!url) return;
+  const bo = document.getElementById("blackout");
+  if (bo) {
+    bo.classList.add("on");
+    setTimeout(() => { location.href = url; }, 200);
+  } else {
+    location.href = url;
+  }
+};
 
 // ===== TOC HTML 생성 (버전별) =====
 const buildTOCHTML = () => {
@@ -1404,6 +1413,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);startRipple();}},16);
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
+      window.addEventListener("pageshow",(e)=>{
+        if(e.persisted){img._rippleStarted=false;startRipple();}
+      });
     }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
@@ -1603,7 +1615,7 @@ function initRipple(img, sq) {
   filter.append(turb, disp);
   defs.appendChild(filter);
   svg.appendChild(defs);
-  document.body.appendChild(svg);
+  wrap.appendChild(svg);
 
   // rippleEl을 sq의 부모(wrap)에 붙임 - sq의 overflow 제한을 완전히 우회
   const wrap = sq.parentElement;
