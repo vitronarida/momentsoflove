@@ -621,7 +621,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 #aboutGrid.about-mode .about-body{
   padding: 6px 6px 0 6px;
   font-family:"Nanum Pen Script", cursive;
-  font-size: 22px;
+  font-size: 33px;
   line-height: 1.6;
   color: rgba(235,235,235,0.90);
   white-space: pre-wrap;
@@ -635,8 +635,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 #aboutGrid.about-mode .about-body p:last-child{ margin-bottom:0; }
 
 #aboutOverlay .index-panel{
-  width: min(340px, 62vw);
-  padding: 20px 24px 32px;
+  width: min(510px, 88vw);
+  padding: 24px 32px 40px;
 }
 #aboutGrid{
   display: block !important;
@@ -1329,7 +1329,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
     if(e.key==="Escape"){if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
     if(menuOn||indexOn||aboutOn)return;
-    if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();goTo(SC.nextURL);}
+    if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
 
@@ -1475,6 +1475,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   })();
 
   if(SC.type==="fog"){
+    document.addEventListener("keydown",(e)=>{
+      if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();goTo(SC.nextURL);}
+    });
     const hero=document.getElementById("hero"),hqEl=document.getElementById("fogHq"),fogNoise=document.getElementById("fogNoise");
     FogFX.bind(fogNoise);
     hqEl.src=SC.imgSrc+"?t="+Date.now();
@@ -1550,7 +1553,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(e.key==="p"||e.key==="P"){e.preventDefault();uiMode=1;applyUIMode();return;}
     if(e.key==="t"||e.key==="T"){e.preventDefault();uiMode=2;applyUIMode();return;}
     if(menuOn||indexOn||aboutOn)return;
-    if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();goTo(SC.nextURL);}
+    if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
 
@@ -1685,10 +1688,10 @@ rippleEl.style.height = `${rippleH + overlapGutter}px`;
 
   let t = 0;
   const animate = () => {
-    const bf1 = 0.013 + Math.sin(t * 0.7) * 0.003;
-    const bf2 = 0.038 + Math.cos(t * 0.5) * 0.005;
+    const bf1 = 0.008 + Math.sin(t * 0.7) * 0.002;
+    const bf2 = 0.022 + Math.cos(t * 0.5) * 0.003;
     turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
-    const sc = 8 + Math.sin(t * 1.1) * 3;
+    const sc = 5 + Math.sin(t * 1.1) * 2;
     disp.setAttribute("scale", sc.toFixed(2));
     t += 0.016;
     requestAnimationFrame(animate);
@@ -1751,8 +1754,8 @@ function initRippleTop(img, sq) {
     rippleEl.style.top=`${rippleTop}px`; rippleEl.style.height=`${rippleH+overlapGutter}px`;
     rippleEl.style.overflow="hidden";
     rippleEl.style.transform="scale(1.05)"; rippleEl.style.transformOrigin="top center";
-    rippleEl.style.webkitMaskImage="linear-gradient(to top, transparent 0%, black 15%, black 100%)";
-    rippleEl.style.maskImage="linear-gradient(to top, transparent 0%, black 15%, black 100%)";
+    rippleEl.style.webkitMaskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
+    rippleEl.style.maskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
     clone.style.width=`${rw+(OFFSET*2)}px`; clone.style.height=`${rh+(OFFSET*2)}px`;
     clone.style.left=`${rx-OFFSET}px`; clone.style.top=`${-OFFSET}px`;
     rippleEl.style.zIndex="10"; img.style.zIndex="1";
@@ -1762,10 +1765,10 @@ function initRippleTop(img, sq) {
 
   let t=0;
   const animate=()=>{
-    const bf1=0.013+Math.sin(t*0.7)*0.0025;
-    const bf2=0.038+Math.cos(t*0.5)*0.004;
+    const bf1=0.008+Math.sin(t*0.7)*0.002;
+    const bf2=0.022+Math.cos(t*0.5)*0.003;
     turb.setAttribute("baseFrequency",`${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
-    const sc=6+Math.sin(t*1.1)*2.5;
+    const sc=3+Math.sin(t*1.1)*1.2;
     disp.setAttribute("scale",sc.toFixed(2));
     t+=0.016;
     requestAnimationFrame(animate);

@@ -396,7 +396,7 @@
 
     /* ===== 타이핑 중 Enter/Esc → 바로 이동 ===== */
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === "Escape") {
+      if (e.key === "Enter" || e.key === "Escape" || e.key === "ArrowRight") {
         try{sessionStorage.removeItem("gl_mode");}catch(err){}
         location.href = TARGET_URL;
       }
