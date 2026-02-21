@@ -1661,13 +1661,19 @@ function initRipple(img, sq) {
   document.addEventListener("fullscreenchange", handleUpdate);
 
   let t = 0;
+  let animRunning = false;
   const animate = () => {
+    if (!animRunning) return;
     turb.setAttribute("baseFrequency", `${(0.010+Math.sin(t*0.7)*0.002).toFixed(4)} ${(0.028+Math.cos(t*0.5)*0.003).toFixed(4)}`);
     disp.setAttribute("scale", (5+Math.sin(t*0.5)*2).toFixed(2));
     t += 0.016;
     requestAnimationFrame(animate);
   };
-  setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 300);
+  const startAnimate = () => { if (!animRunning) { animRunning = true; animate(); } };
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { animRunning = false; startAnimate(); }
+  });
+  setTimeout(() => { rippleEl.style.opacity = "1"; startAnimate(); }, 300);
 }
 // ===== lpl_04 상단 일렁임 효과 =====
 function initRippleTop(img, sq) {
