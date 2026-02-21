@@ -1756,10 +1756,6 @@ function initRippleTop(img, sq) {
 }
 
 // bfcache 복귀 시 항상 새로 로딩
-window.addEventListener("pageshow", (e) => {
-  if (e.persisted) { location.reload(); }
-});
-
 // 브라우저 창 포커스 복귀 시 ripple 재시작
 window.addEventListener("focus", () => {
   const img = document.querySelector(".scene-img");
@@ -1768,4 +1764,21 @@ window.addEventListener("focus", () => {
   const id = (window.THIS_SCENE||{}).id;
   if (id === "prague") { initRipple(img, sq); }
   else if (id === "dreams") { initRippleTop(img, sq); }
+});
+
+// bfcache 복귀 시 sq 크기가 0인 경우 재계산
+window.addEventListener("pageshow", (e) => {
+  if (!e.persisted) return;
+  const sq = document.getElementById("mainContent");
+  if (!sq || sq.offsetWidth > 0) return;
+  // sq가 아직 0이면 rAF로 기다렸다가 재시작
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const img = document.querySelector(".scene-img");
+      if (!img) return;
+      const id = (window.THIS_SCENE||{}).id;
+      if (id === "prague") { initRipple(img, sq); }
+      else if (id === "dreams") { initRippleTop(img, sq); }
+    });
+  });
 });
