@@ -759,7 +759,12 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 
 .nav-btn:active{
   transform: translateY(2px) scale(0.96) translateZ(0) !important;
-}`;
+}
+/* 3·4페이지: ripple이 sq 경계를 넘을 수 있도록 */
+#pragueScreen .square-frame,
+#dreamsScreen .square-frame{ overflow:visible; }
+#pragueScreen.scene,
+#dreamsScreen.scene{ overflow:visible; }`;
 
 (function(){
 
@@ -1414,7 +1419,12 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
       window.addEventListener("pageshow",(e)=>{
-        if(e.persisted){img._rippleStarted=false;startRipple();}
+        if(e.persisted){
+          img._rippleStarted=false;
+          // 기존 ripple 완전 제거 후 재생성
+          sq.querySelectorAll(".ripple-svg, .ripple-el").forEach(el=>el.remove());
+          startRipple();
+        }
       });
     }
   } else {
@@ -1587,27 +1597,34 @@ if(SC.id==="prague"||SC.id==="dreams"){
 
 })();
 
-// ===== 프라하 반영 일렁임 효과 =====
-function initRipple(img, sq) {
-  const RIPPLE_RATIO = 0.41;
-  const FILTER_ID = "prague-ripple-" + Math.random().toString(36).substr(2, 5);
-  const wrap = sq.parentElement;
+// ===== 공통 ripple 생성 함수 =====
+function createRipple(img, sq, opts) {
+  // opts: { ratio, position, filterSeed, maskDir }
+  const RATIO    = opts.ratio    || 0.41;
+  const POS      = opts.pos      || "bottom"; // "bottom" | "top"
+  const SEED     = opts.seed     || 3;
+  const FID      = "ripple-" + Math.random().toString(36).substr(2,6);
+  // 기존 ripple 제거 (bfcache 재진입 시)
+  sq.querySelectorAll(".ripple-svg, .ripple-el").forEach(el => el.remove());
 
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.style.cssText = "position:absolute; width:0; height:0; pointer-events:none; overflow:hidden;";
-  const defs = document.createElementNS(svgNS, "defs");
-  const filter = document.createElementNS(svgNS, "filter");
-  filter.setAttribute("id", FILTER_ID);
+  // SVG filter 생성
+  const NS  = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "ripple-svg");
+  svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
+  const defs   = document.createElementNS(NS, "defs");
+  const filter = document.createElementNS(NS, "filter");
+  filter.setAttribute("id", FID);
   filter.setAttribute("x", "-20%"); filter.setAttribute("y", "-20%");
   filter.setAttribute("width", "140%"); filter.setAttribute("height", "140%");
   filter.setAttribute("color-interpolation-filters", "sRGB");
-  const turb = document.createElementNS(svgNS, "feTurbulence");
+  const turb = document.createElementNS(NS, "feTurbulence");
   turb.setAttribute("type", "turbulence");
   turb.setAttribute("baseFrequency", "0.015 0.04");
   turb.setAttribute("numOctaves", "6");
+  turb.setAttribute("seed", String(SEED));
   turb.setAttribute("result", "noise");
-  const disp = document.createElementNS(svgNS, "feDisplacementMap");
+  const disp = document.createElementNS(NS, "feDisplacementMap");
   disp.setAttribute("in", "SourceGraphic");
   disp.setAttribute("in2", "noise");
   disp.setAttribute("scale", "0");
@@ -1616,147 +1633,90 @@ function initRipple(img, sq) {
   filter.append(turb, disp);
   defs.appendChild(filter);
   svg.appendChild(defs);
-  wrap.appendChild(svg);
+  sq.appendChild(svg);
 
+  // ripple 레이어
   const rippleEl = document.createElement("div");
-  rippleEl.style.cssText = "position:absolute; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
+  rippleEl.className = "ripple-el";
+  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
-  clone.style.cssText = `position:absolute; object-fit:none; filter:url(#${FILTER_ID});`;
+  clone.style.cssText = `position:absolute;object-fit:none;filter:url(#${FID});`;
   rippleEl.appendChild(clone);
-  wrap.appendChild(rippleEl);
+  sq.appendChild(rippleEl);
 
   const syncPosition = () => {
-    const sqLeft = sq.offsetLeft;
-    const sqTop = sq.offsetTop;
-    const sqH = sq.offsetHeight;
-    const sqW = sq.offsetWidth;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const sqW = sq.offsetWidth, sqH = sq.offsetHeight;
+    const iw  = img.naturalWidth, ih = img.naturalHeight;
     if (!iw || !ih) return;
 
-    const fit = (getComputedStyle(img).objectFit || "contain").toLowerCase();
-    const scale = (fit === "cover") ? Math.max(sqW / iw, sqH / ih) : Math.min(sqW / iw, sqH / ih);
+    const fit   = (getComputedStyle(img).objectFit || "contain").toLowerCase();
+    const scale = fit === "cover" ? Math.max(sqW/iw, sqH/ih) : Math.min(sqW/iw, sqH/ih);
     const rw = iw * scale, rh = ih * scale;
     const rx = (sqW - rw) / 2, ry = (sqH - rh) / 2;
-    const rippleH = rh * RIPPLE_RATIO;
-    const rippleTop = ry + rh - rippleH;
-    const rippleElTop = rippleTop - 10;
+    const rippleH = rh * RATIO;
+    const OFFSET  = 60;
+    const GUTTER  = 10;
+    const scaleX  = 1.0;
 
-    rippleEl.style.left = `${sqLeft}px`;
-    rippleEl.style.width = `${sqW}px`;
-    rippleEl.style.top = `${sqTop + rippleElTop}px`;
-    rippleEl.style.height = `${(rh + ry) - rippleElTop}px`;
-    rippleEl.style.zIndex = "10";
-    rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
-    rippleEl.style.maskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
-    const scaleX = (sqW + 240) / sqW;
+    if (POS === "bottom") {
+      // 하단 ripple (3페이지)
+      const top = ry + rh - rippleH - GUTTER;
+      rippleEl.style.top    = `${top}px`;
+      rippleEl.style.height = `${(ry + rh) - top}px`; // 이미지 하단까지
+      rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
+      rippleEl.style.maskImage       = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
+      rippleEl.style.transformOrigin = "bottom center";
+      clone.style.top = `-${(top - ry) + OFFSET}px`;
+    } else {
+      // 상단 ripple (4페이지)
+      const top = ry;
+      rippleEl.style.top    = `${top}px`;
+      rippleEl.style.height = `${rippleH + GUTTER}px`;
+      rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
+      rippleEl.style.maskImage       = "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
+      rippleEl.style.transformOrigin = "top center";
+      clone.style.top = `${-OFFSET}px`;
+    }
+
+    rippleEl.style.left      = "0px";
+    rippleEl.style.width     = `${sqW}px`;
+    rippleEl.style.zIndex    = "10";
     rippleEl.style.transform = `scaleX(${scaleX.toFixed(4)})`;
-    rippleEl.style.transformOrigin = "bottom center";
 
-    const OFFSET = 80;
-    clone.style.width  = `${rw + (OFFSET * 2)}px`;
-    clone.style.height = `${rh + (OFFSET * 2)}px`;
-    clone.style.left = `${rx - OFFSET}px`;
-    clone.style.top = `-${(rippleElTop - ry) + OFFSET}px`;
-  };
-
-  const handleUpdate = () => {
-    syncPosition();
-    setTimeout(syncPosition, 100);
-    setTimeout(syncPosition, 400);
+    clone.style.width  = `${rw + OFFSET * 2}px`;
+    clone.style.height = `${rh + OFFSET * 2}px`;
+    clone.style.left   = `${rx - OFFSET}px`;
   };
 
   syncPosition();
-  window.addEventListener("resize", handleUpdate);
-  document.addEventListener("fullscreenchange", handleUpdate);
+  window.addEventListener("resize", syncPosition);
+  document.addEventListener("fullscreenchange", () => {
+    syncPosition();
+    setTimeout(syncPosition, 150);
+    setTimeout(syncPosition, 500);
+  });
 
   let t = 0;
   const animate = () => {
     const bf1 = 0.010 + Math.sin(t * 0.7) * 0.002;
     const bf2 = 0.028 + Math.cos(t * 0.5) * 0.003;
     turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
-    const sc = 5 + Math.sin(t * 0.5) * 2;
+    const sc = POS === "bottom"
+      ? 5 + Math.sin(t * 0.5) * 2
+      : 3 + Math.sin(t * 0.5) * 1.2;
     disp.setAttribute("scale", sc.toFixed(2));
     t += 0.016;
     requestAnimationFrame(animate);
   };
 
-  setTimeout(() => {
-    rippleEl.style.opacity = "1";
-    animate();
-  }, 300);
+  setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 300);
 }
-// ===== lpl_04 상단 일렁임 효과 =====
+
+function initRipple(img, sq) {
+  createRipple(img, sq, { ratio: 0.41, pos: "bottom", seed: 3 });
+}
+
 function initRippleTop(img, sq) {
-  const RIPPLE_RATIO = 0.51;
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width","0"); svg.setAttribute("height","0");
-  svg.style.cssText = "position:absolute; overflow:hidden;";
-  const defs = document.createElementNS(svgNS, "defs");
-  const filter = document.createElementNS(svgNS, "filter");
-  filter.setAttribute("id","dreams-ripple");
-  filter.setAttribute("x","-5%"); filter.setAttribute("y","-5%");
-  filter.setAttribute("width","110%"); filter.setAttribute("height","110%");
-  filter.setAttribute("color-interpolation-filters","sRGB");
-  const turb = document.createElementNS(svgNS, "feTurbulence");
-  turb.setAttribute("type","turbulence");
-  turb.setAttribute("baseFrequency","0.015 0.04");
-  turb.setAttribute("numOctaves","6");
-  turb.setAttribute("seed","7");
-  turb.setAttribute("result","noise");
-  const disp = document.createElementNS(svgNS, "feDisplacementMap");
-  disp.setAttribute("in","SourceGraphic");
-  disp.setAttribute("in2","noise");
-  disp.setAttribute("scale","0");
-  disp.setAttribute("xChannelSelector","R");
-  disp.setAttribute("yChannelSelector","G");
-  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs); sq.appendChild(svg);
-
-  const rippleEl = document.createElement("div");
-  rippleEl.style.cssText = "position:absolute; pointer-events:none; z-index:11; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
-  const clone = img.cloneNode(false);
-  clone.removeAttribute("id");
-  const filterRef = `url(${location.href.split('#')[0]}#dreams-ripple)`;
-  clone.style.cssText = `position:absolute; object-fit:none; filter:${filterRef};`;
-  rippleEl.appendChild(clone); sq.appendChild(rippleEl);
-  img.style.zIndex = "12";
-
-  const syncPosition = () => {
-    const sqH=sq.offsetHeight, sqW=sq.offsetWidth;
-    const iw=img.naturalWidth, ih=img.naturalHeight;
-    if(!iw||!ih) return;
-    const fit=(getComputedStyle(img).objectFit||"contain").toLowerCase();
-    const scale=(fit==="cover")?Math.max(sqW/iw,sqH/ih):Math.min(sqW/iw,sqH/ih);
-    const rw=iw*scale, rh=ih*scale;
-    const rx=(sqW-rw)/2, ry=(sqH-rh)/2;
-    const rippleH=rh*RIPPLE_RATIO;
-    const rippleTop=ry;
-    const overlapGutter=10;
-    const OFFSET=30;
-    rippleEl.style.left="0px"; rippleEl.style.width=`${sqW}px`;
-    rippleEl.style.top=`${rippleTop}px`; rippleEl.style.height=`${rippleH+overlapGutter}px`;
-    rippleEl.style.overflow="hidden";
-    const scaleX2 = (sqW + 240) / sqW;
-      rippleEl.style.transform=`scaleX(${scaleX2.toFixed(4)}) scaleY(1.05)`; rippleEl.style.transformOrigin="top center";
-    rippleEl.style.webkitMaskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-    rippleEl.style.maskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-    clone.style.width=`${rw+(OFFSET*2)}px`; clone.style.height=`${rh+(OFFSET*2)}px`;
-    clone.style.left=`${rx-OFFSET}px`; clone.style.top=`${-OFFSET}px`;
-    rippleEl.style.zIndex="10"; img.style.zIndex="1";
-  };
-  syncPosition();
-  window.addEventListener("resize", syncPosition);
-
-  let t=0;
-  const animate=()=>{
-    const bf1=0.010+Math.sin(t*0.7)*0.002;
-    const bf2=0.028+Math.cos(t*0.5)*0.003;
-    turb.setAttribute("baseFrequency",`${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
-    const sc=3+Math.sin(t*0.5)*1.2;
-    disp.setAttribute("scale",sc.toFixed(2));
-    t+=0.016;
-    requestAnimationFrame(animate);
-  };
-  setTimeout(()=>{rippleEl.style.opacity="1"; animate();},200);
+  createRipple(img, sq, { ratio: 0.51, pos: "top", seed: 7 });
 }
