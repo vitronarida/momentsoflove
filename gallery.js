@@ -61,7 +61,30 @@ html, body {
   transition: opacity 800ms ease;
 }
 .scene-img.show { opacity: 1; }
-.rest-photo { position: absolute; inset: 0; background: #000; }
+.rest-photo { position: absolute; inset: 0; background: #000; display:flex; align-items:center; justify-content:center; }
+@keyframes restBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.30; }
+  50%       { transform: translateY(var(--bounce-h, -10px)); opacity: 0.65; }
+}
+.rest-ui { display:flex; align-items:center; gap:30px; }
+.rest-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(235,235,235,0.70);
+  animation: restBounce 1800ms ease-in-out infinite;
+}
+
+.rest-arrow { font-size:18px; color:rgba(235,235,235,0.65); user-select:none; line-height:1; }
+.rest-triangle {
+  width:0; height:0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 18px solid rgba(235,235,235,0.70);
+  animation: restFade 1800ms ease-in-out infinite;
+}
+@keyframes restFade {
+  0%, 100% { opacity: 0.30; }
+  50%       { opacity: 0.85; }
+}
 .work-code {
   font-size: 13px;
   color: rgba(235,235,235,0.45);
@@ -451,6 +474,21 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .hero.show-text .fog-text, .scene.show-text .scene-text{ opacity:0.92; transform: translateY(0) translateZ(0); }
   .scene.show-text .scene-text{ opacity:0.95; }
 
+  /* 쉬어가는 페이지 */
+  .rest-photo { position:absolute; inset:0; background:#000; display:flex; align-items:center; justify-content:center; }
+  @keyframes restBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.30; }
+    50%       { transform: translateY(var(--bounce-h, -10px)); opacity: 0.65; }
+  }
+  .rest-ui { display:flex; align-items:center; gap:30px; }
+  .rest-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:rgba(235,235,235,0.70);
+    animation: restBounce 1800ms ease-in-out infinite;
+  }
+  .rest-arrow { font-size:18px; color:rgba(235,235,235,0.65); user-select:none; line-height:1; }
+  .rest-triangle { width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-left:18px solid rgba(235,235,235,0.70); animation:restFade 1800ms ease-in-out infinite; }
+  @keyframes restFade { 0%, 100% { opacity:0.30; } 50% { opacity:0.85; } }
   /* 이미지 장면 */
   .scene-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000;
   opacity:0; visibility:hidden; transition: opacity var(--scene-hq-fade) ease; transform: translateZ(0); }
@@ -764,17 +802,17 @@ const SCENES_ALL = [
   {id:"LPL_02",   code:"LPL#02",kr:"무채색 풍경 위에 당신의 온기가 스며들면",   en:"When your warmth seeps into the monochrome landscape",  file:"LPL_02"},
   {id:"LPL_03",   code:"LPL#03",kr:"세상은 본연의 모습을 되찾고",               en:"The world regains its true colors",                    file:"LPL_03"},
   {id:"dreams",   code:"LPL#04",kr:"그 따스한 품안에서 사랑의 꿈이 일렁입니다", en:"In that warm embrace, dreams of love ripple",           file:"LPL_04"},
-  {id:"rest01",   code:"",      kr:",",                                         en:",",                                                    file:"rest01"},
+  {id:"rest01",   code:"",      kr:"",                                         en:"",                                                    file:"rest01"},
   {id:"dreams00", code:"LDR#00",kr:"사랑의 꿈은",                              en:"Dreams of love",                                       file:"LDR_00"},
   {id:"dreams01", code:"LDR#11",kr:"이끌림을 따라",                            en:"Following the pull",                                   file:"LDR_11"},
   {id:"dreams02", code:"LDR#21",kr:"설렘에 실려",                              en:"Carried by excitement",                                file:"LDR_21"},
   {id:"dreams03", code:"LDR#31",kr:"그리움과 함께 넓어지며",                   en:"Expanding with longing",                               file:"LDR_31"},
   {id:"dreams04", code:"LDR#41",kr:"애틋함으로 깊어져",                        en:"Deepening with tenderness",                            file:"LDR_41"},
   {id:"dreams05", code:"LDR#51",kr:"행복의 바다에 이르고",                     en:"Reaching the sea of happiness",                        file:"LDR_51"},
-  {id:"rest02",   code:"",      kr:",",                                         en:",",                                                    file:"rest02"},
+  {id:"rest02",   code:"",      kr:"",                                         en:"",                                                    file:"rest02"},
   {id:"song01",   code:"LSN#01",kr:"사랑의 노래가 되어",                       en:"Becoming a song of love",                              file:"LSN_01"},
   {id:"song02",   code:"LSN#02",kr:"당신만을 바라고 또 바라 봅니다",            en:"I gaze at you, and gaze again",                        file:"LSN_02"},
-  {id:"rest04",   code:"",      kr:"잠시, 마음의 결을 고릅니다",                en:"A moment, to refine the grain of my heart",            file:"rest04"},
+  {id:"rest04",   code:"",      kr:"",                en:"",            file:"rest04"},
   {id:"song03",   code:"LSN#03",kr:"어제, 오늘 그리고 내일",                   en:"Yesterday, today, and tomorrow",                       file:"LSN_03"},
   {id:"song04",   code:"LSN#04",kr:"하루의 모든 순간",                         en:"Every moment of the day",                              file:"LSN_04"},
   {id:"song05",   code:"LSN#05",kr:"잠 못 이루는 밤",                          en:"Sleepless nights",                                     file:"LSN_05"},
@@ -783,14 +821,14 @@ const SCENES_ALL = [
   {id:"song08",   code:"LSN#08",kr:"끝없이 샘솟는 기쁨",                       en:"Endlessly springing joy",                              file:"LSN_08"},
   {id:"song09",   code:"LSN#09",kr:"마음을 울리는 노래 속에도",                en:"Even in songs that move my heart",                     file:"LSN_09"},
   {id:"song10",   code:"LSN#10",kr:"언제나 당신이 있습니다",                   en:"You are always there",                                 file:"LSN_10"},
-  {id:"rest05",   code:"",      kr:",",                                         en:",",                                                    file:"rest05"},
+  {id:"rest05",   code:"",      kr:"",                                         en:"",                                                    file:"rest05"},
   {id:"song11",   code:"LSN#11",kr:"당신의",                                   en:"Your",                                                 file:"LSN_11"},
   {id:"song12",   code:"LSN#12",kr:"해맑은 미소와 따스한 온기에",              en:"Pure smile and warm embrace",                          file:"LSN_12"},
   {id:"song13",   code:"LSN#13",kr:"모든 순간이 낙원이 되고",                  en:"Every moment becomes paradise",                        file:"LSN_13"},
   {id:"song14",   code:"LSN#14",kr:"온 세상이 사랑으로 물들면",                en:"When the whole world is tinted with love",             file:"LSN_14"},
   {id:"song15",   code:"LSN#15",kr:"나는 당신의 사랑안에서",                   en:"In your love",                                         file:"LSN_15"},
   {id:"song16",   code:"LSN#16",kr:"새로이 태어납니다",                        en:"I am born anew",                                       file:"LSN_16"},
-  {id:"rest03",   code:"",      kr:",",                                         en:",",                                                    file:"rest03"},
+  {id:"rest03",   code:"",      kr:"",                                         en:"",                                                    file:"rest03"},
   {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상",                    en:"A world embraced by love",                             file:"LEL_01"},
 ];
 
@@ -1209,7 +1247,8 @@ if (isMobile) {
   textEl.textContent = curLang==="KR" ? SC.textKR : SC.textEN;
 
   if (SC.type === "rest") {
-    photoArea.innerHTML = `<div class="rest-photo"></div>`;
+    const hasPrev=!!SC.prevURL, hasNext=!!SC.nextURL;
+    photoArea.innerHTML = `<div class="rest-photo"><div class="rest-ui"><span class="rest-dot" style="animation-delay:0ms;--bounce-h:-10px"></span><span class="rest-dot" style="animation-delay:110ms;--bounce-h:-7px"></span><span class="rest-dot" style="animation-delay:220ms;--bounce-h:-5px"></span><span class="rest-dot" style="animation-delay:330ms;--bounce-h:-3px"></span><span class="rest-dot" style="animation-delay:440ms;--bounce-h:-1px"></span><span class="rest-triangle" style="animation-delay:440ms"></span></div></div>`;
     textEl.classList.add("show");
   } else {
     const img = document.createElement("img");
@@ -1217,27 +1256,15 @@ if (isMobile) {
     img.src = SC.imgSrc;
     const onLoad = () => {
       img.classList.add("show");
-      if(SC.id==="prague"||SC.id==="dreams"){textEl.classList.add("show");}
-      else{setTimeout(()=>textEl.classList.add("show"), 400);}
+      setTimeout(()=>textEl.classList.add("show"), 400);
     };
-    if(img.complete&&img.naturalWidth>0){
-      onLoad();
-    } else {
+    if(img.complete&&img.naturalWidth>0){onLoad();}
+    else{
       img.addEventListener("load",onLoad,{once:true});
       const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);onLoad();}},16);
       img.addEventListener("load",()=>clearInterval(poll),{once:true});
     }
     photoArea.appendChild(img);
-    if(!isMobile&&SC.id==="prague"){
-      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRipple(img,photoArea);};
-      if(img.complete&&img.naturalWidth>0){startRipple();}
-      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
-    }
-    if(!isMobile&&SC.id==="dreams"){
-      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRippleTop(img,photoArea);};
-      if(img.complete&&img.naturalWidth>0){startRipple();}
-      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
-    }
   }
 
   // 컨트롤 영역
@@ -1369,7 +1396,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
     if(!isMobile&&(SC.id==="prague"||SC.id==="dreams")){
-      const fn = SC.id==="prague" ? initRipple : initRippleTop;
+      const fn=SC.id==="prague"?initRipple:initRippleTop;
       const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;fn(img,sq);};
       if(img.complete&&img.naturalWidth>0){startRipple();}
       else{
@@ -1382,6 +1409,14 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.appendChild(txt);
+    if(SC.type==="rest"){
+      const hasPrev=!!SC.prevURL, hasNext=!!SC.nextURL;
+      const ui=document.createElement("div");
+      ui.className="rest-ui";
+      ui.style.cssText="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;";
+      ui.innerHTML=`<span class="rest-dot" style="animation-delay:0ms;--bounce-h:-10px"></span><span class="rest-dot" style="animation-delay:110ms;--bounce-h:-7px"></span><span class="rest-dot" style="animation-delay:220ms;--bounce-h:-5px"></span><span class="rest-dot" style="animation-delay:330ms;--bounce-h:-3px"></span><span class="rest-dot" style="animation-delay:440ms;--bounce-h:-1px"></span><span class="rest-triangle" style="animation-delay:440ms"></span>`;
+      sq.appendChild(ui);
+    }
   }
 
   const makeArrow=(dir,url)=>{
@@ -1460,11 +1495,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const imgEl=document.getElementById(SC.id+"Img");
     let _began=false;
     const begin=()=>{if(_began)return;_began=true;frame.classList.add("hq-show");setTimeout(()=>frame.classList.add("show-text"),TIMING.SCENE_TEXT());setTimeout(()=>frame.classList.add("nav-ready"),TIMING.SCENE_TEXT()+50);};
-    if(imgEl.complete&&imgEl.naturalWidth>0){
-      begin();
-    } else {
+    if(imgEl.complete&&imgEl.naturalWidth>0){begin();}
+    else{
       imgEl.addEventListener("load",begin,{once:true});
-      // 캐시 이미지: load 이벤트 없이 complete만 true인 경우 대비
       const poll=setInterval(()=>{if(imgEl.naturalWidth>0){clearInterval(poll);begin();}},16);
       imgEl.addEventListener("load",()=>clearInterval(poll),{once:true});
     }
@@ -1666,36 +1699,32 @@ rippleEl.style.height = `${rippleH + overlapGutter}px`;
     animate();
   }, 200);
 }
-// ===== lpl_04 상단 일렁임 효과 (CSS SVG filter) =====
+// ===== lpl_04 상단 일렁임 효과 =====
 function initRippleTop(img, sq) {
-  const RIPPLE_RATIO = 0.51; // 상단 51%
-
+  const RIPPLE_RATIO = 0.51;
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+  svg.setAttribute("width","0"); svg.setAttribute("height","0");
   svg.style.cssText = "position:absolute; overflow:hidden;";
   const defs = document.createElementNS(svgNS, "defs");
   const filter = document.createElementNS(svgNS, "filter");
-  filter.setAttribute("id", "dreams-ripple");
-  filter.setAttribute("x", "-5%"); filter.setAttribute("y", "-5%");
-  filter.setAttribute("width", "110%"); filter.setAttribute("height", "110%");
-  filter.setAttribute("color-interpolation-filters", "sRGB");
+  filter.setAttribute("id","dreams-ripple");
+  filter.setAttribute("x","-5%"); filter.setAttribute("y","-5%");
+  filter.setAttribute("width","110%"); filter.setAttribute("height","110%");
+  filter.setAttribute("color-interpolation-filters","sRGB");
   const turb = document.createElementNS(svgNS, "feTurbulence");
-  turb.setAttribute("type", "turbulence");
-  turb.setAttribute("baseFrequency", "0.015 0.04");
-  turb.setAttribute("numOctaves", "2");
-  turb.setAttribute("seed", "7");
-  turb.setAttribute("result", "noise");
+  turb.setAttribute("type","turbulence");
+  turb.setAttribute("baseFrequency","0.015 0.04");
+  turb.setAttribute("numOctaves","2");
+  turb.setAttribute("seed","7");
+  turb.setAttribute("result","noise");
   const disp = document.createElementNS(svgNS, "feDisplacementMap");
-  disp.setAttribute("in", "SourceGraphic");
-  disp.setAttribute("in2", "noise");
-  disp.setAttribute("scale", "0");
-  disp.setAttribute("xChannelSelector", "R");
-  disp.setAttribute("yChannelSelector", "G");
-  filter.append(turb, disp);
-  defs.appendChild(filter);
-  svg.appendChild(defs);
-  sq.appendChild(svg);
+  disp.setAttribute("in","SourceGraphic");
+  disp.setAttribute("in2","noise");
+  disp.setAttribute("scale","0");
+  disp.setAttribute("xChannelSelector","R");
+  disp.setAttribute("yChannelSelector","G");
+  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs); sq.appendChild(svg);
 
   const rippleEl = document.createElement("div");
   rippleEl.style.cssText = "position:absolute; pointer-events:none; z-index:11; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
@@ -1703,67 +1732,43 @@ function initRippleTop(img, sq) {
   clone.removeAttribute("id");
   const filterRef = `url(${location.href.split('#')[0]}#dreams-ripple)`;
   clone.style.cssText = `position:absolute; object-fit:none; filter:${filterRef};`;
-  rippleEl.appendChild(clone);
-  sq.appendChild(rippleEl);
-
+  rippleEl.appendChild(clone); sq.appendChild(rippleEl);
   img.style.zIndex = "12";
 
   const syncPosition = () => {
-    const sqH = sq.offsetHeight;
-    const sqW = sq.offsetWidth;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    if (!iw || !ih) return;
-
-    const fit = (getComputedStyle(img).objectFit || "contain").toLowerCase();
-    const scale = (fit === "cover") ? Math.max(sqW / iw, sqH / ih) : Math.min(sqW / iw, sqH / ih);
-
-    const rw = iw * scale;
-    const rh = ih * scale;
-    const rx = (sqW - rw) / 2;
-    const ry = (sqH - rh) / 2;
-
-    const rippleH = rh * RIPPLE_RATIO;
-    const rippleTop = ry; // 상단 시작
-
-    const overlapGutter = 10;
-    rippleEl.style.left = "0px";
-    rippleEl.style.width = `${sqW}px`;
-    rippleEl.style.top = `${rippleTop}px`;
-    rippleEl.style.height = `${rippleH + overlapGutter}px`;
-    rippleEl.style.overflow = "hidden";
-    rippleEl.style.transform = "scale(1.05)";
-    rippleEl.style.transformOrigin = "top center";
-
-    // 상단은 아래쪽을 투명하게 - 원본과 자연스럽게 이어지게
-    rippleEl.style.webkitMaskImage = "linear-gradient(to top, transparent 0%, black 15%, black 100%)";
-    rippleEl.style.maskImage = "linear-gradient(to top, transparent 0%, black 15%, black 100%)";
-
-    const OFFSET = 30;
-    clone.style.width  = `${rw + (OFFSET * 2)}px`;
-    clone.style.height = `${rh + (OFFSET * 2)}px`;
-    clone.style.left = `${rx - OFFSET}px`;
-    clone.style.top = `${-OFFSET}px`; // 상단이므로 ry 기준에서 OFFSET만 위로
-
-    rippleEl.style.zIndex = "10";
-    img.style.zIndex = "1";
+    const sqH=sq.offsetHeight, sqW=sq.offsetWidth;
+    const iw=img.naturalWidth, ih=img.naturalHeight;
+    if(!iw||!ih) return;
+    const fit=(getComputedStyle(img).objectFit||"contain").toLowerCase();
+    const scale=(fit==="cover")?Math.max(sqW/iw,sqH/ih):Math.min(sqW/iw,sqH/ih);
+    const rw=iw*scale, rh=ih*scale;
+    const rx=(sqW-rw)/2, ry=(sqH-rh)/2;
+    const rippleH=rh*RIPPLE_RATIO;
+    const rippleTop=ry;
+    const overlapGutter=10;
+    const OFFSET=30;
+    rippleEl.style.left="0px"; rippleEl.style.width=`${sqW}px`;
+    rippleEl.style.top=`${rippleTop}px`; rippleEl.style.height=`${rippleH+overlapGutter}px`;
+    rippleEl.style.overflow="hidden";
+    rippleEl.style.transform="scale(1.05)"; rippleEl.style.transformOrigin="top center";
+    rippleEl.style.webkitMaskImage="linear-gradient(to top, transparent 0%, black 15%, black 100%)";
+    rippleEl.style.maskImage="linear-gradient(to top, transparent 0%, black 15%, black 100%)";
+    clone.style.width=`${rw+(OFFSET*2)}px`; clone.style.height=`${rh+(OFFSET*2)}px`;
+    clone.style.left=`${rx-OFFSET}px`; clone.style.top=`${-OFFSET}px`;
+    rippleEl.style.zIndex="10"; img.style.zIndex="1";
   };
-
   syncPosition();
   window.addEventListener("resize", syncPosition);
 
-  let t = 0;
-  const animate = () => {
-    const bf1 = 0.013 + Math.sin(t * 0.7) * 0.0025;
-    const bf2 = 0.038 + Math.cos(t * 0.5) * 0.004;
-    turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
-    const sc = 6 + Math.sin(t * 1.1) * 2.5;
-    disp.setAttribute("scale", sc.toFixed(2));
-    t += 0.016;
+  let t=0;
+  const animate=()=>{
+    const bf1=0.013+Math.sin(t*0.7)*0.0025;
+    const bf2=0.038+Math.cos(t*0.5)*0.004;
+    turb.setAttribute("baseFrequency",`${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
+    const sc=6+Math.sin(t*1.1)*2.5;
+    disp.setAttribute("scale",sc.toFixed(2));
+    t+=0.016;
     requestAnimationFrame(animate);
   };
-
-  setTimeout(() => {
-    rippleEl.style.opacity = "1";
-    animate();
-  }, 200);
+  setTimeout(()=>{rippleEl.style.opacity="1"; animate();},200);
 }
