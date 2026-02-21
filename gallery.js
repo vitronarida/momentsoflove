@@ -1591,6 +1591,7 @@ if(SC.id==="prague"||SC.id==="dreams"){
 function initRipple(img, sq) {
   const RIPPLE_RATIO = 0.41;
   const FILTER_ID = "prague-ripple-" + Math.random().toString(36).substr(2, 5);
+  const wrap = sq.parentElement;
 
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
@@ -1617,19 +1618,15 @@ function initRipple(img, sq) {
   svg.appendChild(defs);
   wrap.appendChild(svg);
 
-  // rippleEl을 sq의 부모(wrap)에 붙임 - sq의 overflow 제한을 완전히 우회
-  const wrap = sq.parentElement;
   const rippleEl = document.createElement("div");
-  rippleEl.style.cssText = "position:absolute; pointer-events:none; overflow:hidden; opacity:1;";
+  rippleEl.style.cssText = "position:absolute; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
   const clone = img.cloneNode(false);
   clone.removeAttribute("id");
   clone.style.cssText = `position:absolute; object-fit:none; filter:url(#${FILTER_ID});`;
   rippleEl.appendChild(clone);
   wrap.appendChild(rippleEl);
-  img.style.zIndex = "12";
 
   const syncPosition = () => {
-    // sq의 wrap 내부에서의 실제 위치
     const sqLeft = sq.offsetLeft;
     const sqTop = sq.offsetTop;
     const sqH = sq.offsetHeight;
@@ -1645,16 +1642,13 @@ function initRipple(img, sq) {
     const rippleTop = ry + rh - rippleH;
     const rippleElTop = rippleTop - 10;
 
-    // wrap 기준 절대 좌표
     rippleEl.style.left = `${sqLeft}px`;
     rippleEl.style.width = `${sqW}px`;
     rippleEl.style.top = `${sqTop + rippleElTop}px`;
-    rippleEl.style.height = `${rh + ry - rippleElTop}px`; // 이미지 실제 하단까지만
+    rippleEl.style.height = `${(rh + ry) - rippleElTop}px`;
     rippleEl.style.zIndex = "10";
-
     rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
     rippleEl.style.maskImage = "linear-gradient(to bottom, transparent 0%, black 15%, black 100%)";
-
     const scaleX = (sqW + 240) / sqW;
     rippleEl.style.transform = `scaleX(${scaleX.toFixed(4)})`;
     rippleEl.style.transformOrigin = "bottom center";
@@ -1664,7 +1658,6 @@ function initRipple(img, sq) {
     clone.style.height = `${rh + (OFFSET * 2)}px`;
     clone.style.left = `${rx - OFFSET}px`;
     clone.style.top = `-${(rippleElTop - ry) + OFFSET}px`;
-    img.style.zIndex = "1";
   };
 
   const handleUpdate = () => {
@@ -1688,7 +1681,10 @@ function initRipple(img, sq) {
     requestAnimationFrame(animate);
   };
 
-  animate();
+  setTimeout(() => {
+    rippleEl.style.opacity = "1";
+    animate();
+  }, 300);
 }
 // ===== lpl_04 상단 일렁임 효과 =====
 function initRippleTop(img, sq) {
