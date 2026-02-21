@@ -1759,3 +1759,13 @@ function initRippleTop(img, sq) {
 window.addEventListener("pageshow", (e) => {
   if (e.persisted) { location.reload(); }
 });
+
+// 브라우저 창 포커스 복귀 시 ripple 재시작
+window.addEventListener("focus", () => {
+  const img = document.querySelector(".scene-img");
+  const sq  = document.getElementById("mainContent");
+  if (!img || !sq) return;
+  const id = (window.THIS_SCENE||{}).id;
+  if (id === "prague") { initRipple(img, sq); }
+  else if (id === "dreams") { initRippleTop(img, sq); }
+});
