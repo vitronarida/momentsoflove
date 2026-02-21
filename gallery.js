@@ -1604,7 +1604,7 @@ function initRipple(img, sq) {
   const filter = document.createElementNS(NS, "filter");
   filter.setAttribute("id", FID);
   filter.setAttribute("x","-20%"); filter.setAttribute("y","-20%");
-  filter.setAttribute("width","140%"); filter.setAttribute("height","140%");
+  filter.setAttribute("width","120%"); filter.setAttribute("height","120%");
   filter.setAttribute("color-interpolation-filters","sRGB");
   const turb = document.createElementNS(NS, "feTurbulence");
   turb.setAttribute("type","turbulence");
