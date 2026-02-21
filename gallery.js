@@ -447,6 +447,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .fog-text > *, .scene-text > *{ max-width:95%; display:inline-block; }
   .fog-text{ transition: opacity var(--fog-text-fade) ease, transform var(--fog-text-fade) ease; }
   .scene-text{ transition: opacity var(--scene-text-fade) ease, transform var(--scene-text-fade) ease; z-index:10; }
+  .scene-text.long-text{ height:auto; white-space:pre-wrap; overflow:visible; }
   .hero.show-text .fog-text, .scene.show-text .scene-text{ opacity:0.92; transform: translateY(0) translateZ(0); }
   .scene.show-text .scene-text{ opacity:0.95; }
 
@@ -462,6 +463,11 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .hero.show-text::after, .scene.show-text .square-frame::after{ opacity:1; }
   body.ui-hide-all .square-frame::after,
   .screen.hidden .square-frame::after{ opacity:0 !important; transition:none !important; }
+  /* prague/dreams: 그라데이션 제거, 텍스트를 ripple 위로 */
+  #pragueScreen .square-frame::after,
+  #dreamsScreen .square-frame::after{ display:none !important; }
+  #pragueScreen .scene-text,
+  #dreamsScreen .scene-text{ z-index:20 !important; }
 
   /* 오버레이 공통 */
   .overlay-panel{ position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center;
@@ -1211,11 +1217,27 @@ if (isMobile) {
     img.src = SC.imgSrc;
     const onLoad = () => {
       img.classList.add("show");
-      setTimeout(()=>textEl.classList.add("show"), 400);
+      if(SC.id==="prague"||SC.id==="dreams"){textEl.classList.add("show");}
+      else{setTimeout(()=>textEl.classList.add("show"), 400);}
     };
-    img.addEventListener("load", onLoad, {once:true});
-    if (img.complete && img.naturalWidth > 0) onLoad();
+    if(img.complete&&img.naturalWidth>0){
+      onLoad();
+    } else {
+      img.addEventListener("load",onLoad,{once:true});
+      const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);onLoad();}},16);
+      img.addEventListener("load",()=>clearInterval(poll),{once:true});
+    }
     photoArea.appendChild(img);
+    if(!isMobile&&SC.id==="prague"){
+      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRipple(img,photoArea);};
+      if(img.complete&&img.naturalWidth>0){startRipple();}
+      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
+    }
+    if(!isMobile&&SC.id==="dreams"){
+      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRippleTop(img,photoArea);};
+      if(img.complete&&img.naturalWidth>0){startRipple();}
+      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
+    }
   }
 
   // 컨트롤 영역
@@ -1346,10 +1368,15 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
-    if(SC.id==="prague"){
-      const startRipple=()=>initRipple(img,sq);
-      if(img.complete&&img.naturalWidth>0) startRipple();
-      else img.addEventListener("load",startRipple,{once:true});
+    if(!isMobile&&SC.id==="prague"){
+      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRipple(img,sq);};
+      if(img.complete&&img.naturalWidth>0){startRipple();}
+      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
+    }
+    if(!isMobile&&SC.id==="dreams"){
+      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;initRippleTop(img,sq);};
+      if(img.complete&&img.naturalWidth>0){startRipple();}
+      else{img.addEventListener("load",startRipple,{once:true});requestAnimationFrame(()=>{if(img.complete&&img.naturalWidth>0)startRipple();});}
     }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
@@ -1431,9 +1458,16 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(hqEl.complete&&hqEl.naturalWidth>0)begin();
   } else if(SC.type==="img"){
     const imgEl=document.getElementById(SC.id+"Img");
-    const begin=()=>{frame.classList.add("hq-show");setTimeout(()=>frame.classList.add("show-text"),TIMING.SCENE_TEXT());setTimeout(()=>frame.classList.add("nav-ready"),TIMING.SCENE_TEXT()+50);};
-    imgEl.addEventListener("load",begin,{once:true});
-    if(imgEl.complete&&imgEl.naturalWidth>0)begin();
+    let _began=false;
+    const begin=()=>{if(_began)return;_began=true;frame.classList.add("hq-show");setTimeout(()=>frame.classList.add("show-text"),TIMING.SCENE_TEXT());setTimeout(()=>frame.classList.add("nav-ready"),TIMING.SCENE_TEXT()+50);};
+    if(imgEl.complete&&imgEl.naturalWidth>0){
+      begin();
+    } else {
+      imgEl.addEventListener("load",begin,{once:true});
+      // 캐시 이미지: load 이벤트 없이 complete만 true인 경우 대비
+      const poll=setInterval(()=>{if(imgEl.naturalWidth>0){clearInterval(poll);begin();}},16);
+      imgEl.addEventListener("load",()=>clearInterval(poll),{once:true});
+    }
   } else {
     setTimeout(()=>frame.classList.add("show-text"),TIMING.SCENE_TEXT());
     setTimeout(()=>frame.classList.add("nav-ready"),TIMING.SCENE_TEXT()+50);
@@ -1497,6 +1531,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 
 // ===== 공통 이벤트 (반드시 DOM 삽입 후 실행) =====
 bindCommon();
+
+// ===== 3·4페이지 마우스 휠 줌 차단 =====
+if(SC.id==="prague"||SC.id==="dreams"){
+  document.addEventListener("wheel",(e)=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
+}
 
 })();
 
@@ -1617,6 +1656,107 @@ rippleEl.style.height = `${rippleH + overlapGutter}px`;
     const bf2 = 0.038 + Math.cos(t * 0.5) * 0.005;
     turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
     const sc = 8 + Math.sin(t * 1.1) * 3;
+    disp.setAttribute("scale", sc.toFixed(2));
+    t += 0.016;
+    requestAnimationFrame(animate);
+  };
+
+  setTimeout(() => {
+    rippleEl.style.opacity = "1";
+    animate();
+  }, 200);
+}
+// ===== lpl_04 상단 일렁임 효과 (CSS SVG filter) =====
+function initRippleTop(img, sq) {
+  const RIPPLE_RATIO = 0.51; // 상단 51%
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+  svg.style.cssText = "position:absolute; overflow:hidden;";
+  const defs = document.createElementNS(svgNS, "defs");
+  const filter = document.createElementNS(svgNS, "filter");
+  filter.setAttribute("id", "dreams-ripple");
+  filter.setAttribute("x", "-5%"); filter.setAttribute("y", "-5%");
+  filter.setAttribute("width", "110%"); filter.setAttribute("height", "110%");
+  filter.setAttribute("color-interpolation-filters", "sRGB");
+  const turb = document.createElementNS(svgNS, "feTurbulence");
+  turb.setAttribute("type", "turbulence");
+  turb.setAttribute("baseFrequency", "0.015 0.04");
+  turb.setAttribute("numOctaves", "2");
+  turb.setAttribute("seed", "7");
+  turb.setAttribute("result", "noise");
+  const disp = document.createElementNS(svgNS, "feDisplacementMap");
+  disp.setAttribute("in", "SourceGraphic");
+  disp.setAttribute("in2", "noise");
+  disp.setAttribute("scale", "0");
+  disp.setAttribute("xChannelSelector", "R");
+  disp.setAttribute("yChannelSelector", "G");
+  filter.append(turb, disp);
+  defs.appendChild(filter);
+  svg.appendChild(defs);
+  sq.appendChild(svg);
+
+  const rippleEl = document.createElement("div");
+  rippleEl.style.cssText = "position:absolute; pointer-events:none; z-index:11; overflow:hidden; opacity:0; transition:opacity 1.5s ease;";
+  const clone = img.cloneNode(false);
+  clone.removeAttribute("id");
+  const filterRef = `url(${location.href.split('#')[0]}#dreams-ripple)`;
+  clone.style.cssText = `position:absolute; object-fit:none; filter:${filterRef};`;
+  rippleEl.appendChild(clone);
+  sq.appendChild(rippleEl);
+
+  img.style.zIndex = "12";
+
+  const syncPosition = () => {
+    const sqH = sq.offsetHeight;
+    const sqW = sq.offsetWidth;
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    if (!iw || !ih) return;
+
+    const fit = (getComputedStyle(img).objectFit || "contain").toLowerCase();
+    const scale = (fit === "cover") ? Math.max(sqW / iw, sqH / ih) : Math.min(sqW / iw, sqH / ih);
+
+    const rw = iw * scale;
+    const rh = ih * scale;
+    const rx = (sqW - rw) / 2;
+    const ry = (sqH - rh) / 2;
+
+    const rippleH = rh * RIPPLE_RATIO;
+    const rippleTop = ry; // 상단 시작
+
+    const overlapGutter = 10;
+    rippleEl.style.left = "0px";
+    rippleEl.style.width = `${sqW}px`;
+    rippleEl.style.top = `${rippleTop}px`;
+    rippleEl.style.height = `${rippleH + overlapGutter}px`;
+    rippleEl.style.overflow = "hidden";
+    rippleEl.style.transform = "scale(1.05)";
+    rippleEl.style.transformOrigin = "top center";
+
+    // 상단은 아래쪽을 투명하게 - 원본과 자연스럽게 이어지게
+    rippleEl.style.webkitMaskImage = "linear-gradient(to top, transparent 0%, black 15%, black 100%)";
+    rippleEl.style.maskImage = "linear-gradient(to top, transparent 0%, black 15%, black 100%)";
+
+    const OFFSET = 30;
+    clone.style.width  = `${rw + (OFFSET * 2)}px`;
+    clone.style.height = `${rh + (OFFSET * 2)}px`;
+    clone.style.left = `${rx - OFFSET}px`;
+    clone.style.top = `${-OFFSET}px`; // 상단이므로 ry 기준에서 OFFSET만 위로
+
+    rippleEl.style.zIndex = "10";
+    img.style.zIndex = "1";
+  };
+
+  syncPosition();
+  window.addEventListener("resize", syncPosition);
+
+  let t = 0;
+  const animate = () => {
+    const bf1 = 0.013 + Math.sin(t * 0.7) * 0.0025;
+    const bf2 = 0.038 + Math.cos(t * 0.5) * 0.004;
+    turb.setAttribute("baseFrequency", `${bf1.toFixed(4)} ${bf2.toFixed(4)}`);
+    const sc = 6 + Math.sin(t * 1.1) * 2.5;
     disp.setAttribute("scale", sc.toFixed(2));
     t += 0.016;
     requestAnimationFrame(animate);
