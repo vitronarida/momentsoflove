@@ -1414,9 +1414,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);startRipple();}},16);
         img.addEventListener("load",()=>clearInterval(poll),{once:true});
       }
-      window.addEventListener("pageshow",(e)=>{
-        if(e.persisted){ location.reload(); }
-      });
+
     }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
@@ -1756,3 +1754,8 @@ function initRippleTop(img, sq) {
   };
   setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 200);
 }
+
+// bfcache 복귀 시 항상 새로 로딩
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted) { location.reload(); }
+});
