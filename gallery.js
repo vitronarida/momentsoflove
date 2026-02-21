@@ -1583,6 +1583,9 @@ if(SC.id==="prague"||SC.id==="dreams"){
   document.addEventListener("wheel",(e)=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
 }
 
+// bfcache 완전 비활성화
+window.addEventListener("unload", ()=>{});
+
 })();
 
 // ===== 프라하 반영 일렁임 효과 =====
