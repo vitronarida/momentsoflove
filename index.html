@@ -142,6 +142,27 @@
     [data-tooltip]:hover::after,
     [data-tooltip]:hover::before { opacity: 1; }
 
+    /* ===== skip 버튼 ===== */
+    .skip-bar {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: calc(6% + env(safe-area-inset-bottom));
+      opacity: 0; transform: translateX(-50%) translateY(6px);
+      transition: opacity 2000ms ease, transform 2000ms ease;
+      pointer-events: none;
+    }
+    .skip-bar.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+    .skip-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(235,235,235,0.70);
+      font-family: "Nanum Pen Script", cursive;
+      font-size: 13px; letter-spacing: 0.5px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .skip-btn:active { transform: scale(0.92); }
+
     /* ===== 자물쇠 버튼 ===== */
     .lock-btn {
       margin: 0;
@@ -291,6 +312,10 @@
         </button>
       </div>
 
+      <div class="skip-bar" id="skipBar">
+        <button class="skip-btn" id="skipBtn" type="button">skip</button>
+      </div>
+
       <div class="lang-bar">
         <button class="lang-btn" id="btnKR" aria-label="Korean" data-tooltip="">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" aria-hidden="true">
@@ -352,6 +377,7 @@
     const svgLock   = document.getElementById("svgLock");
     const svgUnlock = document.getElementById("svgUnlock");
     const langBar   = document.querySelector(".lang-bar");
+    const skipBar   = document.getElementById("skipBar");
     const deviceBar = document.querySelector(".device-bar");
 
     /* 아이콘 전환 헬퍼 */
@@ -488,15 +514,30 @@
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
         langBar?.classList.add("show");
+        skipBar?.classList.remove("show");
         deviceBar?.classList.add("show");
       };
       const autoTimer = setTimeout(showLock, 10000);
       document.addEventListener("mousemove", showLock);
       document.addEventListener("keydown", showLock);
       document.addEventListener("touchstart", showLock, {passive:true});
+      // 폰 흔들기
+      window.addEventListener("devicemotion", (e) => {
+        const a = e.acceleration;
+        if (!a) return;
+        const force = Math.abs(a.x||0) + Math.abs(a.y||0) + Math.abs(a.z||0);
+        if (force > 15) showLock();
+      }, {passive:true});
     };
 
     setTimeout(typeChar, 400);
+    setTimeout(() => { skipBar?.classList.add("show"); }, 400);
+
+    /* ===== skip 버튼 ===== */
+    document.getElementById("skipBtn")?.addEventListener("click", () => {
+      try{sessionStorage.removeItem("gl_mode");}catch(e){}
+      location.href = TARGET_URL;
+    });
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */
     if (!isMobile) {
