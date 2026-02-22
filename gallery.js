@@ -285,7 +285,37 @@ html, body {
 .idx-tile.idx-current { background: rgba(212,175,55,0.30); border-color: rgba(212,175,55,0.90); color: rgba(255,250,230,1); text-shadow: 0 0 10px rgba(212,175,55,0.50); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}`;
+}
+/* about 모달 - 모바일에서도 중앙 모달로 표시 */
+#aboutOverlay {
+  align-items: center;
+  justify-content: center;
+}
+#aboutOverlay .index-panel {
+  width: min(480px, 90vw);
+  max-height: 80vh;
+  border-radius: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 24px 32px;
+  transform: translateY(20px);
+}
+#aboutOverlay.on .index-panel {
+  transform: translateY(0);
+}
+#aboutGrid {
+  display: block !important;
+  width: 100%;
+}
+#aboutGrid .about-body {
+  font-family: "Nanum Pen Script", cursive;
+  font-size: 26px;
+  line-height: 1.6;
+  color: rgba(235,235,235,0.90);
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+#aboutGrid .about-body p { margin: 0 0 16px 0; }
+#aboutGrid .about-body p:last-child { margin-bottom: 0; }`;
 const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 /* CSS 변수 */
   :root{
@@ -1091,16 +1121,15 @@ const buildTOCHTML = () => {
     </div>
     <div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="aboutBackdrop"></div>
-      <div class="index-panel panel-box" role="dialog" aria-modal="true">
-        <div class="index-close" id="aboutClose" aria-label="Close">✕</div>
-        <div class="index-header">
+      <div class="index-panel">
+        <div class="toc-handle"></div>
+        <div class="toc-header" style="margin-bottom:8px;">
           <div>
             <h2 class="index-title" id="aboutTitle"></h2>
           </div>
+          <div class="toc-close" id="aboutClose">✕</div>
         </div>
-        <div class="index-body">
-          <div class="index-grid about-mode" id="aboutGrid"></div>
-        </div>
+        <div class="index-grid about-mode" id="aboutGrid"></div>
       </div>
     </div>
     <div id="app" role="main"></div>
@@ -1412,17 +1441,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
-    if(!isMobile&&(SC.id==="prague"||SC.id==="dreams")){
-      const fn=SC.id==="prague"?initRipple:initRippleTop;
-      const startRipple=()=>{if(img._rippleStarted)return;img._rippleStarted=true;fn(img,sq);};
-      if(img.complete&&img.naturalWidth>0){startRipple();}
-      else{
-        img.addEventListener("load",startRipple,{once:true});
-        const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);startRipple();}},16);
-        img.addEventListener("load",()=>clearInterval(poll),{once:true});
-      }
-
-    }
   } else {
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
@@ -1471,6 +1489,136 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   };
   sq.append(makeArrow("left",SC.prevURL),makeArrow("right",SC.nextURL));
   wrap.appendChild(sq); frame.appendChild(wrap); app.appendChild(frame);
+
+  // ===== 프라하 반영 일렁임 효과 (canvas 방식) =====
+  const _initRipple = function(img, sqEl) {
+    if(!img||!sqEl){console.warn("[ripple] invalid args");return;}
+    const RIPPLE_RATIO = 0.43;
+    sqEl.querySelectorAll("[data-ripple-canvas]").forEach(function(el){el.remove();});
+    var c = document.createElement("canvas");
+    c.setAttribute("data-ripple-canvas","prague");
+    c.style.position="absolute";
+    c.style.pointerEvents="none";
+    c.style.opacity="0";
+    c.style.transition="opacity 1.5s ease";
+    c.style.zIndex="10";
+    sqEl.appendChild(c);
+    var ctx = c.getContext("2d");
+    if(!ctx){console.warn("[ripple] no 2d context");return;}
+    var rw=0,rh=0,rx=0,ry=0,rippleH=0;
+    var syncPos=function(){
+      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!iw||!ih)return;
+      var scale=Math.min(sqW/iw,sqH/ih);
+      rw=iw*scale;rh=ih*scale;
+      rx=(sqW-rw)/2;ry=(sqH-rh)/2;
+      rippleH=Math.round(rh*RIPPLE_RATIO);
+      c.width=Math.round(rw);c.height=rippleH;
+      c.style.left=rx+"px";
+      c.style.top=(ry+rh-rippleH)+"px";
+      c.style.width=rw+"px";
+      c.style.height=rippleH+"px";
+      c.style.webkitMaskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 100%)";
+      c.style.maskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 100%)";
+    };
+    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
+    syncPos();
+    window.addEventListener("resize",onUpdate);
+    document.addEventListener("fullscreenchange",onUpdate);
+    var t=0;
+    var animate=function(){
+      var cw=c.width,ch=c.height;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!cw||!ch||!iw||!ih){t+=0.008;requestAnimationFrame(animate);return;}
+      ctx.clearRect(0,0,cw,ch);
+      var scaleX=iw/cw;
+      for(var y=0;y<ch;y++){
+        var depth=y/ch;
+        var amp=depth*cw*0.020;
+        var offsetX=Math.sin(t*1.2+y*0.04)*amp*scaleX;
+        var srcY=ih*(1-RIPPLE_RATIO)+(1-depth)*ih*RIPPLE_RATIO;
+        ctx.drawImage(img,offsetX,srcY,iw,1,0,y,cw,1);
+      }
+      t+=0.008;
+      requestAnimationFrame(animate);
+    };
+    setTimeout(function(){c.style.opacity="1";animate();},300);
+  };
+
+  // ===== lpl_04 상단 일렁임 효과 =====
+  const _initRippleTop = function(img, sqEl) {
+    if(!img||!sqEl)return;
+    var RIPPLE_RATIO=0.51;
+    var FID="dreams-ripple-"+Math.random().toString(36).substr(2,6);
+    var NS="http://www.w3.org/2000/svg";
+    var svg=document.createElementNS(NS,"svg");
+    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";svg.style.pointerEvents="none";svg.style.overflow="hidden";
+    var defs=document.createElementNS(NS,"defs");
+    var filter=document.createElementNS(NS,"filter");
+    filter.setAttribute("id",FID);
+    filter.setAttribute("x","-20%");filter.setAttribute("y","-20%");
+    filter.setAttribute("width","140%");filter.setAttribute("height","140%");
+    filter.setAttribute("color-interpolation-filters","sRGB");
+    var turb=document.createElementNS(NS,"feTurbulence");
+    turb.setAttribute("type","turbulence");
+    turb.setAttribute("baseFrequency","0.015 0.04");
+    turb.setAttribute("numOctaves","3");
+    turb.setAttribute("seed","7");
+    turb.setAttribute("result","noise");
+    var disp=document.createElementNS(NS,"feDisplacementMap");
+    disp.setAttribute("in","SourceGraphic");
+    disp.setAttribute("in2","noise");
+    disp.setAttribute("scale","0");
+    disp.setAttribute("xChannelSelector","R");
+    disp.setAttribute("yChannelSelector","G");
+    filter.append(turb,disp);defs.appendChild(filter);svg.appendChild(defs);
+    document.querySelectorAll("[data-ripple-svg]").forEach(function(el){el.remove();});
+    sqEl.querySelectorAll("[data-ripple-el]").forEach(function(el){el.remove();});
+    svg.setAttribute("data-ripple-svg","dreams");
+    document.body.appendChild(svg);
+    var rippleEl=document.createElement("div");
+    rippleEl.setAttribute("data-ripple-el","dreams");
+    rippleEl.style.position="absolute";rippleEl.style.pointerEvents="none";rippleEl.style.overflow="visible";rippleEl.style.opacity="0";rippleEl.style.transition="opacity 1.5s ease";
+    var clone=img.cloneNode(false);
+    clone.removeAttribute("id");
+    clone.style.position="absolute";clone.style.objectFit="none";clone.style.filter="url(#"+FID+")";
+    rippleEl.appendChild(clone);
+    sqEl.appendChild(rippleEl);
+    var syncPos=function(){
+      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!iw||!ih)return;
+      var scale=Math.min(sqW/iw,sqH/ih);
+      var rw=iw*scale,rh=ih*scale;
+      var rx2=(sqW-rw)/2,ry2=(sqH-rh)/2;
+      var ripH=rh*RIPPLE_RATIO;
+      var OFFSET=60;
+      rippleEl.style.left="0px";
+      rippleEl.style.width=sqW+"px";
+      rippleEl.style.top=ry2+"px";
+      rippleEl.style.height=(ripH+10)+"px";
+      rippleEl.style.zIndex="10";
+      rippleEl.style.webkitMaskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
+      rippleEl.style.maskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
+      rippleEl.style.transform="";
+      clone.style.width=(rw+OFFSET*2)+"px";
+      clone.style.height=(rh+OFFSET*2)+"px";
+      clone.style.left=(rx2-OFFSET)+"px";
+      clone.style.top=(-OFFSET)+"px";
+    };
+    syncPos();
+    window.addEventListener("resize",syncPos);
+    document.addEventListener("fullscreenchange",function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);});
+    var t2=0;
+    var animate2=function(){
+      turb.setAttribute("baseFrequency",(0.010+Math.sin(t2*0.7)*0.002).toFixed(4)+" "+(0.028+Math.cos(t2*0.5)*0.003).toFixed(4));
+      disp.setAttribute("scale",(3+Math.sin(t2*0.5)*1.2).toFixed(2));
+      t2+=0.008;
+      requestAnimationFrame(animate2);
+    };
+    setTimeout(function(){rippleEl.style.opacity="1";animate2();},200);
+  };
 
   // FOG FX
   const FogFX=(()=>{
@@ -1521,6 +1669,21 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       imgEl.addEventListener("load",begin,{once:true});
       const poll=setInterval(()=>{if(imgEl.naturalWidth>0){clearInterval(poll);begin();}},16);
       imgEl.addEventListener("load",()=>clearInterval(poll),{once:true});
+    }
+    // ===== ripple 초기화 (DOM 삽입 후) =====
+    if(!isMobile&&(SC.id==="prague"||SC.id==="dreams")){
+      const doRipple=()=>{
+        if(imgEl._rippleStarted)return;
+        imgEl._rippleStarted=true;
+        if(SC.id==="prague") _initRipple(imgEl,sq);
+        else _initRippleTop(imgEl,sq);
+      };
+      if(imgEl.complete&&imgEl.naturalWidth>0) doRipple();
+      else{
+        imgEl.addEventListener("load",doRipple,{once:true});
+        const rp=setInterval(()=>{if(imgEl.naturalWidth>0){clearInterval(rp);doRipple();}},16);
+        imgEl.addEventListener("load",()=>clearInterval(rp),{once:true});
+      }
     }
   } else {
     setTimeout(()=>frame.classList.add("show-text"),TIMING.SCENE_TEXT());
@@ -1614,198 +1777,32 @@ if(!isMobile){
 // bfcache 완전 비활성화
 window.addEventListener("unload", ()=>{});
 
-})();
-
-// ===== 프라하 반영 일렁임 효과 =====
-function initRipple(img, sq) {
-  const RIPPLE_RATIO = 0.43; /*0.41*/
-  const FID = "prague-ripple";  // 고정 ID - bfcache 복귀 시에도 참조 유지
-
-  // 기존 요소 정리
-  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
-  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
-
-  // SVG를 sq 안에 - bfcache 복귀 시 DOM에 그대로 남아있음
-  const NS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(NS, "svg");
-  svg.setAttribute("data-ripple-svg", "prague");
-  svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
-  const defs = document.createElementNS(NS, "defs");
-  const filter = document.createElementNS(NS, "filter");
-  filter.setAttribute("id", FID);
-  filter.setAttribute("x","-20%"); filter.setAttribute("y","-20%");
-  filter.setAttribute("width","140%"); filter.setAttribute("height","140%");
-  filter.setAttribute("color-interpolation-filters","sRGB");
-  const turb = document.createElementNS(NS, "feTurbulence");
-  turb.setAttribute("type","turbulence");
-  turb.setAttribute("baseFrequency","0.015 0.04");
-  turb.setAttribute("numOctaves","6");
-  turb.setAttribute("result","noise");
-  const disp = document.createElementNS(NS, "feDisplacementMap");
-  disp.setAttribute("in","SourceGraphic");
-  disp.setAttribute("in2","noise");
-  disp.setAttribute("scale","0");
-  disp.setAttribute("xChannelSelector","R");
-  disp.setAttribute("yChannelSelector","G");
-  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
-  sq.appendChild(svg);
-
-  const rippleEl = document.createElement("div");
-  rippleEl.setAttribute("data-ripple-el", "prague");
-  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.5s ease;";
-  const clone = img.cloneNode(false);
-  clone.removeAttribute("id");
-  clone.style.cssText = `position:absolute;object-fit:none;filter:url(#${FID});`;
-  rippleEl.appendChild(clone);
-  sq.appendChild(rippleEl);
-
-  const syncPosition = () => {
-    const sqW = sq.offsetWidth, sqH = sq.offsetHeight;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    if (!iw || !ih) return;
-    const scale = Math.min(sqW/iw, sqH/ih);
-    const rw = iw*scale, rh = ih*scale;
-    const rx = (sqW-rw)/2, ry = (sqH-rh)/2;
-    const rippleH = rh * RIPPLE_RATIO;
-    const top = ry + rh - rippleH - 10;
-    const OFFSET = 60;
-
-    rippleEl.style.left   = "0px";
-    rippleEl.style.width  = `${sqW}px`;
-    rippleEl.style.top    = `${top}px`;
-    rippleEl.style.height = `${(ry+rh) - top}px`;
-    rippleEl.style.zIndex = "10";
-    rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
-    rippleEl.style.maskImage       = "linear-gradient(to bottom, transparent 0%, black 18%, black 100%)";
-    rippleEl.style.transform = "";
-
-    clone.style.width  = `${rw + OFFSET*2}px`;
-    clone.style.height = `${rh + OFFSET*2}px`;
-    clone.style.left   = `${rx - OFFSET}px`;
-    clone.style.top    = `-${(top - ry) + OFFSET}px`;
-  };
-
-  const handleUpdate = () => { syncPosition(); setTimeout(syncPosition,150); setTimeout(syncPosition,500); };
-  syncPosition();
-  window.addEventListener("resize", handleUpdate);
-  document.addEventListener("fullscreenchange", handleUpdate);
-
-  let t = 0;
-  const animate = () => {
-    turb.setAttribute("baseFrequency", `${(0.010+Math.sin(t*0.7)*0.002).toFixed(4)} ${(0.028+Math.cos(t*0.5)*0.003).toFixed(4)}`);
-    disp.setAttribute("scale", (5+Math.sin(t*0.5)*2).toFixed(2));
-    t += 0.016;
-    requestAnimationFrame(animate);
-  };
-  setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 300);
-}
-// ===== lpl_04 상단 일렁임 효과 =====
-function initRippleTop(img, sq) {
-  const RIPPLE_RATIO = 0.51;
-  const FID = "dreams-ripple-" + Math.random().toString(36).substr(2,6);
-
-  const NS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(NS, "svg");
-  svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
-  const defs = document.createElementNS(NS, "defs");
-  const filter = document.createElementNS(NS, "filter");
-  filter.setAttribute("id", FID);
-  filter.setAttribute("x","-20%"); filter.setAttribute("y","-20%");
-  filter.setAttribute("width","140%"); filter.setAttribute("height","140%");
-  filter.setAttribute("color-interpolation-filters","sRGB");
-  const turb = document.createElementNS(NS, "feTurbulence");
-  turb.setAttribute("type","turbulence");
-  turb.setAttribute("baseFrequency","0.015 0.04");
-  turb.setAttribute("numOctaves","6");
-  turb.setAttribute("seed","7");
-  turb.setAttribute("result","noise");
-  const disp = document.createElementNS(NS, "feDisplacementMap");
-  disp.setAttribute("in","SourceGraphic");
-  disp.setAttribute("in2","noise");
-  disp.setAttribute("scale","0");
-  disp.setAttribute("xChannelSelector","R");
-  disp.setAttribute("yChannelSelector","G");
-  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
-
-  // 기존 ripple 정리
-  document.querySelectorAll("[data-ripple-svg]").forEach(el => el.remove());
-  sq.querySelectorAll("[data-ripple-el]").forEach(el => el.remove());
-  svg.setAttribute("data-ripple-svg", "dreams");
-  document.body.appendChild(svg);
-
-  const rippleEl = document.createElement("div");
-  rippleEl.setAttribute("data-ripple-el", "dreams");
-  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:visible;opacity:0;transition:opacity 1.5s ease;";
-  const clone = img.cloneNode(false);
-  clone.removeAttribute("id");
-  clone.style.cssText = `position:absolute;object-fit:none;filter:url(#${FID});`;
-  rippleEl.appendChild(clone);
-  sq.appendChild(rippleEl);
-
-  const syncPosition = () => {
-    const sqW = sq.offsetWidth, sqH = sq.offsetHeight;
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    if (!iw || !ih) return;
-    const scale = Math.min(sqW/iw, sqH/ih);
-    const rw = iw*scale, rh = ih*scale;
-    const rx = (sqW-rw)/2, ry = (sqH-rh)/2;
-    const rippleH = rh * RIPPLE_RATIO;
-    const OFFSET = 60;
-
-    rippleEl.style.left   = "0px";
-    rippleEl.style.width  = `${sqW}px`;
-    rippleEl.style.top    = `${ry}px`;
-    rippleEl.style.height = `${rippleH + 10}px`;
-    rippleEl.style.zIndex = "10";
-    rippleEl.style.webkitMaskImage = "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-    rippleEl.style.maskImage       = "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-    rippleEl.style.transform = `scaleX(${((sqW+200)/sqW).toFixed(4)}) scaleY(1.05)`;
-    rippleEl.style.transformOrigin = "top center";
-
-    clone.style.width  = `${rw + OFFSET*2}px`;
-    clone.style.height = `${rh + OFFSET*2}px`;
-    clone.style.left   = `${rx - OFFSET}px`;
-    clone.style.top    = `${-OFFSET}px`;
-  };
-
-  syncPosition();
-  window.addEventListener("resize", syncPosition);
-  document.addEventListener("fullscreenchange", () => { syncPosition(); setTimeout(syncPosition,150); setTimeout(syncPosition,500); });
-
-  let t = 0;
-  const animate = () => {
-    turb.setAttribute("baseFrequency", `${(0.010+Math.sin(t*0.7)*0.002).toFixed(4)} ${(0.028+Math.cos(t*0.5)*0.003).toFixed(4)}`);
-    disp.setAttribute("scale", (3+Math.sin(t*0.5)*1.2).toFixed(2));
-    t += 0.016;
-    requestAnimationFrame(animate);
-  };
-  setTimeout(() => { rippleEl.style.opacity = "1"; animate(); }, 200);
-}
-
-// bfcache 복귀 시 항상 새로 로딩
 // 브라우저 창 포커스 복귀 시 ripple 재시작
 window.addEventListener("focus", () => {
   const img = document.querySelector(".scene-img");
-  const sq  = document.getElementById("mainContent");
-  if (!img || !sq) return;
+  const sqF = document.getElementById("mainContent");
+  if (!img || !sqF) return;
   const id = (window.THIS_SCENE||{}).id;
-  if (id === "prague") { initRipple(img, sq); }
-  else if (id === "dreams") { initRippleTop(img, sq); }
+  img._rippleStarted = false;
+  if (id === "prague") _initRipple(img, sqF);
+  else if (id === "dreams") _initRippleTop(img, sqF);
 });
 
 // bfcache 복귀 시 sq 크기가 0인 경우 재계산
 window.addEventListener("pageshow", (e) => {
   if (!e.persisted) return;
-  const sq = document.getElementById("mainContent");
-  if (!sq || sq.offsetWidth > 0) return;
-  // sq가 아직 0이면 rAF로 기다렸다가 재시작
+  const sqP = document.getElementById("mainContent");
+  if (!sqP || sqP.offsetWidth > 0) return;
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const img = document.querySelector(".scene-img");
       if (!img) return;
       const id = (window.THIS_SCENE||{}).id;
-      if (id === "prague") { initRipple(img, sq); }
-      else if (id === "dreams") { initRippleTop(img, sq); }
+      img._rippleStarted = false;
+      if (id === "prague") _initRipple(img, sqP);
+      else if (id === "dreams") _initRippleTop(img, sqP);
     });
   });
 });
+
+})();
