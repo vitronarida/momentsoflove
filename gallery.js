@@ -1532,13 +1532,14 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       var iw=img.naturalWidth,ih=img.naturalHeight;
       if(!cw||!ch||!iw||!ih){t+=0.008;requestAnimationFrame(animate);return;}
       ctx.clearRect(0,0,cw,ch);
-      var scaleX=iw/cw;
+      // 물 영역(하단 RIPPLE_RATIO)을 그대로 읽되, 행별 수평 파동만 적용
+      var waterTop=ih*(1-RIPPLE_RATIO); // 소스 이미지에서 물 시작 Y
       for(var y=0;y<ch;y++){
-        var depth=y/ch;
-        var amp=depth*cw*0.020;
-        var offsetX=Math.sin(t*1.2+y*0.04)*amp*scaleX;
-        var srcY=ih*(1-RIPPLE_RATIO)+(1-depth)*ih*RIPPLE_RATIO;
-        ctx.drawImage(img,offsetX,srcY,iw,1,0,y,cw,1);
+        var depth=y/ch;                              // 0=상단, 1=하단
+        var amp=depth*cw*0.018;                      // 진폭(캔버스px), 아래로 갈수록 커짐
+        var dx=Math.sin(t*1.5+y*0.035)*amp;          // 수평 이동량(캔버스px)
+        var srcY=waterTop+depth*ih*RIPPLE_RATIO;     // 소스Y: 물 위→아래 (반전 없음)
+        ctx.drawImage(img,0,srcY,iw,1,dx,y,cw,1);   // dest X를 dx로 이동
       }
       t+=0.008;
       requestAnimationFrame(animate);
