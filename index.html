@@ -437,7 +437,7 @@
 
     /* ===== 타이핑 ===== */
     const words = TEXT.split(" ");
-    let wordIdx = 0, charIdx = 0, typed = "";
+    let wordIdx = 0, charIdx = 0, typed = "", skipped = false;
 
     const lockWrapEl = document.getElementById("lockWrap");
     lockWrapEl.style.visibility = "hidden";
@@ -454,9 +454,10 @@
 
     // 단어 끝에서 커서 2~3번 랜덤 깜빡임 후 콜백
     const blinkOnce = (cb) => {
-      const times = 1 + Math.floor(Math.random() * 2); // 1 or 2
+      const times = 1 + Math.floor(Math.random() * 2);
       let count = 0;
       const doBlink = () => {
+        if(skipped) return;
         cur.style.opacity = "0";
         setTimeout(() => {
           cur.style.opacity = "1";
@@ -470,6 +471,7 @@
     };
 
     const typeChar = () => {
+      if(skipped) return;
       const word = words[wordIdx];
       charIdx++;
       typed = words.slice(0, wordIdx).join(" ") + (wordIdx > 0 ? " " : "") + word.slice(0, charIdx);
@@ -535,8 +537,23 @@
 
     /* ===== skip 버튼 ===== */
     document.getElementById("skipBtn")?.addEventListener("click", () => {
-      try{sessionStorage.removeItem("gl_mode");}catch(e){}
-      location.href = TARGET_URL;
+      skipped = true;
+      // 타이핑 즉시 완료
+      typed = words.join(" ");
+      renderText();
+      // 커서 숨김
+      cur.classList.remove("blinking");
+      cur.style.opacity = "0";
+      cur.style.display = "none";
+      // skip 바 숨김
+      skipBar?.classList.remove("show");
+      // 아이콘 모두 표시
+      showIcon("lock");
+      lockWrapEl.style.visibility = "";
+      btn.classList.add("show");
+      lockWrapEl.classList.add("show");
+      langBar?.classList.add("show");
+      deviceBar?.classList.add("show");
     });
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */
