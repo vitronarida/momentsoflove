@@ -1573,14 +1573,15 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       rippleEl.style.top=(ry+rh-rippleH)+"px";
       rippleEl.style.height=rippleH+"px";
       rippleEl.style.zIndex="10";
-      rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent 0%, black 25%, black 100%)";
-      rippleEl.style.maskImage="linear-gradient(to bottom, transparent 0%, black 25%, black 100%)";
+      rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)";
+      rippleEl.style.maskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)";
 
-      // 클론: 원본과 동일한 크기, rippleEl 기준으로 정확히 겹치게
-      clone.style.width=rw+"px";
-      clone.style.height=rh+"px";
-      clone.style.left="0px";
-      clone.style.top=(rippleH-rh)+"px"; // 음수: 이미지 상단이 rippleEl 위로 올라감
+      // 클론을 좌우 30px 크게 만들어서 필터 가장자리 왜곡이 overflow:hidden에 잘리게
+      var PAD=30;
+      clone.style.width=(rw+PAD*2)+"px";
+      clone.style.height=(rh+PAD*2)+"px";
+      clone.style.left=(-PAD)+"px";
+      clone.style.top=(rippleH-rh-PAD)+"px"; // 음수: 이미지 상단이 rippleEl 위로 올라감
     };
     syncPos();
     var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
