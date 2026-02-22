@@ -493,6 +493,7 @@
         blinkOnce(() => {
           cur.style.opacity = "";
           cur.classList.add("blinking");
+          skipBar?.classList.remove("show");
           startShowLock();
         });
       }
@@ -514,7 +515,6 @@
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
         langBar?.classList.add("show");
-        skipBar?.classList.remove("show");
         deviceBar?.classList.add("show");
       };
       const autoTimer = setTimeout(showLock, 10000);

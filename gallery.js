@@ -1591,6 +1591,26 @@ if(SC.id==="prague"||SC.id==="dreams"){
   document.addEventListener("wheel",(e)=>{if(e.ctrlKey)e.preventDefault();},{passive:false});
 }
 
+// ===== 터치패드 스와이프 (데스크탑 모드) =====
+if(!isMobile){
+  let wheelTimer = null;
+  document.addEventListener("wheel",(e)=>{
+    if(e.ctrlKey) return; // 줌은 무시
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(()=>{
+      const dx = e.deltaX, dy = e.deltaY;
+      // 더 큰 축 기준으로 방향 판단
+      if(Math.abs(dx) >= Math.abs(dy)){
+        if(dx > 30) goTo(SC.nextURL);
+        else if(dx < -30) goTo(SC.prevURL);
+      } else {
+        if(dy > 30) goTo(SC.nextURL);
+        else if(dy < -30) goTo(SC.prevURL);
+      }
+    }, 50);
+  },{passive:true});
+}
+
 // bfcache 완전 비활성화
 window.addEventListener("unload", ()=>{});
 
