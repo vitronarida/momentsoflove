@@ -476,9 +476,9 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .hero.hq-show .fog-hq{ opacity:1; visibility:visible; }
   .hero.lqip-hide .fog-lqip{ opacity:0; }
   .overlay{ position:absolute; inset:0; z-index:4; background: rgba(0,0,0,0.16); pointer-events:none; }
-  .fog{ position:absolute; inset:-12%; z-index:5; background:url("../assets/fog-noise.png") repeat; mix-blend-mode:screen;
+  .fog{ position:absolute; inset:-12%; z-index:5; background-repeat:repeat; mix-blend-mode:screen;
   opacity: var(--fog-opacity, var(--fog-opacity-base));
-  transition: opacity 1200ms ease;
+  transition: opacity 4000ms ease;
    pointer-events:none; transform: translateZ(0); }
   .fog.animated{ animation:fogDrift var(--fog-duration) linear infinite; }
   @keyframes fogDrift{
@@ -1433,6 +1433,21 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const hq=document.createElement("img"); hq.className="bg fog-hq"; hq.id="fogHq"; hq.alt="";
     const ov=document.createElement("div"); ov.className="overlay";
     const fog=document.createElement("div"); fog.className="fog"; fog.id="fogNoise"; fog.setAttribute("aria-hidden","true");
+    // fog-noise.png 대체: Canvas로 랜덤 노이즈 텍스처 생성
+    (function(){
+      var sz=256; // 타일 크기 (256x256, 반복)
+      var cv=document.createElement("canvas"); cv.width=sz; cv.height=sz;
+      var cx=cv.getContext("2d");
+      var id=cx.createImageData(sz,sz);
+      var d=id.data;
+      for(var i=0;i<d.length;i+=4){
+        var v=Math.random()*255|0;
+        d[i]=v; d[i+1]=v; d[i+2]=v; d[i+3]=255;
+      }
+      cx.putImageData(id,0,0);
+      fog.style.backgroundImage="url("+cv.toDataURL("image/png")+")";
+      fog.style.backgroundRepeat="repeat";
+    })();
     const txt=document.createElement("div"); txt.className="fog-text long-text"; txt.id="fogText";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     hero.append(lqip,hq,ov,fog,txt); sq.appendChild(hero);
@@ -1493,68 +1508,15 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   // ===== 프라하 반영 일렁임 효과 (canvas 방식) =====
   const _initRipple = function(img, sqEl) {
     if(!img||!sqEl){console.warn("[ripple] invalid args");return;}
-    const RIPPLE_RATIO = 0.43;
-    sqEl.querySelectorAll("[data-ripple-canvas]").forEach(function(el){el.remove();});
-    var c = document.createElement("canvas");
-    c.setAttribute("data-ripple-canvas","prague");
-    c.style.position="absolute";
-    c.style.pointerEvents="none";
-    c.style.opacity="0";
-    c.style.transition="opacity 1.5s ease";
-    c.style.zIndex="10";
-    sqEl.appendChild(c);
-    var ctx = c.getContext("2d");
-    if(!ctx){console.warn("[ripple] no 2d context");return;}
-    var rw=0,rh=0,rx=0,ry=0,rippleH=0;
-    var syncPos=function(){
-      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
-      var iw=img.naturalWidth,ih=img.naturalHeight;
-      if(!iw||!ih)return;
-      var scale=Math.min(sqW/iw,sqH/ih);
-      rw=iw*scale;rh=ih*scale;
-      rx=(sqW-rw)/2;ry=(sqH-rh)/2;
-      rippleH=Math.round(rh*RIPPLE_RATIO);
-      c.width=Math.round(rw);c.height=rippleH;
-      c.style.left=rx+"px";
-      c.style.top=(ry+rh-rippleH)+"px";
-      c.style.width=rw+"px";
-      c.style.height=rippleH+"px";
-      c.style.webkitMaskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 100%)";
-      c.style.maskImage="linear-gradient(to bottom, transparent 0%, black 20%, black 100%)";
-    };
-    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
-    syncPos();
-    window.addEventListener("resize",onUpdate);
-    document.addEventListener("fullscreenchange",onUpdate);
-    var t=0;
-    var animate=function(){
-      var cw=c.width,ch=c.height;
-      var iw=img.naturalWidth,ih=img.naturalHeight;
-      if(!cw||!ch||!iw||!ih){t+=0.008;requestAnimationFrame(animate);return;}
-      ctx.clearRect(0,0,cw,ch);
-      // 물 영역(하단 RIPPLE_RATIO)을 그대로 읽되, 행별 수평 파동만 적용
-      var waterTop=ih*(1-RIPPLE_RATIO); // 소스 이미지에서 물 시작 Y
-      for(var y=0;y<ch;y++){
-        var depth=y/ch;                              // 0=상단, 1=하단
-        var amp=depth*cw*0.018;                      // 진폭(캔버스px), 아래로 갈수록 커짐
-        var dx=Math.sin(t*1.5+y*0.035)*amp;          // 수평 이동량(캔버스px)
-        var srcY=waterTop+depth*ih*RIPPLE_RATIO;     // 소스Y: 물 위→아래 (반전 없음)
-        ctx.drawImage(img,0,srcY,iw,1,dx,y,cw,1);   // dest X를 dx로 이동
-      }
-      t+=0.008;
-      requestAnimationFrame(animate);
-    };
-    setTimeout(function(){c.style.opacity="1";animate();},300);
-  };
+    const RIPPLE_RATIO = 0.43; // 소스 이미지에서 물 영역 비율
+    const SCREEN_RATIO = 0.40; // 화면 대비 일렁임 높이
+    var FID="prague-ripple-"+Math.random().toString(36).substr(2,6);
 
-  // ===== lpl_04 상단 일렁임 효과 =====
-  const _initRippleTop = function(img, sqEl) {
-    if(!img||!sqEl)return;
-    var RIPPLE_RATIO=0.51;
-    var FID="dreams-ripple-"+Math.random().toString(36).substr(2,6);
+    // SVG 필터 생성 (feTurbulence + feDisplacementMap)
     var NS="http://www.w3.org/2000/svg";
     var svg=document.createElementNS(NS,"svg");
-    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";svg.style.pointerEvents="none";svg.style.overflow="hidden";
+    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";
+    svg.style.pointerEvents="none";svg.style.overflow="hidden";
     var defs=document.createElementNS(NS,"defs");
     var filter=document.createElementNS(NS,"filter");
     filter.setAttribute("id",FID);
@@ -1563,9 +1525,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     filter.setAttribute("color-interpolation-filters","sRGB");
     var turb=document.createElementNS(NS,"feTurbulence");
     turb.setAttribute("type","turbulence");
-    turb.setAttribute("baseFrequency","0.015 0.04");
+    turb.setAttribute("baseFrequency","0.012 0.035");
     turb.setAttribute("numOctaves","3");
-    turb.setAttribute("seed","7");
+    turb.setAttribute("seed","42");
     turb.setAttribute("result","noise");
     var disp=document.createElementNS(NS,"feDisplacementMap");
     disp.setAttribute("in","SourceGraphic");
@@ -1574,48 +1536,171 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     disp.setAttribute("xChannelSelector","R");
     disp.setAttribute("yChannelSelector","G");
     filter.append(turb,disp);defs.appendChild(filter);svg.appendChild(defs);
-    document.querySelectorAll("[data-ripple-svg]").forEach(function(el){el.remove();});
-    sqEl.querySelectorAll("[data-ripple-el]").forEach(function(el){el.remove();});
-    svg.setAttribute("data-ripple-svg","dreams");
+
+    // 기존 요소 정리
+    sqEl.querySelectorAll("[data-ripple-canvas]").forEach(function(el){el.remove();});
+    document.querySelectorAll("[data-ripple-svg-prague]").forEach(function(el){el.remove();});
+    sqEl.querySelectorAll("[data-ripple-el-prague]").forEach(function(el){el.remove();});
+    svg.setAttribute("data-ripple-svg-prague","1");
     document.body.appendChild(svg);
+
+    // 물결 레이어: 이미지 클론 + SVG 필터 적용
     var rippleEl=document.createElement("div");
-    rippleEl.setAttribute("data-ripple-el","dreams");
-    rippleEl.style.position="absolute";rippleEl.style.pointerEvents="none";rippleEl.style.overflow="visible";rippleEl.style.opacity="0";rippleEl.style.transition="opacity 1.5s ease";
+    rippleEl.setAttribute("data-ripple-el-prague","1");
+    rippleEl.style.position="absolute";
+    rippleEl.style.pointerEvents="none";
+    rippleEl.style.overflow="hidden";
+    rippleEl.style.opacity="0";
+    rippleEl.style.transition="opacity 1.5s ease";
     var clone=img.cloneNode(false);
     clone.removeAttribute("id");
-    clone.style.position="absolute";clone.style.objectFit="none";clone.style.filter="url(#"+FID+")";
+    clone.style.position="absolute";
+    clone.style.filter="url(#"+FID+")";
     rippleEl.appendChild(clone);
     sqEl.appendChild(rippleEl);
+
     var syncPos=function(){
       var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
       var iw=img.naturalWidth,ih=img.naturalHeight;
       if(!iw||!ih)return;
       var scale=Math.min(sqW/iw,sqH/ih);
       var rw=iw*scale,rh=ih*scale;
-      var rx2=(sqW-rw)/2,ry2=(sqH-rh)/2;
-      var ripH=rh*RIPPLE_RATIO;
-      var OFFSET=60;
-      rippleEl.style.left="0px";
-      rippleEl.style.width=sqW+"px";
-      rippleEl.style.top=ry2+"px";
-      rippleEl.style.height=(ripH+10)+"px";
+      var rx=(sqW-rw)/2,ry=(sqH-rh)/2;
+      var rippleH=Math.round(sqH*SCREEN_RATIO);
+
+      rippleEl.style.left=rx+"px";
+      rippleEl.style.width=rw+"px";
+      rippleEl.style.top=(ry+rh-rippleH)+"px";
+      rippleEl.style.height=rippleH+"px";
       rippleEl.style.zIndex="10";
-      rippleEl.style.webkitMaskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-      rippleEl.style.maskImage="linear-gradient(to bottom, black 0%, black 60%, transparent 100%)";
-      rippleEl.style.transform="";
-      clone.style.width=(rw+OFFSET*2)+"px";
-      clone.style.height=(rh+OFFSET*2)+"px";
-      clone.style.left=(rx2-OFFSET)+"px";
-      clone.style.top=(-OFFSET)+"px";
+      rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent 0%, black 25%, black 100%)";
+      rippleEl.style.maskImage="linear-gradient(to bottom, transparent 0%, black 25%, black 100%)";
+
+      // 클론: 원본과 동일한 크기, rippleEl 기준으로 정확히 겹치게
+      clone.style.width=rw+"px";
+      clone.style.height=rh+"px";
+      clone.style.left="0px";
+      clone.style.top=(rippleH-rh)+"px"; // 음수: 이미지 상단이 rippleEl 위로 올라감
     };
     syncPos();
-    window.addEventListener("resize",syncPos);
-    document.addEventListener("fullscreenchange",function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);});
+    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
+    window.addEventListener("resize",onUpdate);
+    document.addEventListener("fullscreenchange",onUpdate);
+
+    // 애니메이션: feTurbulence 파라미터를 서서히 변경
+    var t=0;
+    var animate=function(){
+      turb.setAttribute("baseFrequency",
+        (0.010+Math.sin(t*0.7)*0.003).toFixed(4)+" "+
+        (0.030+Math.cos(t*0.5)*0.005).toFixed(4)
+      );
+      disp.setAttribute("scale",(4+Math.sin(t*0.4)*2.0+Math.cos(t*0.7)*1.0).toFixed(2));
+      t+=0.012;
+      requestAnimationFrame(animate);
+    };
+    setTimeout(function(){rippleEl.style.opacity="1";animate();},300);
+  };
+
+  // ===== lpl_04 숨쉬는 물결 효과 (맥동 + 미세 떨림) =====
+  const _initRippleTop = function(img, sqEl) {
+    if(!img||!sqEl)return;
+    var FID="dreams-breath-"+Math.random().toString(36).substr(2,6);
+    var NS="http://www.w3.org/2000/svg";
+
+    // SVG 필터: 미세한 고주파 노이즈
+    var svg=document.createElementNS(NS,"svg");
+    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";
+    svg.style.pointerEvents="none";svg.style.overflow="hidden";
+    var defs=document.createElementNS(NS,"defs");
+    var filter=document.createElementNS(NS,"filter");
+    filter.setAttribute("id",FID);
+    filter.setAttribute("x","-10%");filter.setAttribute("y","-10%");
+    filter.setAttribute("width","120%");filter.setAttribute("height","120%");
+    filter.setAttribute("color-interpolation-filters","sRGB");
+    var turb=document.createElementNS(NS,"feTurbulence");
+    turb.setAttribute("type","turbulence");
+    turb.setAttribute("baseFrequency","0.020 0.045"); // 고주파 = 미세 떨림
+    turb.setAttribute("numOctaves","3");
+    turb.setAttribute("seed","11");
+    turb.setAttribute("result","noise");
+    var disp=document.createElementNS(NS,"feDisplacementMap");
+    disp.setAttribute("in","SourceGraphic");
+    disp.setAttribute("in2","noise");
+    disp.setAttribute("scale","0");
+    disp.setAttribute("xChannelSelector","R");
+    disp.setAttribute("yChannelSelector","G");
+    filter.append(turb,disp);defs.appendChild(filter);svg.appendChild(defs);
+
+    // 기존 요소 정리
+    document.querySelectorAll("[data-ripple-svg]").forEach(function(el){el.remove();});
+    sqEl.querySelectorAll("[data-ripple-el]").forEach(function(el){el.remove();});
+    svg.setAttribute("data-ripple-svg","dreams");
+    document.body.appendChild(svg);
+
+    // 전체 화면 레이어
+    var rippleEl=document.createElement("div");
+    rippleEl.setAttribute("data-ripple-el","dreams");
+    rippleEl.style.position="absolute";
+    rippleEl.style.pointerEvents="none";
+    rippleEl.style.overflow="hidden";
+    rippleEl.style.opacity="0";
+    rippleEl.style.transition="opacity 1.5s ease";
+    rippleEl.style.transformOrigin="center center";
+    var clone=img.cloneNode(false);
+    clone.removeAttribute("id");
+    clone.style.position="absolute";
+    clone.style.filter="url(#"+FID+")";
+    clone.style.transformOrigin="center center";
+    rippleEl.appendChild(clone);
+    sqEl.appendChild(rippleEl);
+
+    var rw=0,rh=0;
+    var syncPos=function(){
+      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!iw||!ih)return;
+      var scale=Math.min(sqW/iw,sqH/ih);
+      rw=iw*scale;rh=ih*scale;
+      var rx=(sqW-rw)/2,ry=(sqH-rh)/2;
+
+      rippleEl.style.left=rx+"px";
+      rippleEl.style.width=rw+"px";
+      rippleEl.style.top=ry+"px";
+      rippleEl.style.height=rh+"px";
+      rippleEl.style.zIndex="10";
+
+      // 마스크: 백조 라인(~53%) 아래는 효과 없음
+      var maskVal="linear-gradient(to bottom, black 0%, black 45%, transparent 55%, transparent 100%)";
+      rippleEl.style.webkitMaskImage=maskVal;
+      rippleEl.style.maskImage=maskVal;
+
+      clone.style.width=rw+"px";
+      clone.style.height=rh+"px";
+      clone.style.left="0px";
+      clone.style.top="0px";
+    };
+    syncPos();
+    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
+    window.addEventListener("resize",onUpdate);
+    document.addEventListener("fullscreenchange",onUpdate);
+
+    // 애니메이션: 느린 맥동(스케일) + 미세 떨림(SVG 필터)
     var t2=0;
     var animate2=function(){
-      turb.setAttribute("baseFrequency",(0.010+Math.sin(t2*0.7)*0.002).toFixed(4)+" "+(0.028+Math.cos(t2*0.5)*0.003).toFixed(4));
-      disp.setAttribute("scale",(3+Math.sin(t2*0.5)*1.2).toFixed(2));
-      t2+=0.008;
+      // 미세 떨림: 고주파 노이즈 파라미터 변동
+      turb.setAttribute("baseFrequency",
+        (0.018+Math.sin(t2*1.1)*0.004).toFixed(4)+" "+
+        (0.040+Math.cos(t2*0.8)*0.008).toFixed(4)
+      );
+      disp.setAttribute("scale",(2.5+Math.sin(t2*0.6)*1.0+Math.cos(t2*0.9)*0.5).toFixed(2));
+
+      // 느린 맥동: 아주 미세한 스케일 변화 (숨쉬는 느낌)
+      var breathScale=1.0+Math.sin(t2*0.15)*0.004+Math.sin(t2*0.08)*0.002;
+      var breathX=Math.sin(t2*0.12)*0.3;
+      var breathY=Math.cos(t2*0.09)*0.2;
+      clone.style.transform="scale("+breathScale.toFixed(5)+") translate("+breathX.toFixed(2)+"px,"+breathY.toFixed(2)+"px)";
+
+      t2+=0.01;
       requestAnimationFrame(animate2);
     };
     setTimeout(function(){rippleEl.style.opacity="1";animate2();},200);
@@ -1633,8 +1718,8 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
           root.style.setProperty("--fog-y",rnd(-2.0,2.0).toFixed(2)+"%");
           root.style.setProperty("--fog-scale-min",rnd(1.01,1.04).toFixed(3));
           root.style.setProperty("--fog-scale-max",(parseFloat(rnd(1.01,1.04).toFixed(3))+rnd(0.01,0.03)).toFixed(3));
-          if(fogEl)fogEl.style.setProperty("--fog-opacity",rnd(0.03,0.22).toFixed(3));
-          timer=setTimeout(tick,Math.floor(rnd(12000,24000)));
+          if(fogEl)fogEl.style.setProperty("--fog-opacity",rnd(0.05,0.18).toFixed(3));
+          timer=setTimeout(tick,Math.floor(rnd(30000,55000)));
         };
         tick();
       }
@@ -1653,10 +1738,14 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       if(started)return;started=true;
       setTimeout(()=>{
         hero.classList.add("hq-show");
-        fogNoise.style.opacity="0"; requestAnimationFrame(()=>{void fogNoise.offsetHeight; fogNoise.style.opacity=""; fogNoise.classList.add("animated"); FogFX.start();});
         setTimeout(()=>hero.classList.add("lqip-hide"),TIMING.FOG_HQ());
         setTimeout(()=>hero.classList.add("show-text"),TIMING.FOG_TEXT());
         setTimeout(()=>frame.classList.add("nav-ready"),TIMING.FOG_TEXT()+50);
+        // 안개: HQ 이미지 페이드인 완료 후 시작
+        setTimeout(()=>{
+          fogNoise.style.opacity="0";
+          requestAnimationFrame(()=>{void fogNoise.offsetHeight; fogNoise.style.opacity=""; fogNoise.classList.add("animated"); FogFX.start();});
+        },TIMING.FOG_HQ()+500);
       },TIMING.FOG_MIN_LQIP());
     };
     hqEl.addEventListener("load",begin,{once:true});
