@@ -20,8 +20,8 @@
     }
     .frame {
       position: relative;
-      width: min(100vw, 100vh);
-      height: min(100vw, 100vh);
+      width: min(100vw, var(--vh100, 100vh));
+      height: min(100vw, var(--vh100, 100vh));
       display: grid; place-items: center;
       background: #2e2e2e;
       padding-bottom: max(env(safe-area-inset-bottom), 18px);
@@ -334,6 +334,13 @@
   </div>
 
   <script>
+    // 실제 viewport 높이 측정 (모바일 주소창 문제 해결)
+    const setVh = () => {
+      document.documentElement.style.setProperty('--vh100', window.innerHeight + 'px');
+    };
+    setVh();
+    window.addEventListener('resize', setVh);
+
     const TEXTS = {
       KR: "모든 사랑의 순간은 당신으로 열립니다",
       EN: "Every moment of love opens with you"

@@ -328,7 +328,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .scene{ background:#000; overflow:hidden; }
   .scene-wrap{ position:relative; width:100%; height:100%; background:#000; }
   .square-frame{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) translateZ(0);
-  width:min(100vw, 100vh); aspect-ratio: 1 / 1; background:#000; overflow:hidden; }
+  width:min(100vw, var(--vh100, 100vh)); aspect-ratio: 1 / 1; background:#000; overflow:hidden; }
 
   /* 작품 채번 */
   .work-code{ position:absolute; top:calc(6% + 26px); left:50%; transform: translateX(-50%) translateY(-50%) translateZ(0); z-index:55;
@@ -780,6 +780,13 @@ const isMobile = (() => {
 const styleEl = document.createElement("style");
 styleEl.textContent = isMobile ? CSS_MOBILE : CSS_DESKTOP;
 document.head.appendChild(styleEl);
+
+// 실제 viewport 높이 측정 (모바일 주소창 문제 해결)
+const setVh = () => {
+  document.documentElement.style.setProperty("--vh100", window.innerHeight + "px");
+};
+setVh();
+window.addEventListener("resize", setVh);
 
 // ===== 언어 감지 =====
 const detectLang = () => {
