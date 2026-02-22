@@ -83,7 +83,6 @@ html, body {
   animation: restBounce 1800ms ease-in-out infinite;
 }
 
-.rest-arrow { font-size:18px; color:rgba(235,235,235,0.65); user-select:none; line-height:1; }
 .rest-triangle {
   width:0; height:0;
   border-top: 10px solid transparent;
@@ -243,8 +242,6 @@ html, body {
 }
 .toc-item:last-child { border-bottom: none; }
 .toc-item:hover .toc-text{ text-decoration: underline; text-underline-offset: 6px; }
-.menu-h-link{ cursor:pointer; }
-.menu-h-link:hover{ text-decoration: underline; text-underline-offset: 6px; }
 
 .toc-item.toc-current { color: rgba(212,175,55,0.95); text-shadow: 0 0 8px rgba(212,175,55,0.30); }
 .toc-bullet { font-size: 10px; opacity: 0; }
@@ -526,7 +523,6 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
     background:rgba(235,235,235,0.70);
     animation: restBounce 1800ms ease-in-out infinite;
   }
-  .rest-arrow { font-size:18px; color:rgba(235,235,235,0.65); user-select:none; line-height:1; }
   .rest-triangle { width:0; height:0; border-top:10px solid transparent; border-bottom:10px solid transparent; border-left:18px solid rgba(235,235,235,0.70); animation:restFade 1800ms ease-in-out infinite; }
   @keyframes restFade { 0%, 100% { opacity:0.30; } 50% { opacity:0.85; } }
   /* 이미지 장면 */
@@ -714,11 +710,6 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .idx-tile[data-title]:hover::after, .idx-tile[data-title]:focus-visible::after{ 
   opacity:1; transform: translateX(-50%) translateY(0); }
 
-  @keyframes idxPulse{
-  0%  { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
-  50%  { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
-  100% { box-shadow: 0 3px 8px rgba(0,0,0,0.03); }
-  }
   .idx-tile.idx-current{ opacity:1; background: rgba(212,175,55,0.22); border-color: rgba(212,175,55,1); 
   color: rgba(255,250,230,1); text-shadow: 0 0 10px rgba(212,175,55,0.35); 
    }
@@ -750,22 +741,15 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
     *, *::before, *::after{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
     .fog.animated{ animation:none !important; }
   }
-    
 
-/* ===== 054 UPDATE : 하단 화살표 눌림 효과 ===== */
+/* nav/work-code 인터랙션 */
 .nav-arrow.nav-btn:hover{
   transform: translateY(1px) scale(0.98) translateZ(0);
   box-shadow: 0 0 18px rgba(212,175,55,0.18);
 }
-
 .nav-arrow.nav-btn:active{
   transform: translateY(2px) scale(0.95) translateZ(0);
 }
-
-
-
-
-/* ===== 059 UPDATE : 작품 번호 UI 톤 통일 ===== */
 .work-code{
   background: rgba(255,255,255,0.035);
   border: 1px solid rgba(255,255,255,0.05);
@@ -774,29 +758,20 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   padding: 6px 14px;
   border-radius: 18px;
 }
-
 .work-code:hover{
   background: rgba(255,255,255,0.035);
   border-color: rgba(255,255,255,0.05);
   box-shadow: 0 0 18px rgba(212,175,55,0.18);
   transform: translateX(-50%) translateY(calc(-50% + 1px)) scale(0.985) translateZ(0);
 }
-
 .work-code span{
   color: rgba(235,235,235,0.58);
   text-shadow: none;
 }
-
-
-
-
-/* ===== 064 UPDATE : 버튼 인터랙션 통일 ===== */
-
 .nav-btn:hover{
   transform: translateY(1px) scale(0.985) translateZ(0) !important;
   box-shadow: 0 0 18px rgba(212,175,55,0.18);
 }
-
 .nav-btn:active{
   transform: translateY(2px) scale(0.96) translateZ(0) !important;
 }
@@ -1211,11 +1186,8 @@ const IndexManager = {
     ov.classList.remove("on"); ov.setAttribute("aria-hidden","true");
     const grid=document.getElementById("indexGrid");
     grid?.classList.remove("about-mode");
-    // ✅ 잔상 방지: 페이드아웃 종료 후 내용 정리
     setTimeout(()=>{
       if(ov) ov.style.display="none";
-      if(grid && grid.classList.contains("about-mode")==false){ /* noop */ }
-      // about 모드였든 아니든, 잔상 방지 차원에서 내부를 정리
       if(grid){ grid.innerHTML = ""; }
     }, 420);
   }
@@ -1289,6 +1261,14 @@ const bindCommon = () => {
 
 // ===== 효과 함수 선언 (모바일/데스크탑 공통) =====
 var _initRipple, _initRippleTop, FogFX;
+var _makeNoiseBg = function(el){
+  var sz=256,cv=document.createElement("canvas");cv.width=sz;cv.height=sz;
+  var cx=cv.getContext("2d"),id=cx.createImageData(sz,sz),d=id.data;
+  for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=255;}
+  cx.putImageData(id,0,0);
+  el.style.backgroundImage="url("+cv.toDataURL("image/png")+")";
+  el.style.backgroundRepeat="repeat";
+};
 
 // FOG FX (모바일/데스크탑 공통)
 FogFX=(()=>{
@@ -1527,7 +1507,6 @@ FogFX=(()=>{
         clone.style.top="0px";
       }
       clone.style.transformOrigin="center center";
-      clone.style.transform="scale(1.015)";
     };
     syncPos();
     var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
@@ -1550,7 +1529,7 @@ FogFX=(()=>{
       var breathScale=1.0+Math.sin(t2*0.15)*_bA+Math.sin(t2*0.08)*_bB;
       var breathX=Math.sin(t2*0.12)*_tX;
       var breathY=Math.cos(t2*0.09)*_tY;
-      clone.style.transform="scale("+(breathScale*1.015).toFixed(5)+") translate("+breathX.toFixed(2)+"px,"+breathY.toFixed(2)+"px)";
+      clone.style.transform="scale("+(breathScale).toFixed(5)+") translate("+breathX.toFixed(2)+"px,"+breathY.toFixed(2)+"px)";
 
       t2+=_tSpd;
       requestAnimationFrame(animate2);
@@ -1589,15 +1568,7 @@ if (isMobile) {
     if(SC.type==="fog"){
       var fogTint=document.createElement("div"); fogTint.className="fog-tint-m";
       mFogEl=document.createElement("div"); mFogEl.className="fog-overlay-m"; mFogEl.id="fogNoiseM";
-      // Canvas 노이즈 텍스처 생성
-      (function(){
-        var sz=256,cv=document.createElement("canvas");cv.width=sz;cv.height=sz;
-        var cx=cv.getContext("2d"),id=cx.createImageData(sz,sz),d=id.data;
-        for(var i=0;i<d.length;i+=4){var v=Math.random()*255|0;d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=255;}
-        cx.putImageData(id,0,0);
-        mFogEl.style.backgroundImage="url("+cv.toDataURL("image/png")+")";
-        mFogEl.style.backgroundRepeat="repeat";
-      })();
+      _makeNoiseBg(mFogEl);
       photoArea.appendChild(fogTint);
       photoArea.appendChild(mFogEl);
     }
@@ -1735,7 +1706,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   uiBtn.style.opacity="0";
   uiBtn.style.visibility="hidden";
   (function(){
-    const MODES=["all","phototext","photo"];
     const tipKR={all:"보기 모드: 사진+텍스트", phototext:"보기 모드: 사진만", photo:"보기 모드: 전체"};
     const tipEN={all:"View: Photo + Text", phototext:"View: Photo only", photo:"View: All"};
     const modeToTip={1:"photo",2:"phototext"};
@@ -1753,21 +1723,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const hq=document.createElement("img"); hq.className="bg fog-hq"; hq.id="fogHq"; hq.alt="";
     const ov=document.createElement("div"); ov.className="overlay";
     const fog=document.createElement("div"); fog.className="fog"; fog.id="fogNoise"; fog.setAttribute("aria-hidden","true");
-    // fog-noise.png 대체: Canvas로 랜덤 노이즈 텍스처 생성
-    (function(){
-      var sz=256; // 타일 크기 (256x256, 반복)
-      var cv=document.createElement("canvas"); cv.width=sz; cv.height=sz;
-      var cx=cv.getContext("2d");
-      var id=cx.createImageData(sz,sz);
-      var d=id.data;
-      for(var i=0;i<d.length;i+=4){
-        var v=Math.random()*255|0;
-        d[i]=v; d[i+1]=v; d[i+2]=v; d[i+3]=255;
-      }
-      cx.putImageData(id,0,0);
-      fog.style.backgroundImage="url("+cv.toDataURL("image/png")+")";
-      fog.style.backgroundRepeat="repeat";
-    })();
+    _makeNoiseBg(fog);
     const txt=document.createElement("div"); txt.className="fog-text long-text"; txt.id="fogText";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     hero.append(lqip,hq,ov,fog,txt); sq.appendChild(hero);
@@ -1809,9 +1765,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
         return btn;
       }
       btn.classList.add("disabled");
-      btn.innerHTML=dir==="left"
-        ?`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"/></svg>`
-        :`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"/></svg>`;
+      btn.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"/></svg>`;
     } else {
       btn.innerHTML=dir==="left"
         ?`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>`
