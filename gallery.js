@@ -63,7 +63,7 @@ html, body {
 .scene-img.show { opacity: 1; }
 /* 모바일 fog 오버레이 */
 .fog-overlay-m { position:absolute; inset:-12%; z-index:5; background-repeat:repeat; mix-blend-mode:screen;
-  opacity: var(--fog-opacity, 0.10); transition: opacity 4000ms ease; pointer-events:none; transform: translateZ(0); }
+  opacity: var(--fog-opacity, 0); transition: opacity 4000ms ease; pointer-events:none; transform: translateZ(0); }
 .fog-overlay-m.animated { animation: fogDriftM 96s linear infinite; }
 .fog-tint-m { position:absolute; inset:0; z-index:4; background: rgba(0,0,0,0.16); pointer-events:none; }
 @keyframes fogDriftM {
@@ -1293,6 +1293,7 @@ var _initRipple, _initRippleTop, FogFX;
 // FOG FX (모바일/데스크탑 공통)
 FogFX=(()=>{
   const root=document.documentElement,rnd=(a,b)=>a+Math.random()*(b-a);
+  const _fogMob=isMobile;
   let timer=null,fogEl=null;
   return {
     bind:el=>{fogEl=el;},
@@ -1302,7 +1303,7 @@ FogFX=(()=>{
         root.style.setProperty("--fog-y",rnd(-2.0,2.0).toFixed(2)+"%");
         root.style.setProperty("--fog-scale-min",rnd(1.01,1.04).toFixed(3));
         root.style.setProperty("--fog-scale-max",(parseFloat(rnd(1.01,1.04).toFixed(3))+rnd(0.01,0.03)).toFixed(3));
-        var nextOp = Math.random()<0.2 ? 0 : rnd(0.04,0.18);
+        var nextOp = Math.random()<0.2 ? 0 : (_fogMob ? rnd(0.02,0.10) : rnd(0.04,0.18));
         if(fogEl)fogEl.style.setProperty("--fog-opacity",nextOp.toFixed(3));
         timer=setTimeout(tick,Math.floor(rnd(30000,55000)));
       };
@@ -1419,7 +1420,7 @@ FogFX=(()=>{
 
     // 애니메이션: feTurbulence 파라미터를 서서히 변경
     var _mob=isMobile;
-    var _dScale=_mob?1.5:4, _dAmpA=_mob?0.6:2.0, _dAmpB=_mob?0.3:1.0, _dSpeed=_mob?0.008:0.012;
+    var _dScale=_mob?3:4, _dAmpA=_mob?1.5:2.0, _dAmpB=_mob?0.7:1.0, _dSpeed=_mob?0.010:0.012;
     var t=0;
     var animate=function(){
       turb.setAttribute("baseFrequency",
@@ -1535,14 +1536,14 @@ FogFX=(()=>{
 
     // 애니메이션: 느린 맥동(스케일) + 미세 떨림(SVG 필터)
     var _mob2=isMobile;
-    var _dS2=_mob2?1.0:2.5, _dA2=_mob2?0.4:1.0, _dB2=_mob2?0.2:0.5;
-    var _bA=_mob2?0.002:0.004, _bB=_mob2?0.001:0.002;
-    var _tX=_mob2?0.15:0.3, _tY=_mob2?0.1:0.2, _tSpd=_mob2?0.007:0.01;
+    var _dS2=_mob2?2.0:2.5, _dA2=_mob2?0.8:1.0, _dB2=_mob2?0.4:0.5;
+    var _bA=_mob2?0.003:0.004, _bB=_mob2?0.0015:0.002;
+    var _tX=_mob2?0.25:0.3, _tY=_mob2?0.15:0.2, _tSpd=_mob2?0.009:0.01;
     var t2=0;
     var animate2=function(){
       turb.setAttribute("baseFrequency",
-        (0.018+Math.sin(t2*1.1)*(_mob2?0.002:0.004)).toFixed(4)+" "+
-        (0.040+Math.cos(t2*0.8)*(_mob2?0.004:0.008)).toFixed(4)
+        (0.018+Math.sin(t2*1.1)*(_mob2?0.003:0.004)).toFixed(4)+" "+
+        (0.040+Math.cos(t2*0.8)*(_mob2?0.006:0.008)).toFixed(4)
       );
       disp.setAttribute("scale",(_dS2+Math.sin(t2*0.6)*_dA2+Math.cos(t2*0.9)*_dB2).toFixed(2));
 
