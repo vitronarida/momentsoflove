@@ -336,7 +336,7 @@
       .intro-app { width:100vw; height:100dvh; display:flex; flex-direction:column; }
       .frame { width:100vw; height:100vw; flex-shrink:0; padding-bottom:0; }
       .mob-bottom {
-        position: relative;
+        position:relative;
         display:flex; flex-direction:column; align-items:center; justify-content:center;
         flex:1; width:100%; padding:8px 24px; box-sizing:border-box;
         padding-bottom: max(env(safe-area-inset-bottom), 8px);
@@ -352,10 +352,10 @@
         pointer-events:none;
       }
       .mob-bottom .skip-bar {
-        position:absolute; right:24px; top:0; bottom:0;
-        display:flex; align-items:center;
+        position:absolute; left:50%; top:50%;
+        transform: translate(-50%, -50%) translateY(-6px);
         opacity:0; transition: opacity 2000ms ease;
-        pointer-events:none; margin:0;
+        pointer-events:none; margin:0; z-index:1;
       }
       .mob-bottom .device-bar.show,
       .mob-bottom .lang-bar.show { opacity:1; transform:translateY(0); pointer-events:auto; }
