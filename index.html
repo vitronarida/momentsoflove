@@ -589,10 +589,8 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
-        langBar?.classList.add("show");
-        deviceBar?.classList.add("show");
 
-        // 일정 시간 이벤트 없으면 하단 아이콘 숨김
+        // 마우스/터치 시 하단 바 표시, 일정 시간 후 숨김
         let idleTimer = null;
         const IDLE_MS = 5000;
         const hideBars = () => {
@@ -652,8 +650,6 @@
       lockWrapEl.style.visibility = "";
       btn.classList.add("show");
       lockWrapEl.classList.add("show");
-      langBar?.classList.add("show");
-      deviceBar?.classList.add("show");
       // skip 위치와 lang-bar 겹침 → 툴팁 방지
       if (langBar) {
         langBar.style.pointerEvents = "none";

@@ -426,6 +426,35 @@ html, body {
 }
 #aboutGrid .about-body p { margin: 0 0 16px 0; }
 #aboutGrid .about-body p:last-child { margin-bottom: 0; }
+/* poem 모달 */
+#poemOverlay {
+  align-items: center;
+  justify-content: center;
+}
+#poemOverlay .index-panel {
+  width: min(480px, 90vw);
+  max-height: 90vh;
+  border-radius: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 24px 32px;
+  transform: translateY(20px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#poemOverlay .index-panel::-webkit-scrollbar { display: none; }
+#poemOverlay.on .index-panel {
+  transform: translateY(0);
+}
+#poemOverlay .poem-body {
+  font-family: "Nanum Pen Script", cursive;
+  font-size: clamp(20px, 2.5vw, 24px);
+  line-height: 1.6;
+  color: rgba(235,235,235,0.90);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  padding: 0 16px;
+}
 /* 모바일 info 타임스탬프 */
 .info-version{ position:absolute; bottom:14px; right:18px; font-family:"Nanum Pen Script", cursive;
 font-size:16px; color: rgba(180,180,180,0.35); }
@@ -998,6 +1027,26 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   width: 100%;
 }
 
+#poemOverlay{ z-index:10003; }
+#poemOverlay .index-panel{
+  width: min(510px, 88vw);
+  max-height: 90vh;
+  padding: 24px 32px 40px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#poemOverlay .index-panel::-webkit-scrollbar { display: none; }
+#poemOverlay .poem-body{
+  font-family: "Nanum Pen Script", cursive;
+  font-size: clamp(22px, 3vw, 28px);
+  line-height: 1.6;
+  color: rgba(235,235,235,0.90);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  padding: 0 16px;
+}
+
   .idx-head{ grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between;
   padding: 6px 8px 3px; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.06);
   font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.1; color: rgba(230,230,230,0.92); }
@@ -1487,6 +1536,16 @@ const buildTOCHTML = () => {
         <div class="index-grid about-mode" id="aboutGrid"></div>
       </div>
     </div>
+    <div id="poemOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="poemBackdrop"></div>
+      <div class="index-panel panel-box">
+        <div class="toc-header" style="margin-bottom:8px;">
+          <div><h2 class="index-title" id="poemTitle"></h2></div>
+          <div class="toc-close" id="poemClose">✕</div>
+        </div>
+        <div class="poem-body" id="poemBody"></div>
+      </div>
+    </div>
     <div id="gbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="gbBackdrop"></div>
       <div class="gb-panel panel-box">
@@ -1629,6 +1688,16 @@ const buildTOCHTML = () => {
           <div class="toc-close" id="aboutClose">✕</div>
         </div>
         <div class="index-grid about-mode" id="aboutGrid"></div>
+      </div>
+    </div>
+    <div id="poemOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="poemBackdrop"></div>
+      <div class="index-panel panel-box">
+        <div class="toc-header" style="margin-bottom:8px;">
+          <div><h2 class="index-title" id="poemTitle"></h2></div>
+          <div class="toc-close" id="poemClose">✕</div>
+        </div>
+        <div class="poem-body" id="poemBody"></div>
       </div>
     </div>
     <div id="gbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
@@ -2503,7 +2572,47 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 
   const indexBtn = document.createElement("div"); indexBtn.className = "nav-btn";
   indexBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>`;
-  indexBtn.addEventListener("click", IndexManager.open);
+
+  /* 모바일 시 fetch + PoemManager */
+  const _mPoemCode = (SC.code || "").replace(/#/g,"_");
+  const _mPoemFile = curLang==="EN" ? `../poems/${_mPoemCode}_EN.txt` : `../poems/${_mPoemCode}.txt`;
+  let _mPoemText = null;
+  if(_mPoemCode){
+    fetch(_mPoemFile).then(r=>{
+      if(!r.ok) throw new Error("not found");
+      return r.text();
+    }).then(txt=>{
+      _mPoemText=txt;
+      indexBtn.setAttribute("data-tip", curLang==="KR" ? "사진 너머의 속삭임" : "A whisper beyond the frame");
+    }).catch(()=>{
+      _mPoemText=null;
+      indexBtn.classList.add("disabled");
+      indexBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
+      indexBtn.setAttribute("data-tip", curLang==="KR" ? "아직 피지 않은 이야기" : "A story yet to bloom");
+    });
+  }
+  const mPoemManager = {
+    open(){
+      if(!_mPoemText) return;
+      const ov=document.getElementById("poemOverlay");
+      if(!ov) return;
+      document.getElementById("poemTitle").textContent = curLang==="KR" ? SC.textKR : SC.textEN;
+      const pb=document.getElementById("poemBody");
+      pb.style.cssText="font-family:'Nanum Pen Script',cursive;font-size:clamp(22px,3vw,28px);line-height:0.8;color:rgba(235,235,235,0.90);white-space:pre-wrap;word-break:keep-all;padding:0 16px;margin-top:32px;";
+      pb.textContent = _mPoemText.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+      ov.style.display="flex"; ov.setAttribute("aria-hidden","false");
+      requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add("on")));
+    },
+    close(){
+      const ov=document.getElementById("poemOverlay");
+      if(!ov) return;
+      ov.classList.remove("on");
+      setTimeout(()=>{ov.style.display="none"; ov.setAttribute("aria-hidden","true");},340);
+    }
+  };
+  document.getElementById("poemClose")?.addEventListener("click",mPoemManager.close);
+  document.getElementById("poemBackdrop")?.addEventListener("click",mPoemManager.close);
+  indexBtn.addEventListener("click", ()=>{ if(!indexBtn.classList.contains("disabled")) mPoemManager.open(); });
 
   const rightBtn = document.createElement("div");
   rightBtn.className = "nav-btn" + (SC.nextURL ? "" : " disabled");
@@ -2545,11 +2654,12 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const menuOn=document.getElementById("tocOverlay").classList.contains("on");
     const indexOn=document.getElementById("indexOverlay").classList.contains("on");
     const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
+    const poemOn=document.getElementById("poemOverlay")?.classList.contains("on");
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     const thumbOn=document.getElementById("thumbOverlay")?.classList.contains("on");
-    if(e.key==="Escape"){if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
+    if(e.key==="Escape"){if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
-    if(menuOn||indexOn||aboutOn||gbOn||thumbOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -2589,15 +2699,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   uiBtn.className="soloToggle nav-btn";
   uiBtn.style.opacity="0";
   uiBtn.style.visibility="hidden";
-  (function(){
-    const tipKR={all:"보기 모드: 사진+텍스트", phototext:"보기 모드: 사진만", photo:"보기 모드: 전체"};
-    const tipEN={all:"View: Photo + Text", phototext:"View: Photo only", photo:"View: All"};
-    const modeToTip={1:"photo",2:"phototext"};
-    window.__refreshViewModeTip = ()=>{
-      const m=modeToTip[uiMode]||"all";
-      uiBtn.setAttribute("data-tip",(curLang==="KR"?tipKR:tipEN)[m]);
-    };
-  })();
 
   sq.append(workCode,menuBtn,uiBtn);
 
@@ -2733,24 +2834,63 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   }
 
   // UI 모드
-  let uiMode=2;
-  const uiIcons={
-    1:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/></svg>`,
-    2:`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>`
-  };
-  const applyUIMode=()=>{
-    document.body.classList.toggle("ui-hide-all",uiMode===1);
-    document.body.classList.toggle("ui-text-only",uiMode===2);
-    document.body.classList.add("ui-mode-ready");
-    document.querySelectorAll(".soloToggle").forEach(b=>{
-      b.innerHTML=uiIcons[uiMode];
-      b.style.opacity="";
-      b.style.visibility="";
+  // UI 초기화 (고정: ui-text-only)
+  document.body.classList.add("ui-text-only");
+  document.body.classList.add("ui-mode-ready");
+  const _poemIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>`;
+  document.querySelectorAll(".soloToggle").forEach(b=>{
+    b.innerHTML=_poemIcon;
+    b.style.opacity="";
+    b.style.visibility="";
+  });
+
+  // Poem 모달
+  const _poemCode = (SC.code || "").replace(/#/g,"_");
+  const _poemFile = curLang==="EN" ? `../poems/${_poemCode}_EN.txt` : `../poems/${_poemCode}.txt`;
+  let _poemText = null;
+  const _lockIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
+  if(_poemCode){
+    fetch(_poemFile).then(r=>{
+      if(!r.ok) throw new Error("not found");
+      return r.text();
+    }).then(txt=>{
+      _poemText=txt;
+      document.querySelectorAll(".soloToggle").forEach(b=>{
+        b.setAttribute("data-tip", curLang==="KR" ? "사진 너머의 속삭임" : "A whisper beyond the frame");
+      });
+    }).catch(()=>{
+      _poemText=null;
+      document.querySelectorAll(".soloToggle").forEach(b=>{
+        b.classList.add("disabled");
+        b.innerHTML=_lockIcon;
+        b.setAttribute("data-tip", curLang==="KR" ? "아직 피지 않은 이야기" : "A story yet to bloom");
+      });
     });
-    if(window.__refreshViewModeTip) window.__refreshViewModeTip();
+  }
+  const PoemManager = {
+    open(){
+      if(!_poemText) return;
+      const ov=document.getElementById("poemOverlay");
+      if(!ov) return;
+      document.getElementById("poemTitle").textContent = curLang==="KR" ? SC.textKR : SC.textEN;
+      const pb=document.getElementById("poemBody");
+      pb.style.cssText="font-family:'Nanum Pen Script',cursive;font-size:clamp(20px,2.5vw,24px);line-height:0.8;color:rgba(235,235,235,0.90);white-space:pre-wrap;word-break:keep-all;padding:0 16px;margin-top:32px;";
+      pb.textContent = _poemText.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+      ov.style.display="flex"; ov.setAttribute("aria-hidden","false");
+      requestAnimationFrame(()=>requestAnimationFrame(()=>ov.classList.add("on")));
+    },
+    close(){
+      const ov=document.getElementById("poemOverlay");
+      if(!ov) return;
+      ov.classList.remove("on");
+      setTimeout(()=>{ov.style.display="none"; ov.setAttribute("aria-hidden","true");},340);
+    }
   };
-  document.querySelectorAll(".soloToggle").forEach(b=>b.addEventListener("click",()=>{uiMode=uiMode===2?1:2;applyUIMode();}));
-  applyUIMode();
+  document.getElementById("poemClose")?.addEventListener("click",PoemManager.close);
+  document.getElementById("poemBackdrop")?.addEventListener("click",PoemManager.close);
+  document.querySelectorAll(".soloToggle").forEach(b=>b.addEventListener("click",()=>{
+    if(!b.classList.contains("disabled")) PoemManager.open();
+  }));
 
   // 데스크탑 전용 이벤트
   menuBtn.addEventListener("click",TOCManager.open);
@@ -2766,8 +2906,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const menuOn=document.getElementById("tocOverlay").classList.contains("on");
     const indexOn=document.getElementById("indexOverlay").classList.contains("on");
     const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
+    const poemOn=document.getElementById("poemOverlay")?.classList.contains("on");
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     if(e.key==="Escape"){
+      if(poemOn){e.preventDefault();PoemManager.close();return;}
       if(gbOn){e.preventDefault();GuestbookManager.close();return;}
       if(aboutOn){e.preventDefault();AboutManager.close();return;}
       if(indexOn){e.preventDefault();IndexManager.close();return;}
@@ -2778,9 +2920,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(e.key==="i"||e.key==="I"){e.preventDefault();indexOn?IndexManager.close():IndexManager.open();return;}
     if(e.key==="g"||e.key==="G"){e.preventDefault();gbOn?GuestbookManager.close():GuestbookManager.open();return;}
     if(e.key==="h"||e.key==="H"){e.preventDefault();if(!menuOn)TOCManager.open();setTimeout(()=>{const el=document.querySelector(".unified-left")||document.querySelector(".toc-panel");el?.classList.add("show-info");},50);return;}
-    if(e.key==="p"||e.key==="P"){e.preventDefault();uiMode=1;applyUIMode();return;}
-    if(e.key==="t"||e.key==="T"){e.preventDefault();uiMode=2;applyUIMode();return;}
-    if(menuOn||indexOn||aboutOn||gbOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
