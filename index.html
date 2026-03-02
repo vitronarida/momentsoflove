@@ -352,8 +352,9 @@
         pointer-events:none;
       }
       .mob-bottom .skip-bar {
-        position:absolute; left:50%; top:50%;
-        transform: translate(-50%, -50%) translateY(-6px);
+        position:absolute; left:50%; top:calc(50% - 21px);
+        right:auto; bottom:auto;
+        transform: translate(-50%, -50%);
         opacity:0; transition: opacity 2000ms ease;
         pointer-events:none; margin:0; z-index:1;
       }
