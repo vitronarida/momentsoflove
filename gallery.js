@@ -267,6 +267,7 @@ html, body {
 .toc-panel {
   position: relative;
   width: 100%;
+  height: 85vh;
   max-height: 92vh;
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.08);
@@ -508,13 +509,14 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-success-icon { font-size:32px; margin-bottom:16px; }
 .gb-success-msg { font-size:18px; line-height:1.7; color:rgba(230,230,230,0.80); }
 /* ===== Thumbnail Grid + Heart (모바일) ===== */
-.mob-unified-body{ display:flex; flex:1; min-height:0; }
-.mob-unified-left{ flex:0 0 38%; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding-right:10px; }
+.mob-unified-body{ display:flex; flex:1; min-height:0; margin:0 -24px -40px; }
+.mob-col-title{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.92); margin:0 0 6px; padding:4px 0; }
+.mob-unified-left{ flex:0 0 38%; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding:0 10px 24px 24px; }
 .mob-unified-left::-webkit-scrollbar{ display:none; }
-.mob-unified-right{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding-left:10px; border-left:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.12); margin:0 -24px -40px 0; padding:0 10px 24px 10px; border-radius:0 0 0 0; }
+.mob-unified-right{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; border-left:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.12); padding:0 24px 24px 10px; }
 .mob-unified-right::-webkit-scrollbar{ display:none; }
-.mob-right-header{ display:flex; align-items:center; justify-content:space-between; padding:4px 0 8px; position:sticky; top:0; z-index:5; }
-.mob-right-header h3{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(235,235,235,0.90); margin:0; }
+.mob-right-header{ display:flex; align-items:center; justify-content:space-between; padding:4px 0 6px; position:sticky; top:0; z-index:5; }
+.mob-right-header h3{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.90); margin:0; }
 .mob-expand-btn{ cursor:pointer; padding:4px; opacity:0.5; -webkit-tap-highlight-color:transparent; }
 .mob-expand-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; }
 .mob-thumb-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:0 0 16px; }
@@ -1406,17 +1408,12 @@ const buildTOCHTML = () => {
       <div class="toc-panel">
         <div class="toc-handle"></div>
         <div class="toc-header">
-          <h2 class="toc-title" id="tocTitle">${t.tocTitle}</h2>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div class="lang-toggle">
-              <div class="lang-btn${curLang==="KR"?" active":""}" id="langKR">KR</div>
-              <div class="lang-btn${curLang==="EN"?" active":""}" id="langEN">EN</div>
-            </div>
-            <div class="toc-close" id="tocClose">✕</div>
-          </div>
+          <div></div>
+          <div class="toc-close" id="tocClose">✕</div>
         </div>
         <div class="mob-unified-body">
           <div class="mob-unified-left">
+            <h3 class="mob-col-title" id="tocTitle">${t.tocTitle}</h3>
             <div class="menu-section">
               <h3 class="menu-h" id="menuH_TOC">${t.menuH_TOC}</h3>
               <ul class="toc-list">
@@ -1449,11 +1446,16 @@ const buildTOCHTML = () => {
             <div class="menu-section">
               <div class="mob-copyright">© Vitro Narida.<br>All rights reserved.</div>
             </div>
-            <div class="info-version">${BUILD_TS}</div>
+            <div class="menu-section">
+              <div class="lang-toggle">
+                <div class="lang-btn${curLang==="KR"?" active":""}" id="langKR">KR</div>
+                <div class="lang-btn${curLang==="EN"?" active":""}" id="langEN">EN</div>
+              </div>
+            </div>
           </div>
           <div class="mob-unified-right">
             <div class="mob-right-header">
-              <h3>${t.indexTitle}</h3>
+              <h3 class="mob-col-title">${t.indexTitle}</h3>
               <div class="mob-expand-btn" id="mobExpandBtn">
                 <svg viewBox="0 0 24 24"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg>
               </div>
