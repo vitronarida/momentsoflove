@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="ko" style="background:#000">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Moments of Love</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+
+  <style>
+    html, body {
+      margin: 0; height: 100%;
+      background: #000;
+      display: grid; place-items: center;
+      font-family: "Nanum Pen Script", cursive;
+      color: rgba(235,235,235,0.94);
+    }
+    .frame {
+      position: relative;
+      width: min(100vw, var(--vh100, 100vh));
+      height: min(100vw, var(--vh100, 100vh));
+      display: grid; place-items: center;
+      background: #2e2e2e;
+      padding-bottom: max(env(safe-area-inset-bottom), 18px);
+      box-sizing: border-box;      
+    }
+    .lang-bar {
+      position: absolute; right: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
+      display: flex; gap: 10px;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 2000ms ease, transform 2000ms ease;
+      pointer-events: none;
+    }
+    .lang-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .device-bar {
+      position: absolute; left: 6%; bottom: calc(6% + env(safe-area-inset-bottom));
+      display: flex; gap: 10px;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 2000ms ease, transform 2000ms ease;
+      pointer-events: none;
+    }
+    .device-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .device-btn {
+      font-family: "Nanum Pen Script", cursive;
+      width: 36px; height: 36px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: rgba(235,235,235,0.35); font-size: 20px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: all 300ms ease;
+    }
+    .device-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.22);
+      color: rgba(235,235,235,0.90);
+      box-shadow: 0 0 14px 4px rgba(255,255,255,0.10);
+      transform: scale(1.08);
+    }
+    .device-btn:hover svg { stroke: rgba(235,235,235,0.90); }
+    .device-btn:active { transform: scale(0.92); }
+    .device-btn.active {
+      color: rgba(235,235,235,0.55);
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+    .device-btn.active:hover {
+      color: rgba(235,235,235,0.90);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 14px 4px rgba(255,255,255,0.10);
+      transform: scale(1.08);
+    }
+    .lang-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      font-family: "Nanum Pen Script", cursive;
+      font-size: 20px; letter-spacing: 0.6px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: rgba(235,235,235,0.35);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: all 300ms ease;
+    }
+    .lang-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.22);
+      color: rgba(235,235,235,0.90);
+      box-shadow: 0 0 14px 4px rgba(255,255,255,0.10);
+      transform: scale(1.08);
+    }
+    .lang-btn:hover svg { stroke: rgba(235,235,235,0.90); }
+
+    /* ✅ 텍스트 아이콘 → SVG 통일 */
+    .device-btn svg,
+    .lang-btn svg{
+      width:20px;
+      height:20px;
+      display:block;
+      transition: stroke 300ms ease;
+    }
+    .lang-btn.active {
+      color: rgba(235,235,235,0.55);
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+    }
+    .lang-btn.active:hover {
+      color: rgba(235,235,235,0.90);
+      border-color: rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 14px 4px rgba(255,255,255,0.10);
+      transform: scale(1.08);
+    }
+    .wrap { text-align: center; }
+    .line-wrap {
+      text-align: center;
+    }
+    #line {
+      font-size: clamp(24px, 6.2vw, 42px);
+      line-height: 1.55; letter-spacing: 0.2px;
+      white-space: pre-wrap; word-break: keep-all;
+    }
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: rgba(220,220,220,0.85);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+    .cursor.blinking {
+      animation: blink 1.4s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ===== 툴팁 ===== */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30,30,30,0.92);
+      color: rgba(220,220,220,0.95);
+      font-family: "Nanum Pen Script", cursive;
+      font-size: 15px;
+      white-space: nowrap;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    /* 말풍선 꼬리 */
+    [data-tooltip]::before {
+      content: "";
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(30,30,30,0.92);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    [data-tooltip]:hover::after,
+    [data-tooltip]:hover::before { opacity: 1; }
+
+    /* ===== skip 버튼 ===== */
+    .skip-bar {
+      position: absolute; right: 6%;
+      bottom: calc(6% + env(safe-area-inset-bottom));
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 2000ms ease, transform 2000ms ease;
+      pointer-events: none;
+    }
+    .skip-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .skip-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(235,235,235,0.70);
+      font-family: "Nanum Pen Script", cursive;
+      font-size: 13px; letter-spacing: 0.5px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .skip-btn:active { transform: scale(0.92); }
+
+    /* ===== 자물쇠 버튼 ===== */
+    .lock-btn {
+      margin: 0;
+      width: 68px; height: 68px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      cursor: pointer; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1200ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+    .lock-btn.show {
+      position: relative;
+      pointer-events: auto;
+      animation: fadeInBreath 2s ease-in-out 1 forwards,
+                 breathe      2.8s ease-in-out 2s infinite,
+                 glow         2.8s ease-in-out 2s infinite;
+    }
+    @keyframes fadeInBreath {
+      0%   { opacity: 0;    }
+      100% { opacity: 0.35; }
+    }
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.35; }
+      50%       { opacity: 0.55; }
+    }
+    .lock-btn.show:hover {
+      animation: none;
+      opacity: 1;
+      background: rgba(255,255,255,0.09);
+      box-shadow: 0 0 20px 6px rgba(255,255,255,0.18);
+    }
+
+    .lock-btn.show:active {
+      transform: scale(0.91);
+      box-shadow: 0 0 10px rgba(0,0,0,0.55);
+      animation: none;
+    }
+    .lock-btn svg {
+      width: 28px; height: 28px;
+      stroke: rgba(200,200,200,0.75);
+    }
+
+    /* 타이핑 중 점 ripple */
+    @keyframes dot-ripple {
+      0%   { transform: scale(0.1); opacity: 0.7; }
+      100% { transform: scale(1);   opacity: 0; }
+    }
+
+    /* 펄스 링 */
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);    opacity: 0.55; }
+      70%  { transform: scale(1.55); opacity: 0;    }
+      100% { transform: scale(1.55); opacity: 0;    }
+    }
+    /* 글로우 */
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 5px  2px rgba(255,255,255,0.06); }
+      50%       { box-shadow: 0 0 14px 5px rgba(255,255,255,0.14); }
+    }
+
+    /* 도트 ripple wrapper */
+    .dot-wrap {
+      position: relative;
+      width: 68px; height: 68px;
+      display: grid; place-items: center;
+    }
+    .dot-wrap .dot-core {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: rgba(220,220,220,0.90);
+      position: relative; z-index: 1;
+    }
+    .dot-wrap .dot-ring {
+      position: absolute;
+      width: 68px; height: 68px;
+      border-radius: 999px;
+      background: rgba(220,220,220,0.18);
+      transform: scale(0.1);
+      opacity: 0;
+    }
+    .dot-wrap.active .dot-ring:nth-child(1) {
+      animation: dot-ripple 2s ease-out infinite;
+    }
+    .dot-wrap.active .dot-ring:nth-child(2) {
+      animation: dot-ripple 2s ease-out 0.7s infinite;
+    }
+    .dot-wrap.active .dot-ring:nth-child(3) {
+      animation: dot-ripple 2s ease-out 1.4s infinite;
+    }
+
+    /* 펄스 링 — 버튼 감싸는 wrapper */
+    .lock-wrap {
+      position: absolute;
+      bottom: calc(6% + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-grid;
+      place-items: center;
+    }
+    .lock-wrap::before,
+    .lock-wrap::after {
+      content: "";
+      position: absolute;
+      width: 68px; height: 68px;
+      border-radius: 999px;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .lock-wrap.show::before {
+      border: 1.5px solid rgba(255,255,255,0.22);
+      animation: pulse-ring 2.4s ease-out infinite;
+      opacity: 1;
+    }
+    .lock-wrap.show::after {
+      border: 1px solid rgba(255,255,255,0.14);
+      animation: pulse-ring 2.4s ease-out 0.8s infinite;
+      opacity: 1;
+    }
+    .lock-wrap:hover::before,
+    .lock-wrap:hover::after {
+      animation: none;
+      opacity: 0;
+    }
+
+    @media (max-width: 768px) {
+      .frame { width: 100vw; height: 100dvh; }
+    }
+  </style>
+</head>
+<body style="background:#000">
+  <!-- 폰트 사전 로드용 (화면에 안 보임) -->
+  <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;font-family:'Nanum Pen Script',cursive;font-size:32px;">모든 사랑의 순간은 당신으로 열립니다 Every moment of love opens with you</div>
+  <div class="frame">
+    <div class="wrap">
+
+      <div class="device-bar">
+        <button class="device-btn" id="btnDesktop" aria-label="Desktop" data-tooltip="">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.5m6-1.5v1.5M3 4.5h18v10.5a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V4.5Z"/>
+          </svg>
+        </button>
+        <button class="device-btn" id="btnMobile" aria-label="Mobile" data-tooltip="">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5h3m-6 3h9A1.5 1.5 0 0 1 18 6v12a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V6a1.5 1.5 0 0 1 1.5-1.5Z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 18.75h1.5"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="skip-bar" id="skipBar">
+        <button class="skip-btn" id="skipBtn" type="button">skip</button>
+      </div>
+
+      <div class="lang-bar">
+        <button class="lang-btn" id="btnKR" aria-label="Korean" data-tooltip="">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" aria-hidden="true">
+            <!-- K (KR) -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 6v12"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12l8-6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12l8 6"/>
+          </svg>
+        </button>
+        <button class="lang-btn" id="btnEN" aria-label="English" data-tooltip="">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" aria-hidden="true">
+            <!-- E (EN) -->
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 6H9"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6v12"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 18h7"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="line-wrap">
+        <span id="line"></span>
+      </div>
+
+      <div class="lock-wrap" id="lockWrap">
+      <button class="lock-btn" id="enterBtn" type="button" aria-label="Enter" data-tooltip="">
+
+        <!-- 타이핑 완료: Lock -->
+        <svg id="svgLock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+
+        <!-- hover / 모바일 탭: Unlock -->
+        <svg id="svgUnlock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display:none;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+        </svg>
+
+      </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 실제 viewport 높이 측정 (모바일 주소창 문제 해결)
+    const setVh = () => {
+      document.documentElement.style.setProperty('--vh100', window.innerHeight + 'px');
+    };
+    setVh();
+    window.addEventListener('resize', setVh);
+
+    const TEXTS = {
+      KR: "모든 사랑의 순간은 당신으로 열립니다",
+      EN: "Every moment of love opens with you"
+    };
+    const TYPE_INTERVAL = () => 120 + Math.random() * 160;
+
+    const el        = document.getElementById("line");
+    const btn       = document.getElementById("enterBtn");
+    const svgLock   = document.getElementById("svgLock");
+    const svgUnlock = document.getElementById("svgUnlock");
+    const langBar   = document.querySelector(".lang-bar");
+    const skipBar   = document.getElementById("skipBar");
+    const deviceBar = document.querySelector(".device-bar");
+
+    /* 아이콘 전환 헬퍼 */
+    const showIcon = (name) => {
+      svgLock.style.display   = name === "lock"   ? "" : "none";
+      svgUnlock.style.display = name === "unlock" ? "" : "none";
+    };
+
+    /* ===== 디바이스 감지 ===== */
+    const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const forced   = (() => { try { return localStorage.getItem("force_device"); } catch(e) { return null; } })();
+    const isMobile = forced ? (forced === "M") : detectedMobile;
+    const TARGET_URL = "./scenes/LPL_01.html?from=index";
+
+    /* ===== 언어 감지 ===== */
+    function detectLang() {
+      const fallback = (navigator.language||"en").toLowerCase().startsWith("ko") ? "KR" : "EN";
+      try {
+        if (isMobile) return localStorage.getItem("m_lang") || fallback;
+        return localStorage.getItem("d_lang") || localStorage.getItem("lang") || fallback;
+      } catch(e) { return fallback; }
+    }
+    const lang = detectLang();
+    const TEXT = TEXTS[lang] || TEXTS.KR;
+
+    /* ===== 툴팁 텍스트 ===== */
+    const TOOLTIPS = {
+      KR: {
+        desktop: "데스크탑 모드",
+        mobile:  "모바일 모드",
+        kr:      "한국어",
+        en:      "English",
+        enter:   "Open"
+      },
+      EN: {
+        desktop: "Desktop mode",
+        mobile:  "Mobile mode",
+        kr:      "한국어",
+        en:      "English",
+        enter:   "Open"
+      }
+    };
+    const TT = TOOLTIPS[lang] || TOOLTIPS.KR;
+    document.getElementById("btnDesktop").dataset.tooltip = TT.desktop;
+    document.getElementById("btnMobile").dataset.tooltip  = TT.mobile;
+    document.getElementById("btnKR").dataset.tooltip      = TT.kr;
+    document.getElementById("btnEN").dataset.tooltip      = TT.en;
+    document.getElementById("enterBtn").dataset.tooltip   = TT.enter;
+
+    /* ===== 타이핑 중 Enter/Esc → 바로 이동 ===== */
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === "Escape" || e.key === "ArrowRight") {
+        try{sessionStorage.removeItem("gl_mode");}catch(err){}
+        location.href = TARGET_URL;
+      }
+    });
+
+    /* ===== 타이핑 ===== */
+    const words = TEXT.split(" ");
+    let wordIdx = 0, charIdx = 0, typed = "", skipped = false;
+
+    const lockWrapEl = document.getElementById("lockWrap");
+    lockWrapEl.style.visibility = "hidden";
+
+    // 커서 요소
+    const cur = document.createElement("span");
+    cur.className = "cursor";
+    el.appendChild(cur);
+
+    const renderText = () => {
+      el.textContent = typed;
+      el.appendChild(cur);
+    };
+
+    // 단어 끝에서 커서 2~3번 랜덤 깜빡임 후 콜백
+    const blinkOnce = (cb) => {
+      const times = 1 + Math.floor(Math.random() * 2);
+      let count = 0;
+      const doBlink = () => {
+        if(skipped) return;
+        cur.style.opacity = "0";
+        setTimeout(() => {
+          cur.style.opacity = "1";
+          count++;
+          if (count < times) setTimeout(doBlink, 300);
+          else cb();
+        }, 300);
+      };
+      cur.style.opacity = "1";
+      setTimeout(doBlink, 300);
+    };
+
+    const typeChar = () => {
+      if(skipped) return;
+      const word = words[wordIdx];
+      charIdx++;
+      typed = words.slice(0, wordIdx).join(" ") + (wordIdx > 0 ? " " : "") + word.slice(0, charIdx);
+      renderText();
+
+      if (charIdx < word.length) {
+        // 단어 내 계속 타이핑
+        return setTimeout(typeChar, TYPE_INTERVAL());
+      }
+
+      // 단어 완성
+      if (wordIdx < words.length - 1) {
+        // 다음 단어로
+        blinkOnce(() => {
+          wordIdx++;
+          charIdx = 0;
+          setTimeout(typeChar, 150);
+        });
+      } else {
+        // 마지막 단어 완성 → 계속 깜빡이다가 자물쇠 뜰 때 사라짐
+        blinkOnce(() => {
+          cur.style.opacity = "";
+          cur.classList.add("blinking");
+          skipBar?.classList.remove("show");
+          startShowLock();
+        });
+      }
+    };
+
+    const startShowLock = () => {
+      let shown = false;
+      const showLock = () => {
+        if (shown) return;
+        shown = true;
+        clearTimeout(autoTimer);
+        document.removeEventListener("mousemove", showLock);
+        document.removeEventListener("keydown", showLock);
+        document.removeEventListener("touchstart", showLock);
+        cur.classList.remove("blinking");
+        cur.style.opacity = "0";
+        showIcon("lock");
+        lockWrapEl.style.visibility = "";
+        btn.classList.add("show");
+        lockWrapEl.classList.add("show");
+        langBar?.classList.add("show");
+        deviceBar?.classList.add("show");
+
+        // 일정 시간 이벤트 없으면 하단 아이콘 숨김
+        let idleTimer = null;
+        const IDLE_MS = 5000;
+        const hideBars = () => {
+          langBar?.classList.remove("show");
+          deviceBar?.classList.remove("show");
+        };
+        const showBars = () => {
+          langBar?.classList.add("show");
+          deviceBar?.classList.add("show");
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(hideBars, IDLE_MS);
+        };
+        idleTimer = setTimeout(hideBars, IDLE_MS);
+        document.addEventListener("mousemove", showBars);
+        document.addEventListener("keydown", showBars);
+        document.addEventListener("touchstart", showBars, {passive:true});
+      };
+      const autoTimer = setTimeout(showLock, 10000);
+      document.addEventListener("mousemove", showLock);
+      document.addEventListener("keydown", showLock);
+      document.addEventListener("touchstart", showLock, {passive:true});
+      // 폰 흔들기
+      window.addEventListener("devicemotion", (e) => {
+        const a = e.acceleration;
+        if (!a) return;
+        const force = Math.abs(a.x||0) + Math.abs(a.y||0) + Math.abs(a.z||0);
+        if (force > 15) showLock();
+      }, {passive:true});
+    };
+
+    // 폰트 로딩 완료 후 타이핑 시작 ("든" 등 깨짐 방지)
+    const startTyping = () => {
+      setTimeout(typeChar, 400);
+      setTimeout(() => { skipBar?.classList.add("show"); }, 400);
+    };
+    if (document.fonts && document.fonts.load) {
+      // 실제 사용할 텍스트로 폰트 로드 확인
+      document.fonts.load('32px "Nanum Pen Script"', TEXT).then(startTyping).catch(startTyping);
+    } else {
+      setTimeout(startTyping, 800);
+    }
+
+    /* ===== skip 버튼 ===== */
+    document.getElementById("skipBtn")?.addEventListener("click", () => {
+      skipped = true;
+      // 타이핑 즉시 완료
+      typed = words.join(" ");
+      renderText();
+      // 커서 숨김
+      cur.classList.remove("blinking");
+      cur.style.opacity = "0";
+      cur.style.display = "none";
+      // skip 바 숨김
+      skipBar?.classList.remove("show");
+      // 아이콘 모두 표시
+      showIcon("lock");
+      lockWrapEl.style.visibility = "";
+      btn.classList.add("show");
+      lockWrapEl.classList.add("show");
+      langBar?.classList.add("show");
+      deviceBar?.classList.add("show");
+      // skip 위치와 lang-bar 겹침 → 툴팁 방지
+      if (langBar) {
+        langBar.style.pointerEvents = "none";
+        setTimeout(() => { langBar.style.pointerEvents = ""; }, 600);
+      }
+    });
+
+    /* ===== hover: Lock ↔ Unlock (PC만) ===== */
+    if (!isMobile) {
+      btn.addEventListener("mouseenter", () => { if (btn.classList.contains("show")) showIcon("unlock"); });
+      btn.addEventListener("mouseleave", () => { if (btn.classList.contains("show")) showIcon("lock"); });
+    }
+
+    /* ===== 클릭/탭 ===== */
+    btn.addEventListener("click", () => {
+      if (!btn.classList.contains("show")) return;
+      try{sessionStorage.removeItem("gl_mode");}catch(e){}
+      if (isMobile) {
+        showIcon("unlock");
+        setTimeout(() => { location.href = TARGET_URL; }, 320);
+      } else {
+        location.href = TARGET_URL;
+      }
+    });
+
+    /* ===== 언어 전환 ===== */
+    function applyLang(newLang) {
+      try {
+        if (isMobile) { localStorage.setItem("m_lang", newLang); }
+        else { localStorage.setItem("d_lang", newLang); localStorage.setItem("lang", newLang); }
+      } catch(e) {}
+      location.reload();
+    }
+    document.getElementById("btnKR")?.addEventListener("click", () => applyLang("KR"));
+    document.getElementById("btnEN")?.addEventListener("click", () => applyLang("EN"));
+
+    /* ===== 디바이스 강제 전환 ===== */
+    document.getElementById("btnDesktop")?.addEventListener("click", () => {
+      try { localStorage.setItem("force_device", "PC"); } catch(e) {}
+      location.reload();
+    });
+    document.getElementById("btnMobile")?.addEventListener("click", () => {
+      try { localStorage.setItem("force_device", "M"); } catch(e) {}
+      location.reload();
+    });
+
+    /* ===== 현재 상태 표시 ===== */
+    if (isMobile) document.getElementById("btnMobile")?.classList.add("active");
+    else document.getElementById("btnDesktop")?.classList.add("active");
+    if (lang === "KR") document.getElementById("btnKR")?.classList.add("active");
+    else document.getElementById("btnEN")?.classList.add("active");
+  </script>
+</body>
+</html>
