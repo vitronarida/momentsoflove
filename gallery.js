@@ -267,13 +267,13 @@ html, body {
 .toc-panel {
   position: relative;
   width: 100%;
-  height: 85vh;
-  max-height: 92vh;
+  height: 94vh;
+  max-height: 96vh;
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.08);
   border-bottom: none;
-  border-radius: 20px 20px 0 0;
-  padding: 20px 24px 40px;
+  border-radius: 14px 14px 0 0;
+  padding: 12px 24px 40px;
   display: flex; flex-direction: column;
   overflow: hidden;
   -ms-overflow-style: none; scrollbar-width: none;
@@ -350,7 +350,7 @@ html, body {
 .menu-sub a { color: rgba(220,220,220,0.75); text-decoration: none; border-bottom: 1px solid rgba(220,220,220,0.20); }
 .index-panel {
   position: relative;
-  width: 100%; max-height: 92vh;
+  width: 100%; height: 94vh; max-height: 96vh;
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.08);
   border-bottom: none;
@@ -1406,11 +1406,6 @@ const buildTOCHTML = () => {
     <div id="tocOverlay" class="overlay-panel" aria-hidden="true">
       <div class="overlay-backdrop" id="tocBackdrop"></div>
       <div class="toc-panel">
-        <div class="toc-handle"></div>
-        <div class="toc-header">
-          <div></div>
-          <div class="toc-close" id="tocClose">✕</div>
-        </div>
         <div class="mob-unified-body">
           <div class="mob-unified-left">
             <h3 class="mob-col-title" id="tocTitle">${t.tocTitle}</h3>
@@ -1456,8 +1451,11 @@ const buildTOCHTML = () => {
           <div class="mob-unified-right">
             <div class="mob-right-header">
               <h3 class="mob-col-title">${t.indexTitle}</h3>
-              <div class="mob-expand-btn" id="mobExpandBtn">
-                <svg viewBox="0 0 24 24"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="mob-expand-btn" id="mobExpandBtn">
+                  <svg viewBox="0 0 24 24"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg>
+                </div>
+                <div class="toc-close" id="tocClose">✕</div>
               </div>
             </div>
             <div class="mob-thumb-grid" id="mobThumbGrid"></div>
@@ -1468,7 +1466,6 @@ const buildTOCHTML = () => {
     <div id="indexOverlay" class="overlay-panel" aria-hidden="true">
       <div class="overlay-backdrop" id="indexBackdrop"></div>
       <div class="index-panel">
-        <div class="toc-handle"></div>
         <div class="toc-header" style="margin-bottom:8px;">
           <div>
             <h2 class="index-title" id="indexTitle">${t.indexTitle}</h2>
@@ -1481,7 +1478,6 @@ const buildTOCHTML = () => {
     <div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="aboutBackdrop"></div>
       <div class="index-panel panel-box">
-        <div class="toc-handle"></div>
         <div class="toc-header" style="margin-bottom:8px;">
           <div>
             <h2 class="index-title" id="aboutTitle"></h2>
@@ -1494,7 +1490,6 @@ const buildTOCHTML = () => {
     <div id="gbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="gbBackdrop"></div>
       <div class="gb-panel panel-box">
-        <div class="toc-handle"></div>
         <div class="toc-header" style="margin-bottom:8px;">
           <div><h2 class="gb-title" id="gbTitle">${t.gbTitle}</h2></div>
           <div class="toc-close" id="gbClose">✕</div>
@@ -1507,7 +1502,6 @@ const buildTOCHTML = () => {
     <div id="thumbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="thumbBackdrop"></div>
       <div class="index-panel panel-box">
-        <div class="toc-handle"></div>
         <div class="toc-header" style="margin-bottom:8px;">
           <div><h2 class="index-title" id="thumbTitle">${t.indexList}</h2></div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -1628,7 +1622,6 @@ const buildTOCHTML = () => {
     <div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="aboutBackdrop"></div>
       <div class="index-panel panel-box">
-        <div class="toc-handle"></div>
         <div class="toc-header" style="margin-bottom:8px;">
           <div>
             <h2 class="index-title" id="aboutTitle"></h2>
@@ -1696,6 +1689,12 @@ const renderIndex = (gridId) => {
 };
 
 // ===== TOC/INDEX 오버레이 =====
+const scrollToCurrent = (container, selector) => {
+  setTimeout(() => {
+    const el = container?.querySelector(selector);
+    if (el) el.scrollIntoView({ block:"center", behavior:"smooth" });
+  }, 120);
+};
 const TOCManager = {
   open: () => {
     const ov=document.getElementById("tocOverlay");
@@ -1703,8 +1702,12 @@ const TOCManager = {
     if (isMobile) {
       const grid = document.getElementById("mobThumbGrid");
       if (grid) { currentHearts = getHeartsCache(); buildThumbGrid(grid, currentHearts); }
+      scrollToCurrent(document.querySelector(".mob-unified-right"), ".thumb-current");
     }
-    else renderThumbnails();
+    else {
+      renderThumbnails();
+      scrollToCurrent(document.querySelector(".unified-right"), ".thumb-current");
+    }
   },
   close: () => {
     const ov=document.getElementById("tocOverlay");
@@ -1721,6 +1724,7 @@ const IndexManager = {
     const ov=document.getElementById("indexOverlay");
     if(ov){ ov.style.display="flex"; }
     ov.classList.add("on"); ov.setAttribute("aria-hidden","false");
+    scrollToCurrent(document.getElementById("indexGrid"), ".idx-current");
   },
   close: () => {
     const ov=document.getElementById("indexOverlay");
@@ -2019,6 +2023,7 @@ const ThumbnailManager = {
     ov.classList.add("on");
     ov.setAttribute("aria-hidden","false");
     await renderThumbnails();
+    scrollToCurrent(document.getElementById("thumbGrid"), ".thumb-current");
   },
   close: () => {
     const ov = document.getElementById("thumbOverlay");
