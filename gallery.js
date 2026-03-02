@@ -267,8 +267,9 @@ html, body {
 .toc-panel {
   position: relative;
   width: 100%;
-  height: 94vh;
-  max-height: 96vh;
+  height: 94dvh;
+  max-height: 96dvh;
+  padding-top: env(safe-area-inset-top, 0px);
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.08);
   border-bottom: none;
@@ -350,7 +351,8 @@ html, body {
 .menu-sub a { color: rgba(220,220,220,0.75); text-decoration: none; border-bottom: 1px solid rgba(220,220,220,0.20); }
 .index-panel {
   position: relative;
-  width: 100%; height: 94vh; max-height: 96vh;
+  width: 100%; height: 94dvh; max-height: 96dvh;
+  padding-top: env(safe-area-inset-top, 0px);
   background: rgba(255,255,255,0.10);
   border: 1px solid rgba(255,255,255,0.08);
   border-bottom: none;
@@ -401,7 +403,7 @@ html, body {
 }
 #aboutOverlay .index-panel {
   width: min(480px, 90vw);
-  max-height: 80vh;
+  max-height: 80dvh;
   border-radius: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   padding: 20px 24px 32px;
@@ -433,7 +435,7 @@ html, body {
 }
 #poemOverlay .index-panel {
   width: min(480px, 90vw);
-  max-height: 90vh;
+  max-height: 90dvh;
   border-radius: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   padding: 20px 24px 32px;
@@ -461,7 +463,7 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 /* ===== Guestbook 오버레이 (모바일) ===== */
 #gbOverlay { align-items:flex-end; }
 #gbOverlay .gb-panel {
-  position:relative; width:100%; max-height:92vh;
+  position:relative; width:100%; max-height:92dvh;
   background: rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.08); border-bottom:none;
   border-radius:20px 20px 0 0; padding:14px 16px 24px; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none;
   transform:translateY(20px); transition:transform 400ms ease; color:#e6e6e6;
