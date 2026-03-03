@@ -1506,9 +1506,7 @@ const LANG_TEXTS = {
 백조와 반영은
 서로의 색으로 물들고
 온 세상이 사랑으로 번져갑니다.
-
-모든 사랑의 순간은 당신으로 열리고,
-사랑은 당신으로 완성됩니다.`,menuH_COPY:"저작권",
+`,menuH_COPY:"저작권",
       homeText:"사랑의 모든 순간은 당신으로 열립니다",
       prologue:"프롤로그",lovedream:"사랑의 꿈 (일부 공개)",lovesong:"사랑의 노래",
       resonance:"사랑의 공명 (잠김)",dance:"사랑의 춤 (잠김)",chorus:"사랑의 합창 (잠김)",
