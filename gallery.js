@@ -196,7 +196,7 @@ html, body {
   font-family: "Nanum Pen Script", cursive;
 }
 .scene-text {
-  font-size: clamp(20px, 5vw, 26px);
+  font-size: clamp(22px, 3vw, 28px);
   color: rgba(235,235,235,0.92);
   text-align: center;
   line-height: 1.6;
@@ -419,14 +419,14 @@ html, body {
 }
 #aboutGrid .about-body {
   font-family: "Nanum Pen Script", cursive;
-  font-size: clamp(16px, 2vw, 18px);
-  line-height: 1.6;
+  font-size: clamp(22px, 3vw, 28px);
+  line-height: 0.8;
   color: rgba(235,235,235,0.90);
   white-space: pre-wrap;
   word-break: keep-all;
   padding-left: 16px;
 }
-#aboutGrid .about-body p { margin: 0 0 16px 0; }
+#aboutGrid .about-body p { margin: 0 0 40px 0; }
 #aboutGrid .about-body p:last-child { margin-bottom: 0; }
 /* poem 모달 */
 #poemOverlay {
@@ -1804,7 +1804,8 @@ const AboutManager = {
     titleEl.textContent = t.aboutTitle || t.menuH_ABOUT || "";
 
     const parts = String(t.aboutBody||"").trim().split(/\n\s*\n/);
-    const bodyHTML = parts.map(p => `<p>${p.replace(/\n/g,"<br>")}</p>`).join("");
+    const brTag = isMobile ? "<br><br>" : "<br>";
+    const bodyHTML = parts.map(p => `<p>${p.replace(/\n/g,brTag)}</p>`).join("");
     grid.innerHTML = `<div class="about-body">${bodyHTML}</div>`;
 
     ov.style.display="flex";

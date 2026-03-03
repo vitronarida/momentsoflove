@@ -661,6 +661,22 @@
         langBar.style.pointerEvents = "none";
         setTimeout(() => { langBar.style.pointerEvents = ""; }, 600);
       }
+      // 마우스/터치 시 하단 바 표시
+      let skipIdleTimer = null;
+      const SKIP_IDLE_MS = 5000;
+      const skipHideBars = () => {
+        langBar?.classList.remove("show");
+        deviceBar?.classList.remove("show");
+      };
+      const skipShowBars = () => {
+        langBar?.classList.add("show");
+        deviceBar?.classList.add("show");
+        clearTimeout(skipIdleTimer);
+        skipIdleTimer = setTimeout(skipHideBars, SKIP_IDLE_MS);
+      };
+      document.addEventListener("mousemove", skipShowBars);
+      document.addEventListener("keydown", skipShowBars);
+      document.addEventListener("touchstart", skipShowBars, {passive:true});
     });
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */
