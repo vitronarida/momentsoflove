@@ -184,13 +184,13 @@
 
     /* ===== skip 버튼 ===== */
     .skip-bar {
-      position: absolute; right: 6%;
-      bottom: calc(6% + env(safe-area-inset-bottom));
-      opacity: 0; transform: translateY(6px);
-      transition: opacity 2000ms ease, transform 2000ms ease;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: calc(6% + env(safe-area-inset-bottom) + 16px);
+      opacity: 0;
+      transition: opacity 2000ms ease;
       pointer-events: none;
     }
-    .skip-bar.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .skip-bar.show { opacity: 1; pointer-events: auto; }
     .skip-btn {
       width: 36px; height: 36px; border-radius: 999px;
       display: grid; place-items: center;
@@ -595,24 +595,6 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
-
-        // 마우스/터치 시 하단 바 표시, 일정 시간 후 숨김
-        let idleTimer = null;
-        const IDLE_MS = 5000;
-        const hideBars = () => {
-          langBar?.classList.remove("show");
-          deviceBar?.classList.remove("show");
-        };
-        const showBars = () => {
-          langBar?.classList.add("show");
-          deviceBar?.classList.add("show");
-          clearTimeout(idleTimer);
-          idleTimer = setTimeout(hideBars, IDLE_MS);
-        };
-        idleTimer = setTimeout(hideBars, IDLE_MS);
-        document.addEventListener("mousemove", showBars);
-        document.addEventListener("keydown", showBars);
-        document.addEventListener("touchstart", showBars, {passive:true});
       };
       const autoTimer = setTimeout(showLock, 3000);
       document.addEventListener("mousemove", showLock);
@@ -661,22 +643,6 @@
         langBar.style.pointerEvents = "none";
         setTimeout(() => { langBar.style.pointerEvents = ""; }, 600);
       }
-      // 마우스/터치 시 하단 바 표시
-      let skipIdleTimer = null;
-      const SKIP_IDLE_MS = 5000;
-      const skipHideBars = () => {
-        langBar?.classList.remove("show");
-        deviceBar?.classList.remove("show");
-      };
-      const skipShowBars = () => {
-        langBar?.classList.add("show");
-        deviceBar?.classList.add("show");
-        clearTimeout(skipIdleTimer);
-        skipIdleTimer = setTimeout(skipHideBars, SKIP_IDLE_MS);
-      };
-      document.addEventListener("mousemove", skipShowBars);
-      document.addEventListener("keydown", skipShowBars);
-      document.addEventListener("touchstart", skipShowBars, {passive:true});
     });
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */

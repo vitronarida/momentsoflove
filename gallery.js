@@ -457,6 +457,69 @@ html, body {
   word-break: keep-all;
   padding: 0 16px;
 }
+/* intro 버튼 오버레이 */
+#introOverlay {
+  align-items: center;
+  justify-content: center;
+}
+#introOverlay .intro-circle-wrap {
+  position: relative;
+  display: grid; place-items: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+#introOverlay.on .intro-circle-wrap {
+  opacity: 1;
+  transform: scale(1);
+}
+#introOverlay .intro-btn {
+  width: 88px; height: 88px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: relative; z-index: 1;
+  animation: introBreath 2.8s ease-in-out infinite, introGlow 2.8s ease-in-out infinite;
+}
+#introOverlay .intro-btn-text {
+  font-family: "Nanum Pen Script", cursive;
+  font-size: 20px; letter-spacing: 0.5px;
+  color: rgba(235,235,235,0.65);
+  transition: color 200ms ease;
+}
+#introOverlay .intro-btn:active {
+  transform: scale(0.92);
+  animation: none;
+}
+#introOverlay .intro-ring {
+  position: absolute; top: 50%; left: 50%;
+  width: 88px; height: 88px;
+  margin-top: -44px; margin-left: -44px;
+  border-radius: 999px; pointer-events: none;
+}
+#introOverlay .intro-ring:nth-child(2) {
+  border: 1.5px solid rgba(255,255,255,0.22);
+  animation: introPulse 2.4s ease-out infinite;
+}
+#introOverlay .intro-ring:nth-child(3) {
+  border: 1px solid rgba(255,255,255,0.14);
+  animation: introPulse 2.4s ease-out 0.8s infinite;
+}
+@keyframes introBreath {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.75; }
+}
+@keyframes introGlow {
+  0%, 100% { box-shadow: 0 0 5px 2px rgba(255,255,255,0.06); }
+  50% { box-shadow: 0 0 14px 5px rgba(255,255,255,0.14); }
+}
+@keyframes introPulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
 /* 모바일 info 타임스탬프 */
 .info-version{ position:absolute; bottom:14px; right:18px; font-family:"Nanum Pen Script", cursive;
 font-size:16px; color: rgba(180,180,180,0.35); }
@@ -893,6 +956,14 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   font-size: 22px; line-height: 1; z-index: 20; }
 
+  /* 인포 버튼 (왼쪽 하단) */
+  .toc-info-btn{ position:absolute; bottom: 14px; left: 14px; right: auto; width: 36px; height: 36px;
+  border-radius: 999px; display:grid; place-items:center; color: rgba(200,200,200,0.6);
+  background: transparent; border: 1px solid rgba(255,255,255,0.05);
+  cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  transition: color 200ms ease, border-color 200ms ease, background 200ms ease; z-index:10; }
+  .toc-info-btn:hover{ color: rgba(235,235,235,0.92); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.035); }
+
   /* 인포 패널 슬라이드 */
   .toc-main{ transition: opacity 250ms ease, transform 250ms ease; }
   .info-section{ margin-bottom: 14px; }
@@ -952,6 +1023,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-thumb-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding:0 2px; }
   .unified-thumb-body::-webkit-scrollbar{ display:none; }
   .unified-panel .toc-close{ top:12px; right:12px; }
+  .unified-panel .toc-info-btn{ bottom:12px; left:14px; right:auto; }
   .contact-icons{ display:flex; gap:14px; padding-left:14px; margin-top:2px; }
   .contact-icon{ display:grid; place-items:center; color:rgba(220,220,220,0.55); transition:color 180ms ease; }
   .contact-icon:hover{ color:rgba(235,235,235,0.92); }
@@ -1022,6 +1094,79 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   white-space: pre-wrap;
   word-break: keep-all;
   padding: 0 16px;
+}
+
+#introOverlay{ z-index:10003; }
+#introOverlay .intro-circle-wrap{
+  position: relative;
+  display: grid; place-items: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+#introOverlay.on .intro-circle-wrap{
+  opacity: 1;
+  transform: scale(1);
+}
+#introOverlay .intro-btn{
+  width: 88px; height: 88px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  cursor: pointer; user-select: none;
+  position: relative; z-index: 1;
+  animation: introBreath 2.8s ease-in-out infinite, introGlow 2.8s ease-in-out infinite;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+#introOverlay .intro-btn-text{
+  font-family: "Nanum Pen Script", cursive;
+  font-size: 20px; letter-spacing: 0.5px;
+  color: rgba(235,235,235,0.65);
+  transition: color 200ms ease;
+}
+#introOverlay .intro-btn:hover{
+  animation: none;
+  opacity: 1;
+  background: rgba(255,255,255,0.09);
+  box-shadow: 0 0 20px 6px rgba(255,255,255,0.18);
+}
+#introOverlay .intro-btn:hover .intro-btn-text{
+  color: rgba(235,235,235,0.95);
+}
+#introOverlay .intro-btn:active{
+  transform: scale(0.91);
+  box-shadow: 0 0 10px rgba(0,0,0,0.55);
+  animation: none;
+}
+#introOverlay .intro-ring{
+  position: absolute; top: 50%; left: 50%;
+  width: 88px; height: 88px;
+  margin-top: -44px; margin-left: -44px;
+  border-radius: 999px; pointer-events: none;
+}
+#introOverlay .intro-ring:nth-child(2){
+  border: 1.5px solid rgba(255,255,255,0.22);
+  animation: introPulse 2.4s ease-out infinite;
+}
+#introOverlay .intro-ring:nth-child(3){
+  border: 1px solid rgba(255,255,255,0.14);
+  animation: introPulse 2.4s ease-out 0.8s infinite;
+}
+#introOverlay .intro-btn:hover ~ .intro-ring{
+  animation: none; opacity: 0;
+}
+@keyframes introBreath {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.75; }
+}
+@keyframes introGlow {
+  0%, 100% { box-shadow: 0 0 5px 2px rgba(255,255,255,0.06); }
+  50% { box-shadow: 0 0 14px 5px rgba(255,255,255,0.14); }
+}
+@keyframes introPulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
 }
 
   .idx-head{ grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between;
@@ -1374,7 +1519,8 @@ const LANG_TEXTS = {
       infoNav:"이전 / 다음 작품",infoMenu:"메뉴 열기 / 닫기",
       infoHelp:"도움말 열기 / 닫기",infoT:"텍스트 보기",
       infoG:"독자의 말 열기 / 닫기",infoP:"작가의 말 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
-      menuH_GB:"독자의 말",gbTitle:"독자의 말"},
+      menuH_GB:"독자의 말",gbTitle:"독자의 말",
+      introText:"모든 사랑의\n시작은\n당신으로\n열립니다"},
   EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Index",menuH_CONTACT:"Contact",
       menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`Dazzling sunlight,
 a gentle breeze,
@@ -1398,7 +1544,8 @@ and love is complete with you.`,menuH_COPY:"Copyright",
       infoNav:"Prev / Next",infoMenu:"Open / Close Menu",
       infoHelp:"Open / Close Help",infoT:"View Text",
       infoG:"Open / Close Reader's Words",infoP:"Open / Close Artist's Note",copyright:"© Vitro Narida. All rights reserved.",
-      menuH_GB:"Reader's Words",gbTitle:"Reader's Words"}
+      menuH_GB:"Reader's Words",gbTitle:"Reader's Words",
+      introText:"Every love\nbegins\nwith\nyou"}
 };
 
 const goTo = (url) => {
@@ -1483,6 +1630,9 @@ const buildTOCHTML = () => {
             <div class="mob-thumb-grid" id="mobThumbGrid"></div>
           </div>
         </div>
+        <div class="toc-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+        </div>
       </div>
     </div>
     <div id="indexOverlay" class="overlay-panel" aria-hidden="true">
@@ -1547,6 +1697,14 @@ const buildTOCHTML = () => {
           <div class="info-row"><kbd>P</kbd> <span>${t.infoP}</span></div>
         </div>
         <div class="info-version">${BUILD_TS}</div>
+      </div>
+    </div>
+    <div id="introOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="introBackdrop"></div>
+      <div class="intro-circle-wrap">
+        <div class="intro-btn" id="introBtn"><span class="intro-btn-text">intro</span></div>
+        <div class="intro-ring"></div>
+        <div class="intro-ring"></div>
       </div>
     </div>
     <div id="thumbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
@@ -1616,6 +1774,9 @@ const buildTOCHTML = () => {
             <div class="menu-section">
               <div class="menu-copyright" id="copyrightLine">© Vitro Narida.<br>All rights reserved.</div>
             </div>
+          </div>
+          <div class="toc-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
           </div>
         </div>
         <div class="unified-right">
@@ -1695,6 +1856,14 @@ const buildTOCHTML = () => {
           <div class="info-row"><kbd>P</kbd> <span>${t.infoP}</span></div>
         </div>
         <div class="info-version">${BUILD_TS}</div>
+      </div>
+    </div>
+    <div id="introOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="introBackdrop"></div>
+      <div class="intro-circle-wrap">
+        <div class="intro-btn" id="introBtn"><span class="intro-btn-text">intro</span></div>
+        <div class="intro-ring"></div>
+        <div class="intro-ring"></div>
       </div>
     </div>
     <div id="app" role="main"></div>
@@ -1833,6 +2002,25 @@ const HelpManager = {
   },
   close: () => {
     const ov = document.getElementById("helpOverlay");
+    if (!ov) return;
+    ov.classList.remove("on");
+    ov.setAttribute("aria-hidden","true");
+    setTimeout(() => { ov.style.display = "none"; }, 420);
+  }
+};
+
+const IntroManager = {
+  open: () => {
+    const ov = document.getElementById("introOverlay");
+    if (!ov) return;
+    ov.style.display = "flex";
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      ov.classList.add("on");
+      ov.setAttribute("aria-hidden","false");
+    }));
+  },
+  close: () => {
+    const ov = document.getElementById("introOverlay");
     if (!ov) return;
     ov.classList.remove("on");
     ov.setAttribute("aria-hidden","true");
@@ -2129,6 +2317,7 @@ const bindCommon = () => {
   document.getElementById("gbClose")?.addEventListener("click", GuestbookManager.close);
   document.getElementById("helpBackdrop")?.addEventListener("click", HelpManager.close);
   document.getElementById("helpClose")?.addEventListener("click", HelpManager.close);
+  document.getElementById("tocInfoBtn")?.addEventListener("click", HelpManager.open);
   document.getElementById("menuH_GB")?.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();GuestbookManager.open();});
   document.getElementById("menuH_GB")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();GuestbookManager.open();}});
   document.getElementById("langKR")?.addEventListener("click", ()=>setLang("KR"));
@@ -2167,7 +2356,9 @@ const bindCommon = () => {
   document.getElementById("menuH_ABOUT")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();AboutManager.open();}});
 
   const homeEl=document.getElementById("tocHome");
-  homeEl?.addEventListener("click",(e)=>{e.preventDefault();TOCManager.close();try{sessionStorage.removeItem("gl_mode");}catch(e){}setTimeout(()=>goTo("../index.html"),200);});
+  homeEl?.addEventListener("click",(e)=>{e.preventDefault();IntroManager.open();});
+  document.getElementById("introBackdrop")?.addEventListener("click", IntroManager.close);
+  document.getElementById("introBtn")?.addEventListener("click",()=>{IntroManager.close();try{sessionStorage.removeItem("gl_mode");}catch(e){}setTimeout(()=>goTo("../index.html"),300);});
 };
 
 // ===== 효과 함수 선언 (모바일/데스크탑 공통) =====
@@ -2567,7 +2758,7 @@ if (isMobile) {
   const codeEl = document.createElement("div");
   codeEl.className = "work-code";
   codeEl.textContent = SC.code ? `Op. ${SC.code}` : "";
-  if (SC.code) { codeEl.style.cursor="pointer"; codeEl.addEventListener("click", IndexManager.open); }
+  if (SC.code) { codeEl.style.cursor="pointer"; codeEl.addEventListener("click", ThumbnailManager.open); }
 
   // 네비바
   const navBar = document.createElement("div"); navBar.className = "nav-bar";
@@ -2674,9 +2865,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     const thumbOn=document.getElementById("thumbOverlay")?.classList.contains("on");
     const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
-    if(e.key==="Escape"){if(helpOn)HelpManager.close();else if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
+    const introOn=document.getElementById("introOverlay")?.classList.contains("on");
+    if(e.key==="Escape"){if(introOn)IntroManager.close();else if(helpOn)HelpManager.close();else if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn||helpOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn||helpOn||introOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -2924,7 +3116,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const poemOn=document.getElementById("poemOverlay")?.classList.contains("on");
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
+    const introOn=document.getElementById("introOverlay")?.classList.contains("on");
     if(e.key==="Escape"){
+      if(introOn){e.preventDefault();IntroManager.close();return;}
       if(helpOn){e.preventDefault();HelpManager.close();return;}
       if(poemOn){e.preventDefault();PoemManager.close();return;}
       if(gbOn){e.preventDefault();GuestbookManager.close();return;}
@@ -2937,7 +3131,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(e.key==="i"||e.key==="I"){e.preventDefault();indexOn?IndexManager.close():IndexManager.open();return;}
     if(e.key==="g"||e.key==="G"){e.preventDefault();gbOn?GuestbookManager.close():GuestbookManager.open();return;}
     if(e.key==="h"||e.key==="H"){e.preventDefault();helpOn?HelpManager.close():HelpManager.open();return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn||helpOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||helpOn||introOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
