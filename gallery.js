@@ -32,7 +32,7 @@ html, body {
   overflow: hidden;
   width: 100%;
   aspect-ratio: 1 / 1;
-  touch-action: pan-x;
+  touch-action: manipulation;
 }
 .control-area {
   position: relative;
@@ -47,7 +47,7 @@ html, body {
   gap: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  touch-action: pan-y;
+  touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
 }
 @media (min-aspect-ratio: 1/1) {
@@ -893,31 +893,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   font-size: 22px; line-height: 1; z-index: 20; }
 
-  /* 인포 버튼 */
-  .toc-info-btn{ position:absolute; bottom: 14px; right: 14px; width: 36px; height: 36px;
-  border-radius: 999px; display:grid; place-items:center; color: rgba(200,200,200,0.6);
-  background: transparent; border: 1px solid rgba(255,255,255,0.05);
-  cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-  transition: color 200ms ease, border-color 200ms ease, background 200ms ease; z-index:10; }
-  .toc-info-btn:hover{ color: rgba(235,235,235,0.92); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.035); }
-
   /* 인포 패널 슬라이드 */
   .toc-main{ transition: opacity 250ms ease, transform 250ms ease; }
-  .toc-info-panel{ position:absolute; inset:0; padding: 14px 22px 12px;
-  overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; opacity:0; pointer-events:none;
-  transform: translateX(18px); transition: opacity 250ms ease, transform 250ms ease; }
-  .toc-info-panel::-webkit-scrollbar { display: none; }
-  .toc-panel.show-info .toc-main{ opacity:0; pointer-events:none; transform: translateX(-18px); }
-  .toc-panel.show-info .toc-info-panel{ opacity:1; pointer-events:auto; transform: translateX(0); }
-  .toc-panel.show-info .toc-info-btn{ opacity:0; pointer-events:none; }
-  .unified-left.show-info .toc-main{ opacity:0; pointer-events:none; transform: translateX(-18px); }
-  .unified-left.show-info .toc-info-panel{ opacity:1; pointer-events:auto; transform: translateX(0); }
-  .unified-left.show-info .toc-info-btn{ opacity:0; pointer-events:none; }
-  .info-back-btn{ display:inline-flex; align-items:center; gap:6px; cursor:pointer;
-  font-family:"Nanum Pen Script", cursive; font-size:20px; color: rgba(180,180,180,0.7);
-  border:none; background:none; padding:0; margin-bottom:10px;
-  transition: color 180ms ease; -webkit-tap-highlight-color: transparent; }
-  .info-back-btn:hover{ color: rgba(235,235,235,0.92); }
   .info-section{ margin-bottom: 14px; }
   .info-section-h{ font-family:"Nanum Pen Script", cursive; font-size:26px; line-height:1.1;
   color: rgba(235,235,235,0.92); margin: 0 0 6px 0; padding-bottom: 4px;
@@ -959,7 +936,6 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-left .toc-list{ font-size:20px; }
   .unified-left .toc-item{ gap:10px; }
   .unified-left .toc-bullet{ width:10px; flex:0 0 10px; font-size:10px; }
-  .unified-left .info-version{ font-size:18px; bottom:10px; right:14px; }
   .unified-right{ flex:1; display:flex; flex-direction:column; padding:16px 16px 14px; overflow:hidden; background:rgba(0,0,0,0.18); border-radius:0 16px 16px 0; }
   .unified-right .index-title{ margin:0 0 10px 4px; padding-right:40px; }
   .unified-right-header{ display:flex; align-items:center; justify-content:space-between; padding-right:40px; }
@@ -976,7 +952,6 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-thumb-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding:0 2px; }
   .unified-thumb-body::-webkit-scrollbar{ display:none; }
   .unified-panel .toc-close{ top:12px; right:12px; }
-  .unified-panel .toc-info-btn{ bottom:12px; left:clamp(160px,26%,200px); transform:translateX(-50%); right:auto; }
   .contact-icons{ display:flex; gap:14px; padding-left:14px; margin-top:2px; }
   .contact-icon{ display:grid; place-items:center; color:rgba(220,220,220,0.55); transition:color 180ms ease; }
   .contact-icon:hover{ color:rgba(235,235,235,0.92); }
@@ -1376,7 +1351,7 @@ const LOCKED_TITLES = {
 };
 
 const LANG_TEXTS = {
-  KR:{tocTitle:"메뉴",menuH_TOC:"목차",menuH_INDEX:"색인",menuH_CONTACT:"연락처",
+  KR:{tocTitle:"메뉴",menuH_TOC:"목차",menuH_INDEX:"작품 목록",menuH_CONTACT:"연락처",
       menuH_ABOUT:"작가의 말",aboutTitle:"작가의 말",aboutBody:`눈부신 햇살,
 잔잔한 바람,
 백조의 우아한 자태에
@@ -1393,14 +1368,12 @@ const LANG_TEXTS = {
       prologue:"프롤로그",lovedream:"사랑의 꿈 (일부 공개)",lovesong:"사랑의 노래",
       resonance:"사랑의 공명 (잠김)",dance:"사랑의 춤 (잠김)",chorus:"사랑의 합창 (잠김)",
       epilogue:"에필로그",indexList:"작품 목록",
-      indexTitle:"색인",indexSub:"존재하는 작품은 클릭하면 바로 이동합니다",
+      indexTitle:"작품 목록",indexSub:"존재하는 작품은 클릭하면 바로 이동합니다",
       indexBtnLabel:"버튼",indexThumbLabel:"썸네일",
       infoBack:"뒤로",infoHelpTitle:"사용법",
       infoNav:"이전 / 다음 작품",infoMenu:"메뉴 열기 / 닫기",
-      infoIndex:"작품 목록 열기 / 닫기",infoHelp:"도움말 열기 / 닫기",
-      infoP:"사진만 보기",infoT:"사진 + 텍스트 보기",infoA:"전체 UI 보기",
-      infoG:"독자의 말 열기 / 닫기",
-      infoEsc:"닫기 / 전체 UI 복귀",copyright:"© Vitro Narida. All rights reserved.",
+      infoHelp:"도움말 열기 / 닫기",infoT:"텍스트 보기",
+      infoG:"독자의 말 열기 / 닫기",infoP:"작가의 말 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
       menuH_GB:"독자의 말",gbTitle:"독자의 말"},
   EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Index",menuH_CONTACT:"Contact",
       menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`Dazzling sunlight,
@@ -1423,10 +1396,8 @@ and love is complete with you.`,menuH_COPY:"Copyright",
       indexBtnLabel:"Buttons",indexThumbLabel:"Thumbnails",
       infoBack:"Back",infoHelpTitle:"How to Use",
       infoNav:"Prev / Next",infoMenu:"Open / Close Menu",
-      infoIndex:"Open / Close Index",infoHelp:"Open / Close Help",
-      infoP:"Photo Only",infoT:"Photo + Text",infoA:"Full UI",
-      infoG:"Open / Close Reader's Words",
-      infoEsc:"Close / Restore Full UI",copyright:"© Vitro Narida. All rights reserved.",
+      infoHelp:"Open / Close Help",infoT:"View Text",
+      infoG:"Open / Close Reader's Words",infoP:"Open / Close Artist's Note",copyright:"© Vitro Narida. All rights reserved.",
       menuH_GB:"Reader's Words",gbTitle:"Reader's Words"}
 };
 
@@ -1560,6 +1531,24 @@ const buildTOCHTML = () => {
         <div id="gbListArea"></div>
       </div>
     </div>
+    <div id="helpOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="helpBackdrop"></div>
+      <div class="index-panel panel-box">
+        <div class="toc-header" style="margin-bottom:8px;">
+          <div><h2 class="index-title" id="helpTitle">${t.infoHelpTitle}</h2></div>
+          <div class="toc-close" id="helpClose">✕</div>
+        </div>
+        <div class="info-section" style="padding:0 16px;">
+          <div class="info-row"><kbd>← →</kbd> <span>${t.infoNav}</span></div>
+          <div class="info-row"><kbd>M</kbd> <span>${t.infoMenu}</span></div>
+          <div class="info-row"><kbd>H</kbd> <span>${t.infoHelp}</span></div>
+          <div class="info-row"><kbd>T</kbd> <span>${t.infoT}</span></div>
+          <div class="info-row"><kbd>G</kbd> <span>${t.infoG}</span></div>
+          <div class="info-row"><kbd>P</kbd> <span>${t.infoP}</span></div>
+        </div>
+        <div class="info-version">${BUILD_TS}</div>
+      </div>
+    </div>
     <div id="thumbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
       <div class="overlay-backdrop" id="thumbBackdrop"></div>
       <div class="index-panel panel-box">
@@ -1628,28 +1617,6 @@ const buildTOCHTML = () => {
               <div class="menu-copyright" id="copyrightLine">© Vitro Narida.<br>All rights reserved.</div>
             </div>
           </div>
-          <div class="toc-info-btn" id="tocInfoBtn" aria-label="Information" tabindex="0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
-          </div>
-          <div class="toc-info-panel" id="tocInfoPanel">
-            <button class="info-back-btn" id="tocInfoBack">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
-              <span id="infoBackLabel">${t.infoBack}</span>
-            </button>
-            <div class="info-section">
-              <div class="info-section-h" id="infoHelpTitle">${t.infoHelpTitle}</div>
-              <div class="info-row"><kbd>← →</kbd> <span id="infoNav">${t.infoNav}</span></div>
-              <div class="info-row"><kbd>M</kbd> <span id="infoMenu">${t.infoMenu}</span></div>
-              <div class="info-row"><kbd>I</kbd> <span id="infoIndex">${t.infoIndex}</span></div>
-              <div class="info-row"><kbd>H</kbd> <span id="infoHelp">${t.infoHelp}</span></div>
-              <div class="info-row"><kbd>P</kbd> <span id="infoP">${t.infoP}</span></div>
-              <div class="info-row"><kbd>T</kbd> <span id="infoT">${t.infoT}</span></div>
-              <div class="info-row"><kbd>A</kbd> <span id="infoA">${t.infoA}</span></div>
-              <div class="info-row"><kbd>G</kbd> <span id="infoG">${t.infoG}</span></div>
-              <div class="info-row"><kbd>Esc</kbd> <span id="infoEsc">${t.infoEsc}</span></div>
-            </div>
-            <div class="info-version">${BUILD_TS}</div>
-          </div>
         </div>
         <div class="unified-right">
           <div class="unified-right-header">
@@ -1710,6 +1677,24 @@ const buildTOCHTML = () => {
         <div id="gbAuthArea"></div>
         <div id="gbFormArea"></div>
         <div id="gbListArea"></div>
+      </div>
+    </div>
+    <div id="helpOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+      <div class="overlay-backdrop" id="helpBackdrop"></div>
+      <div class="index-panel panel-box">
+        <div class="toc-header" style="margin-bottom:8px;">
+          <div><h2 class="index-title" id="helpTitle">${t.infoHelpTitle}</h2></div>
+          <div class="toc-close" id="helpClose">✕</div>
+        </div>
+        <div class="info-section" style="padding:0 16px;">
+          <div class="info-row"><kbd>← →</kbd> <span>${t.infoNav}</span></div>
+          <div class="info-row"><kbd>M</kbd> <span>${t.infoMenu}</span></div>
+          <div class="info-row"><kbd>H</kbd> <span>${t.infoHelp}</span></div>
+          <div class="info-row"><kbd>T</kbd> <span>${t.infoT}</span></div>
+          <div class="info-row"><kbd>G</kbd> <span>${t.infoG}</span></div>
+          <div class="info-row"><kbd>P</kbd> <span>${t.infoP}</span></div>
+        </div>
+        <div class="info-version">${BUILD_TS}</div>
       </div>
     </div>
     <div id="app" role="main"></div>
@@ -1783,8 +1768,6 @@ const TOCManager = {
   close: () => {
     const ov=document.getElementById("tocOverlay");
     ov.classList.remove("on"); ov.setAttribute("aria-hidden","true");
-    document.querySelector(".toc-panel")?.classList.remove("show-info");
-    document.querySelector(".unified-left")?.classList.remove("show-info");
     document.querySelector(".unified-panel")?.classList.remove("expanded");
   }
 };
@@ -1836,6 +1819,23 @@ const AboutManager = {
     setTimeout(() => {
       ov.style.display = "none";
     }, 420);
+  }
+};
+
+const HelpManager = {
+  open: () => {
+    const ov = document.getElementById("helpOverlay");
+    if (!ov) return;
+    ov.style.display = "flex";
+    ov.classList.add("on");
+    ov.setAttribute("aria-hidden","false");
+  },
+  close: () => {
+    const ov = document.getElementById("helpOverlay");
+    if (!ov) return;
+    ov.classList.remove("on");
+    ov.setAttribute("aria-hidden","true");
+    setTimeout(() => { ov.style.display = "none"; }, 420);
   }
 };
 
@@ -2126,16 +2126,29 @@ const bindCommon = () => {
   document.getElementById("aboutClose")?.addEventListener("click", AboutManager.close);
   document.getElementById("gbBackdrop")?.addEventListener("click", GuestbookManager.close);
   document.getElementById("gbClose")?.addEventListener("click", GuestbookManager.close);
+  document.getElementById("helpBackdrop")?.addEventListener("click", HelpManager.close);
+  document.getElementById("helpClose")?.addEventListener("click", HelpManager.close);
   document.getElementById("menuH_GB")?.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();GuestbookManager.open();});
   document.getElementById("menuH_GB")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();GuestbookManager.open();}});
   document.getElementById("langKR")?.addEventListener("click", ()=>setLang("KR"));
   document.getElementById("langEN")?.addEventListener("click", ()=>setLang("EN"));
 
-  const tocNav = {tocPrologue:"LPL_01",tocLoveDream:"LDR_00",tocLoveSong:"LSN_01",tocEpilogue:"LEL_01"};
-  Object.entries(tocNav).forEach(([id,file])=>{
+  const tocNav = {tocPrologue:"LPL",tocLoveDream:"LDR",tocLoveSong:"LSN",tocEpilogue:"LEL"};
+  Object.entries(tocNav).forEach(([id,prefix])=>{
     document.getElementById(id)?.addEventListener("click",(e)=>{
-      e.preventDefault(); TOCManager.close();
-      setTimeout(()=>goTo("./"+file+".html"),200);
+      e.preventDefault();
+      // 우측 썸네일 그리드에서 해당 섹션 헤더를 찾아 스크롤
+      const gridId = isMobile ? "mobThumbGrid" : "thumbGrid";
+      const grid = document.getElementById(gridId);
+      if(!grid) return;
+      const heads = grid.querySelectorAll(".thumb-section-head");
+      for(const h of heads){
+        if(h.textContent.trim().startsWith(prefix)){
+          const scrollParent = h.closest(".mob-unified-right") || h.closest(".unified-thumb-body") || grid.parentElement;
+          if(scrollParent){ scrollParent.scrollTop = h.offsetTop - scrollParent.offsetTop; }
+          break;
+        }
+      }
     });
   });
   const tocIndex=document.getElementById("tocIndex");
@@ -2659,9 +2672,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const poemOn=document.getElementById("poemOverlay")?.classList.contains("on");
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     const thumbOn=document.getElementById("thumbOverlay")?.classList.contains("on");
-    if(e.key==="Escape"){if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
+    const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
+    if(e.key==="Escape"){if(helpOn)HelpManager.close();else if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn||helpOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -2690,7 +2704,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   workCode.innerHTML=SC.code
     ?`Op. ${SC.code}<span class="page-num">&nbsp; P.${SC.pageNum}/${SC.totalPages}</span>`
     :`<span class="page-num">P.${SC.pageNum}/${SC.totalPages}</span>`;
-  workCode.setAttribute("data-tip", curLang==="KR" ? "색인" : "Index");
+  workCode.setAttribute("data-tip", curLang==="KR" ? "작품 목록" : "Index");
 
   const menuBtn=document.createElement("div");
   menuBtn.className="nav-menu nav-btn";
@@ -2898,8 +2912,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   menuBtn.addEventListener("click",TOCManager.open);
   workCode.addEventListener("click",(e)=>{e.preventDefault();e.stopPropagation();IndexManager.open();});
   workCode.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();IndexManager.open();}});
-  document.getElementById("tocInfoBtn")?.addEventListener("click",()=>{const el=document.querySelector(".unified-left")||document.querySelector(".toc-panel");el?.classList.add("show-info");});
-  document.getElementById("tocInfoBack")?.addEventListener("click",()=>{const el=document.querySelector(".unified-left")||document.querySelector(".toc-panel");el?.classList.remove("show-info");});
   document.getElementById("thumbExpandBtn")?.addEventListener("click",()=>{document.querySelector(".unified-panel")?.classList.toggle("expanded");});
   document.getElementById("thumbExpandBtn")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();document.querySelector(".unified-panel")?.classList.toggle("expanded");}});
 
@@ -2910,7 +2922,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const aboutOn=document.getElementById("aboutOverlay")?.classList.contains("on");
     const poemOn=document.getElementById("poemOverlay")?.classList.contains("on");
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
+    const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
     if(e.key==="Escape"){
+      if(helpOn){e.preventDefault();HelpManager.close();return;}
       if(poemOn){e.preventDefault();PoemManager.close();return;}
       if(gbOn){e.preventDefault();GuestbookManager.close();return;}
       if(aboutOn){e.preventDefault();AboutManager.close();return;}
@@ -2921,8 +2935,8 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
     if(e.key==="i"||e.key==="I"){e.preventDefault();indexOn?IndexManager.close():IndexManager.open();return;}
     if(e.key==="g"||e.key==="G"){e.preventDefault();gbOn?GuestbookManager.close():GuestbookManager.open();return;}
-    if(e.key==="h"||e.key==="H"){e.preventDefault();if(!menuOn)TOCManager.open();setTimeout(()=>{const el=document.querySelector(".unified-left")||document.querySelector(".toc-panel");el?.classList.add("show-info");},50);return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn)return;
+    if(e.key==="h"||e.key==="H"){e.preventDefault();helpOn?HelpManager.close():HelpManager.open();return;}
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||helpOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
