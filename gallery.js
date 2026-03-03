@@ -1380,7 +1380,7 @@ if (!SC) { console.error("THIS_SCENE not defined"); return; }
 
 // ===== 디바이스 감지 =====
 const isMobile = (() => {
-  const forced = (() => { try { return localStorage.getItem("force_device"); } catch(e) { return null; } })();
+  const forced = (() => { try { return sessionStorage.getItem("force_device"); } catch(e) { return null; } })();
   if (forced === "M") return true;
   if (forced === "PC") return false;
   return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);

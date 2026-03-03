@@ -467,7 +467,7 @@
 
     /* ===== 디바이스 감지 ===== */
     const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    const forced   = (() => { try { return localStorage.getItem("force_device"); } catch(e) { return null; } })();
+    const forced   = (() => { try { return sessionStorage.getItem("force_device"); } catch(e) { return null; } })();
     const isMobile = forced ? (forced === "M") : detectedMobile;
     const TARGET_URL = "./scenes/LPL_01.html?from=index";
 
@@ -676,11 +676,11 @@
 
     /* ===== 디바이스 강제 전환 ===== */
     document.getElementById("btnDesktop")?.addEventListener("click", () => {
-      try { localStorage.setItem("force_device", "PC"); } catch(e) {}
+      try { sessionStorage.setItem("force_device", "PC"); } catch(e) {}
       location.reload();
     });
     document.getElementById("btnMobile")?.addEventListener("click", () => {
-      try { localStorage.setItem("force_device", "M"); } catch(e) {}
+      try { sessionStorage.setItem("force_device", "M"); } catch(e) {}
       location.reload();
     });
 
