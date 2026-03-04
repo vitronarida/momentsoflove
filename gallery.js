@@ -1476,7 +1476,7 @@ const SCENES_ALL = [
   {id:"song15",   code:"LSN#15",kr:"나는 당신의 사랑안에서",                   en:"In your love",                                         file:"LSN_15"},
   {id:"song16",   code:"LSN#16",kr:"새로이 태어납니다",                        en:"I am born anew",                                       file:"LSN_16"},
   {id:"RST_05",   code:"",      kr:"아직 열리지 않은 이야기들이 있습니다.\n사랑의 공명, 사랑의 춤, 사랑의 합창 —\n언젠가, 다른 공간에서 만나길 바랍니다.",                                         en:"There are stories yet to be opened.\nLove Resonance, Love Dance, Love Chorus —\nwe hope to meet them someday, in another space.",                                                    file:"RST_05"},
-  {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상, 세상도 내 마음도 사랑으로 가득합니다",                    en:"A world embraced by love, the world and my heart are filled with love",                             file:"LEL_01"},
+  {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상,\n세상도 내 마음도 사랑으로 가득합니다",                    en:"A world embraced by love,\nthe world and my heart are filled with love",                             file:"LEL_01"},
 ];
 
 const INDEX_ROWS = [
@@ -1608,15 +1608,17 @@ const buildSceneList = () => {
     const thumbEl = hasThumb && hasPage
       ? `<div class="slst-thumb" style="cursor:pointer;" data-url="./${sc.file}.html">${thumbHTML}</div>`
       : `<div class="slst-thumb">${thumbHTML}</div>`;
-    return `<div class="slst-item${isCurrent?" slst-current":""}" data-code="${sc.code||""}" data-kr="${safeKr}" data-en="${safeEn}" data-has-poem="">${thumbEl}<span class="slst-title">${title}</span></div>`;
+    return `<div class="slst-item${isCurrent?" slst-current":""}" data-code="${sc.code||""}" data-kr="${safeKr}" data-en="${safeEn}" data-has-poem="">${thumbEl}<span class="slst-title">${title.replace(/\n/g,"<br>")}</span></div>`;
   }).join("");
 };
 
 const openPoemFromList = (code, kr, en, itemEl) => {
   if (!code) return;
+  // SCENES_ALL에서 원본 텍스트 가져오기 (줄바꿈 보존)
+  const sc = SCENES_ALL.find(s => s.code === code);
+  const title = sc ? (curLang==="KR" ? sc.kr : (sc.en||sc.kr)) : (curLang==="KR" ? kr : (en||kr));
   const poemCode = code.replace(/#/g,"_");
   const poemFile = curLang==="EN" ? `../poems/${poemCode}_EN.txt` : `../poems/${poemCode}.txt`;
-  const title = curLang==="KR" ? kr : (en||kr);
   fetch(poemFile).then(r => {
     if (!r.ok) throw new Error("not found");
     return r.text();
@@ -1627,7 +1629,9 @@ const openPoemFromList = (code, kr, en, itemEl) => {
       const ov = document.getElementById("poemOverlay");
       if (!ov) return;
       const titleEl = document.getElementById("poemTitle");
-      if (titleEl) titleEl.textContent = title;
+      if (titleEl) {
+        titleEl.innerHTML = title.replace(/\n/g, "<br>");
+      }
       const pb = document.getElementById("poemBody");
       if (pb) {
         pb.style.cssText = "font-family:'Nanum Pen Script',cursive;font-size:clamp(20px,2.5vw,24px);line-height:0.8;color:rgba(235,235,235,0.90);white-space:pre-wrap;word-break:keep-all;padding:0 16px;margin-top:32px;";
