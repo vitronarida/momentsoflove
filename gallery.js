@@ -1505,9 +1505,8 @@ const LANG_TEXTS = {
 
 백조와 반영은
 서로의 색으로 물들고
-온 세상이 사랑으로 번져갑니다.
-`,menuH_COPY:"저작권",
-      homeText:"사랑의 모든 순간은 당신으로 열립니다",
+온 세상이 사랑으로 번져갑니다.`,menuH_COPY:"저작권",
+      homeText:"모든 사랑의 순간은 당신으로 열립니다",
       prologue:"프롤로그",lovedream:"사랑의 꿈 (일부 공개)",lovesong:"사랑의 노래",
       resonance:"사랑의 공명 (잠김)",dance:"사랑의 춤 (잠김)",chorus:"사랑의 합창 (잠김)",
       epilogue:"에필로그",indexList:"작품 목록",
@@ -1518,7 +1517,7 @@ const LANG_TEXTS = {
       infoHelp:"도움말 열기 / 닫기",infoT:"텍스트 보기",
       infoG:"독자의 말 열기 / 닫기",infoP:"작가의 말 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
       menuH_GB:"독자의 말",gbTitle:"독자의 말",
-      introText:"모든 사랑의\n시작은\n당신으로\n열립니다"},
+      introText:"모든 사랑의\n순간은\n당신으로\n열립니다"},
   EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Index",menuH_CONTACT:"Contact",
       menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`Dazzling sunlight,
 a gentle breeze,
