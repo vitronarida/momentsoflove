@@ -226,11 +226,11 @@ html, body {
   width: 48px; height: 48px;
   border-radius: 999px;
   display: grid; place-items: center;
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  color: #e6e6e6;
+  color: rgba(235,235,235,0.35);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -645,7 +645,23 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .thumb-card.thumb-locked .thumb-code { color:rgba(255,255,255,0.45); }
 .thumb-card.thumb-locked .thumb-lock-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-60%); opacity:0.5; }
 .thumb-card.thumb-locked .thumb-lock-icon svg { width:22px; height:22px; stroke:rgba(255,255,255,0.55); fill:none; stroke-width:1.5; }
-.thumb-card.thumb-locked .thumb-title { position:absolute; bottom:22px; left:0; right:0; text-align:center; font-family:"Nanum Pen Script",cursive; font-size:12px; color:rgba(255,255,255,0.4); pointer-events:none; }`;
+.thumb-card.thumb-locked .thumb-title { position:absolute; bottom:22px; left:0; right:0; text-align:center; font-family:"Nanum Pen Script",cursive; font-size:12px; color:rgba(255,255,255,0.4); pointer-events:none; }
+/* ===== Scene List Overlay ===== */
+.slst-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.slst-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; min-height:0; }
+.slst-body::-webkit-scrollbar{ display:none; }
+.slst-item{ display:flex; align-items:center; gap:14px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.slst-item:last-child{ border-bottom:none; }
+.slst-thumb{ width:48px; height:48px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
+.slst-img{ width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 400ms ease; }
+.slst-img.loaded{ opacity:1; }
+.slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
+.slst-lock svg{ width:18px; height:18px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(17px,3.5vw,20px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title.has-poem{ cursor:pointer; }
+.slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
+.slst-current{ background:rgba(212,175,55,0.06); }
+.slst-current .slst-title{ color:rgba(212,175,55,0.88); }`;
 const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 /* CSS 변수 */
   :root{
@@ -731,9 +747,9 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   }
 
   /* 네비게이션 버튼 */
-  .nav-btn{ border-radius:999px; display:grid; place-items:center; color:#e6e6e6;
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.05);
+  .nav-btn{ border-radius:999px; display:grid; place-items:center; color:rgba(235,235,235,0.35);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   cursor:pointer; user-select:none;
   opacity:0; pointer-events:none; transition: opacity var(--nav-fade) ease, transform 200ms ease;
@@ -745,7 +761,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 
   .nav-menu{ position:absolute; top:6%; left:6%; transform: translateZ(0); z-index:60; width:52px; height:52px; }
 
-  .soloToggle{ position:absolute; top:6%; right:6%; z-index:60; width:52px; height:52px; opacity:0; visibility:hidden; }
+  .soloToggle{ position:absolute; top:6%; right:6%; z-index:60; width:52px; height:52px; }
 
   .nav-arrow{ position:absolute; bottom: var(--ui-bottom); transform: translateZ(0); z-index:20;
   width:52px; height:52px; }
@@ -771,31 +787,25 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   body.ui-hide-all .fog-text, body.ui-hide-all .scene-text,
   body.ui-hide-all .work-code{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
 
-  /* Photo Only 모드 - soloToggle peek */
-  body.ui-hide-all .soloToggle{ opacity:0; visibility:hidden; pointer-events:none;
-    transition: opacity 1200ms ease, visibility 1200ms ease; }
-  body.ui-hide-all.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
-    transition: opacity 300ms ease, visibility 0ms !important; }
-  body.ui-hide-all .nav-arrow, body.ui-hide-all .nav-menu{ opacity:0; visibility:hidden; pointer-events:none;
+  /* Photo Only 모드 - soloToggle 항상 표시 */
+  body.ui-hide-all .nav_arrow, body.ui-hide-all .nav-menu{ opacity:0; visibility:hidden; pointer-events:none;
     transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-hide-all.solo-peek .nav-arrow, body.ui-hide-all.solo-peek .nav-menu{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
     transition: opacity 300ms ease, visibility 0ms !important; }
 
   body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu, body.ui-text-only .nav-btn:not(.soloToggle), body.ui-text-only .work-code{ 
   opacity:0 !important; visibility:hidden !important; pointer-events:none !important; }
+  body.ui-text-only .soloToggle{ opacity:0 !important; visibility:hidden !important; pointer-events:none !important;
+    transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-hide-all .nav-btn:not(.soloToggle){ opacity:0; visibility:hidden; pointer-events:none;
     transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-hide-all.solo-peek .nav-btn:not(.soloToggle){ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
     transition: opacity 300ms ease, visibility 0ms !important; }
   body.ui-text-only .fog-text, body.ui-text-only .scene-text{ pointer-events:none !important; }
-  /* ui-text-only: soloToggle */
-  body.ui-text-only .soloToggle{ opacity:0 !important; visibility:hidden; pointer-events:none;
-    transition: opacity 1200ms ease, visibility 1200ms ease; }
-  body.ui-text-only .soloToggle:hover{ opacity:0.92 !important; transform: scale(1.04) translateZ(0) !important; }
-  body.ui-text-only.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
-    transition: opacity 300ms ease, visibility 0ms !important; }
   body.ui-text-only .nav-arrow, body.ui-text-only .nav-menu{ transition: opacity 1200ms ease, visibility 1200ms ease; }
   body.ui-text-only.solo-peek .nav-arrow, body.ui-text-only.solo-peek .nav-menu{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
+    transition: opacity 300ms ease, visibility 0ms !important; }
+  body.ui-text-only.solo-peek .soloToggle{ opacity:0.92 !important; visibility:visible !important; pointer-events:auto !important;
     transition: opacity 300ms ease, visibility 0ms !important; }
 
   /* FOG 장면 */
@@ -1371,6 +1381,24 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .thumb-card.thumb-locked .thumb-lock-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-60%); opacity:0.5; }
 .thumb-card.thumb-locked .thumb-lock-icon svg { width:24px; height:24px; stroke:rgba(255,255,255,0.55); fill:none; stroke-width:1.5; }
 .thumb-card.thumb-locked .thumb-title { position:absolute; bottom:24px; left:0; right:0; text-align:center; font-family:"Nanum Pen Script",cursive; font-size:13px; color:rgba(255,255,255,0.4); pointer-events:none; }
+/* ===== Scene List Overlay ===== */
+.slst-panel{ flex-direction:column !important; width:min(540px,92vw) !important; max-height:min(82vh,860px) !important; height:auto !important; padding:0 !important; }
+.slst-panel .toc-close{ position:static !important; width:32px !important; height:32px !important; }
+.slst-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 22px 12px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.slst-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; min-height:0; }
+.slst-body::-webkit-scrollbar{ display:none; }
+.slst-item{ display:flex; align-items:center; gap:16px; padding:10px 22px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.slst-item:last-child{ border-bottom:none; }
+.slst-thumb{ width:56px; height:56px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
+.slst-img{ width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 400ms ease; }
+.slst-img.loaded{ opacity:1; }
+.slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
+.slst-lock svg{ width:20px; height:20px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(18px,1.8vw,22px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title.has-poem{ cursor:pointer; }
+.slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
+.slst-current{ background:rgba(212,175,55,0.06); }
+.slst-current .slst-title{ color:rgba(212,175,55,0.88); }
 `;
 
 (function(){
@@ -1448,7 +1476,7 @@ const SCENES_ALL = [
   {id:"song15",   code:"LSN#15",kr:"나는 당신의 사랑안에서",                   en:"In your love",                                         file:"LSN_15"},
   {id:"song16",   code:"LSN#16",kr:"새로이 태어납니다",                        en:"I am born anew",                                       file:"LSN_16"},
   {id:"RST_05",   code:"",      kr:"아직 열리지 않은 이야기들이 있습니다.\n사랑의 공명, 사랑의 춤, 사랑의 합창 —\n언젠가, 다른 공간에서 만나길 바랍니다.",                                         en:"There are stories yet to be opened.\nLove Resonance, Love Dance, Love Chorus —\nwe hope to meet them someday, in another space.",                                                    file:"RST_05"},
-  {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상",                    en:"A world embraced by love",                             file:"LEL_01"},
+  {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상, 세상도 내 마음도 사랑으로 가득합니다",                    en:"A world embraced by love, the world and my heart are filled with love",                             file:"LEL_01"},
 ];
 
 const INDEX_ROWS = [
@@ -1562,6 +1590,118 @@ const goTo = (url) => {
   const bo = document.getElementById("blackout");
   if (bo) { bo.classList.add("on"); setTimeout(() => { location.href = dest; }, 200); }
   else { location.href = dest; }
+};
+
+// ===== 씬 리스트 =====
+const buildSceneList = () => {
+  const lockSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
+  return SCENES_ALL.filter(sc => sc.kr && !sc.id.startsWith("RST")).map(sc => {
+    const isCurrent = sc.code && sc.code === SC.code;
+    const hasThumb = THUMB_CODES.has(sc.code);
+    const hasPage = !!sc.file;
+    const thumbHTML = hasThumb
+      ? `<img class="slst-img" src="../assets/thumb/${sc.file}.jpg" alt="" loading="lazy" />`
+      : `<div class="slst-lock">${lockSVG}</div>`;
+    const title = curLang==="KR" ? sc.kr : (sc.en||sc.kr);
+    const safeKr = (sc.kr||"").replace(/"/g,"&quot;").replace(/\n/g," ");
+    const safeEn = (sc.en||"").replace(/"/g,"&quot;").replace(/\n/g," ");
+    const thumbEl = hasThumb && hasPage
+      ? `<div class="slst-thumb" style="cursor:pointer;" data-url="./${sc.file}.html">${thumbHTML}</div>`
+      : `<div class="slst-thumb">${thumbHTML}</div>`;
+    return `<div class="slst-item${isCurrent?" slst-current":""}" data-code="${sc.code||""}" data-kr="${safeKr}" data-en="${safeEn}" data-has-poem="">${thumbEl}<span class="slst-title">${title}</span></div>`;
+  }).join("");
+};
+
+const openPoemFromList = (code, kr, en, itemEl) => {
+  if (!code) return;
+  const poemCode = code.replace(/#/g,"_");
+  const poemFile = curLang==="EN" ? `../poems/${poemCode}_EN.txt` : `../poems/${poemCode}.txt`;
+  const title = curLang==="KR" ? kr : (en||kr);
+  fetch(poemFile).then(r => {
+    if (!r.ok) throw new Error("not found");
+    return r.text();
+  }).then(txt => {
+    if (itemEl) itemEl.dataset.hasPoem = "yes";
+    SceneListManager.close();
+    setTimeout(() => {
+      const ov = document.getElementById("poemOverlay");
+      if (!ov) return;
+      const titleEl = document.getElementById("poemTitle");
+      if (titleEl) titleEl.textContent = title;
+      const pb = document.getElementById("poemBody");
+      if (pb) {
+        pb.style.cssText = "font-family:'Nanum Pen Script',cursive;font-size:clamp(20px,2.5vw,24px);line-height:0.8;color:rgba(235,235,235,0.90);white-space:pre-wrap;word-break:keep-all;padding:0 16px;margin-top:32px;";
+        pb.textContent = txt.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+      }
+      ov.style.display = "flex";
+      ov.setAttribute("aria-hidden","false");
+      ov.dataset.fromList = "1";
+      requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add("on")));
+    }, 200);
+  }).catch(() => {
+    if (itemEl) itemEl.dataset.hasPoem = "no";
+    const t = itemEl?.querySelector(".slst-title");
+    if (t) t.classList.remove("has-poem");
+  });
+};
+
+const buildSceneListHTML = () => {
+  const t = LANG_TEXTS[curLang];
+  const langToggle = isMobile
+    ? `<div class="lang-toggle"><div class="lang-btn${curLang==="KR"?" active":""}" id="slstLangKR">KR</div><div class="lang-btn${curLang==="EN"?" active":""}" id="slstLangEN">EN</div></div>`
+    : `<div class="langToggle"><div class="langBtn${curLang==="EN"?" active":""}" id="slstLangEN" role="button" tabindex="0">EN</div><div class="langBtn${curLang==="KR"?" active":""}" id="slstLangKR" role="button" tabindex="0">KR</div></div>`;
+  const panelClass = isMobile ? "toc-panel" : "unified-panel panel-box slst-panel";
+  return `
+  <div id="sceneListOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">
+    <div class="overlay-backdrop" id="slstBackdrop"></div>
+    <div class="${panelClass}">
+      <div class="slst-header">
+        <h2 class="toc-title">${t.indexTitle}</h2>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${langToggle}
+          <div class="toc-close" id="slstClose" aria-label="Close">✕</div>
+        </div>
+      </div>
+      <div class="slst-body" id="sceneListBody">${buildSceneList()}</div>
+    </div>
+  </div>`;
+};
+
+const SceneListManager = {
+  open: () => {
+    const ov = document.getElementById("sceneListOverlay");
+    if (!ov) return;
+    ov.style.display = "flex";
+    ov.setAttribute("aria-hidden","false");
+    requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add("on")));
+    scrollToCurrent(document.getElementById("sceneListBody"), ".slst-current");
+    // lazy load 썸네일
+    document.querySelectorAll("#sceneListBody .slst-img").forEach(img => {
+      img.addEventListener("load", () => img.classList.add("loaded"), {once:true});
+      if (img.complete && img.naturalWidth > 0) img.classList.add("loaded");
+    });
+    // 시 파일 존재 여부 사전 체크 (미체크 항목만)
+    document.querySelectorAll("#sceneListBody .slst-item[data-has-poem='']").forEach(item => {
+      const code = item.dataset.code;
+      if (!code) return;
+      const poemCode = code.replace(/#/g,"_");
+      const poemFile = curLang==="EN" ? `../poems/${poemCode}_EN.txt` : `../poems/${poemCode}.txt`;
+      fetch(poemFile, {method:"HEAD"}).then(r => {
+        item.dataset.hasPoem = r.ok ? "yes" : "no";
+        const t = item.querySelector(".slst-title");
+        if (t && r.ok) t.classList.add("has-poem");
+      }).catch(() => {
+        item.dataset.hasPoem = "no";
+      });
+    });
+  },
+  close: () => {
+    const ov = document.getElementById("sceneListOverlay");
+    if (!ov) return;
+    ov.classList.remove("on");
+    ov.setAttribute("aria-hidden","true");
+    setTimeout(() => { ov.style.display = "none"; }, 420);
+  }
 };
 
 // ===== TOC HTML 생성 (버전별) =====
@@ -1879,6 +2019,7 @@ if (isMobile) {
 } else {
   document.body.insertAdjacentHTML("afterbegin", buildTOCHTML());
 }
+document.body.insertAdjacentHTML("beforeend", buildSceneListHTML());
 
 // ===== index → 첫 페이지: 정사각형만 흰색 전환 =====
 const fromIndex = new URLSearchParams(window.location.search).get("from") === "index";
@@ -2299,6 +2440,13 @@ const ThumbnailManager = {
 const setLang = (l) => {
   saveLang(l);
   try{sessionStorage.removeItem("gl_mode");}catch(e){}
+  // 현재 열린 오버레이 저장 → reload 후 복원
+  try {
+    const open = ["tocOverlay","thumbOverlay","sceneListOverlay","indexOverlay"]
+      .find(id => document.getElementById(id)?.classList.contains("on"));
+    if (open) sessionStorage.setItem("reopen_overlay", open);
+    else sessionStorage.removeItem("reopen_overlay");
+  } catch(e) {}
   location.reload();
 };
 
@@ -2319,6 +2467,25 @@ const bindCommon = () => {
   document.getElementById("menuH_GB")?.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();GuestbookManager.open();}});
   document.getElementById("langKR")?.addEventListener("click", ()=>setLang("KR"));
   document.getElementById("langEN")?.addEventListener("click", ()=>setLang("EN"));
+
+  // 씬 리스트 오버레이
+  document.getElementById("slstBackdrop")?.addEventListener("click", SceneListManager.close);
+  document.getElementById("slstClose")?.addEventListener("click", SceneListManager.close);
+  document.getElementById("slstLangKR")?.addEventListener("click", ()=>setLang("KR"));
+  document.getElementById("slstLangEN")?.addEventListener("click", ()=>setLang("EN"));
+  document.getElementById("sceneListBody")?.addEventListener("click", e => {
+    // 썸네일 클릭 → 페이지 이동
+    const thumb = e.target.closest(".slst-thumb[data-url]");
+    if (thumb) { goTo(thumb.dataset.url); return; }
+    // 제목 클릭 → 시 열기
+    const title = e.target.closest(".slst-title");
+    if (!title) return;
+    const item = title.closest(".slst-item");
+    if (!item) return;
+    // 이미 시 없음 확인된 경우 무시
+    if (item.dataset.hasPoem === "no") return;
+    openPoemFromList(item.dataset.code, item.dataset.kr, item.dataset.en, item);
+  });
 
   const tocNav = {tocPrologue:"LPL",tocLoveDream:"LDR",tocLoveSong:"LSN",tocEpilogue:"LEL"};
   Object.entries(tocNav).forEach(([id,prefix])=>{
@@ -2790,8 +2957,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       indexBtn.setAttribute("data-tip", curLang==="KR" ? "사진 너머의 속삭임" : "A whisper beyond the frame");
     }).catch(()=>{
       _mPoemText=null;
-      indexBtn.classList.add("disabled");
-      indexBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
       indexBtn.setAttribute("data-tip", curLang==="KR" ? "아직 피지 않은 이야기" : "A story yet to bloom");
     });
   }
@@ -2810,13 +2975,18 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     close(){
       const ov=document.getElementById("poemOverlay");
       if(!ov) return;
+      const fromList = ov.dataset.fromList === "1";
+      delete ov.dataset.fromList;
       ov.classList.remove("on");
-      setTimeout(()=>{ov.style.display="none"; ov.setAttribute("aria-hidden","true");},340);
+      setTimeout(()=>{
+        ov.style.display="none"; ov.setAttribute("aria-hidden","true");
+        if(fromList) SceneListManager.open();
+      },340);
     }
   };
   document.getElementById("poemClose")?.addEventListener("click",mPoemManager.close);
   document.getElementById("poemBackdrop")?.addEventListener("click",mPoemManager.close);
-  indexBtn.addEventListener("click", ()=>{ if(!indexBtn.classList.contains("disabled")) mPoemManager.open(); });
+  indexBtn.addEventListener("click", ()=>{ SceneListManager.open(); });
 
   const rightBtn = document.createElement("div");
   rightBtn.className = "nav-btn" + (SC.nextURL ? "" : " disabled");
@@ -2863,9 +3033,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const thumbOn=document.getElementById("thumbOverlay")?.classList.contains("on");
     const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
     const introOn=document.getElementById("introOverlay")?.classList.contains("on");
-    if(e.key==="Escape"){if(introOn)IntroManager.close();else if(helpOn)HelpManager.close();else if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
+    const slstOn=document.getElementById("sceneListOverlay")?.classList.contains("on");
+    if(e.key==="Escape"){if(introOn)IntroManager.close();else if(helpOn)HelpManager.close();else if(slstOn)SceneListManager.close();else if(poemOn)mPoemManager.close();else if(thumbOn)ThumbnailManager.close();else if(gbOn)GuestbookManager.close();else if(aboutOn)AboutManager.close();else if(indexOn)IndexManager.close();else if(menuOn)TOCManager.close();return;}
     if(e.key==="m"||e.key==="M"){e.preventDefault();menuOn?TOCManager.close():TOCManager.open();return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn||helpOn||introOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||thumbOn||helpOn||introOn||slstOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -2903,8 +3074,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 
   const uiBtn=document.createElement("div");
   uiBtn.className="soloToggle nav-btn";
-  uiBtn.style.opacity="0";
-  uiBtn.style.visibility="hidden";
 
   sq.append(workCode,menuBtn,uiBtn);
 
@@ -3044,17 +3213,12 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   document.body.classList.add("ui-text-only");
   document.body.classList.add("ui-mode-ready");
   const _poemIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>`;
-  document.querySelectorAll(".soloToggle").forEach(b=>{
-    b.innerHTML=_poemIcon;
-    b.style.opacity="";
-    b.style.visibility="";
-  });
+  document.querySelectorAll(".soloToggle").forEach(b=>{ b.innerHTML=_poemIcon; });
 
   // Poem 모달
   const _poemCode = (SC.code || "").replace(/#/g,"_");
   const _poemFile = curLang==="EN" ? `../poems/${_poemCode}_EN.txt` : `../poems/${_poemCode}.txt`;
   let _poemText = null;
-  const _lockIcon=`<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
   if(_poemCode){
     fetch(_poemFile).then(r=>{
       if(!r.ok) throw new Error("not found");
@@ -3067,8 +3231,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     }).catch(()=>{
       _poemText=null;
       document.querySelectorAll(".soloToggle").forEach(b=>{
-        b.classList.add("disabled");
-        b.innerHTML=_lockIcon;
         b.setAttribute("data-tip", curLang==="KR" ? "아직 피지 않은 이야기" : "A story yet to bloom");
       });
     });
@@ -3088,14 +3250,19 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     close(){
       const ov=document.getElementById("poemOverlay");
       if(!ov) return;
+      const fromList = ov.dataset.fromList === "1";
+      delete ov.dataset.fromList;
       ov.classList.remove("on");
-      setTimeout(()=>{ov.style.display="none"; ov.setAttribute("aria-hidden","true");},340);
+      setTimeout(()=>{
+        ov.style.display="none"; ov.setAttribute("aria-hidden","true");
+        if(fromList) SceneListManager.open();
+      },340);
     }
   };
   document.getElementById("poemClose")?.addEventListener("click",PoemManager.close);
   document.getElementById("poemBackdrop")?.addEventListener("click",PoemManager.close);
   document.querySelectorAll(".soloToggle").forEach(b=>b.addEventListener("click",()=>{
-    if(!b.classList.contains("disabled")) PoemManager.open();
+    SceneListManager.open();
   }));
 
   // 데스크탑 전용 이벤트
@@ -3114,9 +3281,11 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     const gbOn=document.getElementById("gbOverlay")?.classList.contains("on");
     const helpOn=document.getElementById("helpOverlay")?.classList.contains("on");
     const introOn=document.getElementById("introOverlay")?.classList.contains("on");
+    const slstOn=document.getElementById("sceneListOverlay")?.classList.contains("on");
     if(e.key==="Escape"){
       if(introOn){e.preventDefault();IntroManager.close();return;}
       if(helpOn){e.preventDefault();HelpManager.close();return;}
+      if(slstOn){e.preventDefault();SceneListManager.close();return;}
       if(poemOn){e.preventDefault();PoemManager.close();return;}
       if(gbOn){e.preventDefault();GuestbookManager.close();return;}
       if(aboutOn){e.preventDefault();AboutManager.close();return;}
@@ -3128,7 +3297,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     if(e.key==="i"||e.key==="I"){e.preventDefault();indexOn?IndexManager.close():IndexManager.open();return;}
     if(e.key==="g"||e.key==="G"){e.preventDefault();gbOn?GuestbookManager.close():GuestbookManager.open();return;}
     if(e.key==="h"||e.key==="H"){e.preventDefault();helpOn?HelpManager.close():HelpManager.open();return;}
-    if(menuOn||indexOn||aboutOn||poemOn||gbOn||helpOn||introOn)return;
+    if(menuOn||indexOn||aboutOn||poemOn||gbOn||helpOn||introOn||slstOn)return;
     if(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="Enter"){e.preventDefault();goTo(SC.nextURL);}
     else if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();goTo(SC.prevURL);}
   });
@@ -3139,10 +3308,28 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   document.addEventListener("mousemove",showPeek);
   document.addEventListener("click",showPeek);
   document.addEventListener("touchstart",showPeek,{passive:true});
+  // nav-ready 시점에 자동 peek — 4개 버튼 동시 등장
+  frame.addEventListener("animationend",()=>{},{ once:true });
+  const _autopeek=()=>{ if(frame.classList.contains("nav-ready")) showPeek(); else requestAnimationFrame(_autopeek); };
+  requestAnimationFrame(_autopeek);
 }
 
 // ===== 공통 이벤트 (반드시 DOM 삽입 후 실행) =====
 bindCommon();
+
+// ===== 언어 전환 후 오버레이 복원 =====
+try {
+  const reopen = sessionStorage.getItem("reopen_overlay");
+  if (reopen) {
+    sessionStorage.removeItem("reopen_overlay");
+    setTimeout(() => {
+      if (reopen === "tocOverlay") TOCManager.open();
+      else if (reopen === "thumbOverlay") ThumbnailManager.open();
+      else if (reopen === "sceneListOverlay") SceneListManager.open();
+      else if (reopen === "indexOverlay") IndexManager.open();
+    }, 80);
+  }
+} catch(e) {}
 
 // ===== 3·4페이지 마우스 휠 줌 차단 =====
 if(SC.id==="prague"||SC.id==="dreams"){
