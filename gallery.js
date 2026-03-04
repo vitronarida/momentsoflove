@@ -660,6 +660,8 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(17px,3.5vw,20px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
+.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
+.slst-lock-tag svg{ width:13px; height:13px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
 .slst-current .slst-title{ color:rgba(212,175,55,0.88); }`;
 const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
@@ -1397,6 +1399,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(18px,1.8vw,22px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
+.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
+.slst-lock-tag svg{ width:14px; height:14px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
 .slst-current .slst-title{ color:rgba(212,175,55,0.88); }
 `;
@@ -1690,12 +1694,20 @@ const SceneListManager = {
       if (!code) return;
       const poemCode = code.replace(/#/g,"_");
       const poemFile = curLang==="EN" ? `../poems/${poemCode}_EN.txt` : `../poems/${poemCode}.txt`;
+      const lockSVG = `<span class="slst-lock-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg></span>`;
       fetch(poemFile, {method:"HEAD"}).then(r => {
         item.dataset.hasPoem = r.ok ? "yes" : "no";
         const t = item.querySelector(".slst-title");
-        if (t && r.ok) t.classList.add("has-poem");
+        if (!t) return;
+        if (r.ok) {
+          t.classList.add("has-poem");
+        } else {
+          t.insertAdjacentHTML("beforeend", lockSVG);
+        }
       }).catch(() => {
         item.dataset.hasPoem = "no";
+        const t = item.querySelector(".slst-title");
+        if (t) t.insertAdjacentHTML("beforeend", lockSVG);
       });
     });
   },
