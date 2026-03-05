@@ -191,6 +191,7 @@
       pointer-events: none;
     }
     .skip-bar.show { opacity: 1; pointer-events: auto; }
+    .skip-bar.hide { opacity: 0; pointer-events: none; transition: opacity 400ms ease; }
     .skip-btn {
       width: 36px; height: 36px; border-radius: 999px;
       display: grid; place-items: center;
@@ -331,10 +332,30 @@
       opacity: 0;
     }
 
+    @media (min-width: 769px) {
+      @keyframes fadeInBreathDesktop {
+        0%   { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      @keyframes breatheDesktop {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.85; }
+      }
+      .lock-btn.show {
+        animation: fadeInBreathDesktop 1.2s ease-in-out 1 forwards,
+                   breatheDesktop      2.8s ease-in-out 1.2s infinite,
+                   glow                2.8s ease-in-out 2s infinite;
+      }
+      .lock-wrap { bottom: 28%; }
+      .frame { background: linear-gradient(to bottom, #303030 0%, #222222 100%); }
+      body { background: #222222; }
+    }
+
     @media (max-width: 768px) {
       html, body { display:flex; flex-direction:column; }
       .intro-app { width:100vw; height:100dvh; display:flex; flex-direction:column; }
-      .frame { width:100vw; height:100vw; flex-shrink:0; padding-bottom:0; }
+      .frame { width:100vw; height:100vw; flex-shrink:0; padding-bottom:0; background: linear-gradient(to bottom, #303030 0%, #222222 100%); }
+      body { background: #222222; }
       .mob-bottom {
         position:relative;
         display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -595,6 +616,21 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
+        let idleTimer = null;
+        const IDLE_MS = 5000;
+        const hideFuncBars = () => {
+          langBar?.classList.remove("show");
+          deviceBar?.classList.remove("show");
+        };
+        const showFuncBars = () => {
+          langBar?.classList.add("show");
+          deviceBar?.classList.add("show");
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(hideFuncBars, IDLE_MS);
+        };
+        document.addEventListener("mousemove", showFuncBars);
+        document.addEventListener("keydown", showFuncBars);
+        document.addEventListener("touchstart", showFuncBars, {passive:true});
       };
       const autoTimer = setTimeout(showLock, 3000);
       document.addEventListener("mousemove", showLock);
@@ -621,41 +657,46 @@
       setTimeout(startTyping, 800);
     }
 
+    /* ===== skip 바 표시/숨김 (모듈 스코프) ===== */
+    let skipIdleTimer = null;
+    const SKIP_IDLE_MS = 5000;
+    const skipHideBars = () => {
+      langBar?.classList.remove("show");
+      deviceBar?.classList.remove("show");
+    };
+    const skipShowBars = () => {
+      langBar?.classList.add("show");
+      deviceBar?.classList.add("show");
+      clearTimeout(skipIdleTimer);
+      skipIdleTimer = setTimeout(skipHideBars, SKIP_IDLE_MS);
+    };
+    const removeSkipBarListeners = () => {
+      document.removeEventListener("mousemove", skipShowBars);
+      document.removeEventListener("keydown", skipShowBars);
+      document.removeEventListener("touchstart", skipShowBars);
+    };
+
     /* ===== skip 버튼 ===== */
     document.getElementById("skipBtn")?.addEventListener("click", () => {
       skipped = true;
-      // 타이핑 즉시 완료
       typed = words.join(" ");
       renderText();
-      // 커서 숨김
       cur.classList.remove("blinking");
       cur.style.opacity = "0";
       cur.style.display = "none";
-      // skip 바 숨김
       skipBar?.classList.remove("show");
-      // 아이콘 모두 표시
-      showIcon("lock");
-      lockWrapEl.style.visibility = "";
-      btn.classList.add("show");
-      lockWrapEl.classList.add("show");
-      // skip 위치와 lang-bar 겹침 → 툴팁 방지
+      skipBar?.classList.add("hide");
+      setTimeout(() => {
+        skipBar?.classList.remove("hide");
+        showIcon("lock");
+        lockWrapEl.style.visibility = "";
+        btn.classList.add("show");
+        lockWrapEl.classList.add("show");
+      }, 420);
       if (langBar) {
         langBar.style.pointerEvents = "none";
         setTimeout(() => { langBar.style.pointerEvents = ""; }, 600);
       }
-      // 마우스/터치 시 하단 바 표시, 일정 시간 후 숨김
-      let skipIdleTimer = null;
-      const SKIP_IDLE_MS = 5000;
-      const skipHideBars = () => {
-        langBar?.classList.remove("show");
-        deviceBar?.classList.remove("show");
-      };
-      const skipShowBars = () => {
-        langBar?.classList.add("show");
-        deviceBar?.classList.add("show");
-        clearTimeout(skipIdleTimer);
-        skipIdleTimer = setTimeout(skipHideBars, SKIP_IDLE_MS);
-      };
       document.addEventListener("mousemove", skipShowBars);
       document.addEventListener("keydown", skipShowBars);
       document.addEventListener("touchstart", skipShowBars, {passive:true});
@@ -670,6 +711,7 @@
     /* ===== 클릭/탭 ===== */
     btn.addEventListener("click", () => {
       if (!btn.classList.contains("show")) return;
+      removeSkipBarListeners();
       try{sessionStorage.removeItem("gl_mode");}catch(e){}
       if (isMobile) {
         showIcon("unlock");

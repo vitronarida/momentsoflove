@@ -650,20 +650,21 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .slst-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,0.06); }
 .slst-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; min-height:0; }
 .slst-body::-webkit-scrollbar{ display:none; }
-.slst-item{ display:flex; align-items:center; gap:14px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.slst-item{ display:flex; align-items:center; gap:14px; padding:5px 16px; border-bottom:1px solid rgba(255,255,255,0.04); }
 .slst-item:last-child{ border-bottom:none; }
-.slst-thumb{ width:48px; height:48px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
+.slst-thumb{ width:54px; height:54px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
 .slst-img{ width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 400ms ease; }
 .slst-img.loaded{ opacity:1; }
 .slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
 .slst-lock svg{ width:18px; height:18px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
-.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(17px,3.5vw,20px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
 .slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
 .slst-lock-tag svg{ width:13px; height:13px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
-.slst-current .slst-title{ color:rgba(212,175,55,0.88); }`;
+.slst-current .slst-title{ color:rgba(212,175,55,0.88); }
+.slst-divider{ height:18px; flex-shrink:0; }`;
 const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 /* CSS 변수 */
   :root{
@@ -1015,7 +1016,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-left .toc-header{ padding-right:0; margin-bottom:6px; }
   .unified-left .toc-title{ font-size:24px; }
   .unified-left .menu-section{ padding-left:14px; }
-  .unified-left .menu-h{ font-size:22px; }
+  .unified-left .menu-h{ font-size:26px; }
   .unified-left .toc-list{ font-size:20px; }
   .unified-left .toc-item{ gap:10px; }
   .unified-left .toc-bullet{ width:10px; flex:0 0 10px; font-size:10px; }
@@ -1389,20 +1390,21 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .slst-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 22px 12px; flex-shrink:0; border-bottom:1px solid rgba(255,255,255,0.06); }
 .slst-body{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; min-height:0; }
 .slst-body::-webkit-scrollbar{ display:none; }
-.slst-item{ display:flex; align-items:center; gap:16px; padding:10px 22px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.slst-item{ display:flex; align-items:center; gap:16px; padding:6px 22px; border-bottom:1px solid rgba(255,255,255,0.04); }
 .slst-item:last-child{ border-bottom:none; }
-.slst-thumb{ width:56px; height:56px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
+.slst-thumb{ width:61px; height:61px; border-radius:8px; overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); display:grid; place-items:center; }
 .slst-img{ width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity 400ms ease; }
 .slst-img.loaded{ opacity:1; }
 .slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
 .slst-lock svg{ width:20px; height:20px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
-.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(18px,1.8vw,22px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
 .slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
 .slst-lock-tag svg{ width:14px; height:14px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
 .slst-current .slst-title{ color:rgba(212,175,55,0.88); }
+.slst-divider{ height:22px; flex-shrink:0; }
 `;
 
 (function(){
@@ -1541,7 +1543,7 @@ const LANG_TEXTS = {
       homeText:"모든 사랑의 순간은 당신으로 열립니다",
       prologue:"프롤로그",lovedream:"사랑의 꿈 (일부 공개)",lovesong:"사랑의 노래",
       resonance:"사랑의 공명 (잠김)",dance:"사랑의 춤 (잠김)",chorus:"사랑의 합창 (잠김)",
-      epilogue:"에필로그",indexList:"작품 목록",
+      epilogue:"에필로그",indexList:"작품 목록",slstTitle:"사랑의 순간",
       indexTitle:"작품 목록",indexSub:"존재하는 작품은 클릭하면 바로 이동합니다",
       indexBtnLabel:"버튼",indexThumbLabel:"썸네일",
       infoBack:"뒤로",infoHelpTitle:"사용법",
@@ -1550,7 +1552,7 @@ const LANG_TEXTS = {
       infoG:"독자의 말 열기 / 닫기",infoP:"작가의 말 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
       menuH_GB:"독자의 말",gbTitle:"독자의 말",
       introText:"모든 사랑의\n순간은\n당신으로\n열립니다"},
-  EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Index",menuH_CONTACT:"Contact",
+  EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Collection",menuH_CONTACT:"Contact",
       menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`Dazzling sunlight,
 a gentle breeze,
 in the graceful poise of swans
@@ -1566,8 +1568,8 @@ and love is complete with you.`,menuH_COPY:"Copyright",
       homeText:"Every moment of love opens with you.",
       prologue:"Prologue",lovedream:"Love Dream (Selection)",lovesong:"Love Song",
       resonance:"Love Resonance (locked)",dance:"Love Dance (locked)",chorus:"Love Chorus (locked)",
-      epilogue:"Epilogue",indexList:"Artwork List",
-      indexTitle:"Index",indexSub:"Click on existing artworks to navigate",
+      epilogue:"Epilogue",indexList:"Artwork List",slstTitle:"Moment of Love",
+      indexTitle:"Collection",indexSub:"Click on existing artworks to navigate",
       indexBtnLabel:"Buttons",indexThumbLabel:"Thumbnails",
       infoBack:"Back",infoHelpTitle:"How to Use",
       infoNav:"Prev / Next",infoMenu:"Open / Close Menu",
@@ -1599,7 +1601,8 @@ const goTo = (url) => {
 // ===== 씬 리스트 =====
 const buildSceneList = () => {
   const lockSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`;
-  return SCENES_ALL.filter(sc => sc.kr && !sc.id.startsWith("RST")).map(sc => {
+  return SCENES_ALL.filter(sc => sc.kr !== undefined).map(sc => {
+    if (sc.id.startsWith("RST")) return `<div class="slst-divider"></div>`;
     const isCurrent = sc.code && sc.code === SC.code;
     const hasThumb = THUMB_CODES.has(sc.code);
     const hasPage = !!sc.file;
@@ -1664,7 +1667,7 @@ const buildSceneListHTML = () => {
     <div class="overlay-backdrop" id="slstBackdrop"></div>
     <div class="${panelClass}">
       <div class="slst-header">
-        <h2 class="toc-title">${t.indexTitle}</h2>
+        <h2 class="toc-title">${t.slstTitle}</h2>
         <div style="display:flex;align-items:center;gap:10px;">
           ${langToggle}
           <div class="toc-close" id="slstClose" aria-label="Close">✕</div>
@@ -1752,7 +1755,7 @@ const buildTOCHTML = () => {
             </div>
             <div class="menu-section">
               <div class="mob-contact-icons">
-                <a href="mailto:vitronarida@gmail.com" title="E-Mail">
+                <a href="mailto:vitro@narida.art" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                 </a>
                 <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener">
@@ -1916,7 +1919,7 @@ const buildTOCHTML = () => {
             </div>
             <div class="menu-section">
               <div class="contact-icons">
-                <a href="mailto:vitronarida@gmail.com" class="contact-icon" title="E-Mail">
+                <a href="mailto:vitro@narida.art" class="contact-icon" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                 </a>
                 <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener noreferrer" class="contact-icon" title="Instagram">
