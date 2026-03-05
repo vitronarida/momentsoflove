@@ -3084,7 +3084,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   workCode.innerHTML=SC.code
     ?`Op. ${SC.code}<span class="page-num">&nbsp; P.${SC.pageNum}/${SC.totalPages}</span>`
     :`<span class="page-num">P.${SC.pageNum}/${SC.totalPages}</span>`;
-  workCode.setAttribute("data-tip", curLang==="KR" ? "작품 목록" : "Index");
+  workCode.setAttribute("data-tip", curLang==="KR" ? "사랑의 순간" : "Moment of Love");
 
   const menuBtn=document.createElement("div");
   menuBtn.className="nav-menu nav-btn";
