@@ -3327,10 +3327,7 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   document.addEventListener("mousemove",showPeek);
   document.addEventListener("click",showPeek);
   document.addEventListener("touchstart",showPeek,{passive:true});
-  // nav-ready 시점에 자동 peek — 4개 버튼 동시 등장
-  frame.addEventListener("animationend",()=>{},{ once:true });
-  const _autopeek=()=>{ if(frame.classList.contains("nav-ready")) showPeek(); else requestAnimationFrame(_autopeek); };
-  requestAnimationFrame(_autopeek);
+  // nav-ready 시점 자동 peek 제거 — 마우스 이동 시에만 버튼 표시
 }
 
 // ===== 공통 이벤트 (반드시 DOM 삽입 후 실행) =====
