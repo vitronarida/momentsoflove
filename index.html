@@ -487,7 +487,8 @@
     };
 
     /* ===== 디바이스 감지 ===== */
-    const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const forced   = (() => { try { return sessionStorage.getItem("force_device"); } catch(e) { return null; } })();
     const isMobile = forced ? (forced === "M") : detectedMobile;
     const TARGET_URL = "./scenes/LPL_01.html?from=index";
@@ -709,7 +710,7 @@
     }
 
     /* ===== 클릭/탭 ===== */
-    btn.addEventListener("click", () => {
+    const doEnter = () => {
       if (!btn.classList.contains("show")) return;
       removeSkipBarListeners();
       try{sessionStorage.removeItem("gl_mode");}catch(e){}
@@ -719,7 +720,11 @@
       } else {
         location.href = TARGET_URL;
       }
-    });
+    };
+    btn.addEventListener("click", doEnter);
+    if (isMobile) {
+      btn.addEventListener("touchend", (e) => { e.preventDefault(); doEnter(); }, {passive:false});
+    }
 
     /* ===== 언어 전환 ===== */
     function applyLang(newLang) {

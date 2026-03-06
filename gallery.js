@@ -660,8 +660,8 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
-.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
-.slst-lock-tag svg{ width:13px; height:13px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
+.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:8px; opacity:0.5; flex-shrink:0; }
+.slst-lock-tag svg{ width:13px; height:13px; stroke:rgba(212,175,55,0.9); fill:none; stroke-width:2.0; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
 .slst-current .slst-title{ color:rgba(212,175,55,0.88); }
 .slst-divider{ height:18px; flex-shrink:0; }`;
@@ -1037,10 +1037,11 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-thumb-body::-webkit-scrollbar{ display:none; }
   .unified-panel .toc-close{ top:12px; right:12px; }
   .unified-panel .toc-info-btn{ bottom:12px; left:14px; right:auto; }
-  .contact-icons{ display:flex; gap:14px; padding-left:14px; margin-top:2px; }
-  .contact-icon{ display:grid; place-items:center; color:rgba(220,220,220,0.55); transition:color 180ms ease; }
+  .contact-icons{ display:flex; flex-direction:column; gap:8px; padding-left:14px; margin-top:2px; }
+  .contact-icon{ display:flex; align-items:center; gap:8px; color:rgba(220,220,220,0.55); transition:color 180ms ease; text-decoration:none; }
   .contact-icon:hover{ color:rgba(235,235,235,0.92); }
-  .contact-icon svg{ width:20px; height:20px; }
+  .contact-icon svg{ width:20px; height:20px; flex-shrink:0; }
+  .contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:16px; letter-spacing:0.3px; }
   .menu-copyright{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(200,200,200,0.45); padding-left:14px; line-height:1.4; }
   .has-tooltip{ position:relative; }
   .has-tooltip::after{ content:attr(data-tooltip); position:absolute; left:105%; top:50%; transform:translateY(-50%); white-space:nowrap;
@@ -1400,8 +1401,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
-.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:7px; opacity:0.35; flex-shrink:0; }
-.slst-lock-tag svg{ width:14px; height:14px; stroke:rgba(235,235,235,0.9); fill:none; stroke-width:1.5; display:block; }
+.slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:8px; opacity:0.5; flex-shrink:0; }
+.slst-lock-tag svg{ width:14px; height:14px; stroke:rgba(212,175,55,0.9); fill:none; stroke-width:2.0; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
 .slst-current .slst-title{ color:rgba(212,175,55,0.88); }
 .slst-divider{ height:22px; flex-shrink:0; }
@@ -1697,20 +1698,17 @@ const SceneListManager = {
       if (!code) return;
       const poemCode = code.replace(/#/g,"_");
       const poemFile = curLang==="EN" ? `../poems/${poemCode}_EN.txt` : `../poems/${poemCode}.txt`;
-      const lockSVG = `<span class="slst-lock-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg></span>`;
+      const penSVG = `<span class="slst-lock-tag"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 4.76a6 6 0 0 0-8.49 0L4 12.5V20h7.5l7.74-7.75a6 6 0 0 0 0-8.49z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg></span>`;
       fetch(poemFile, {method:"HEAD"}).then(r => {
         item.dataset.hasPoem = r.ok ? "yes" : "no";
         const t = item.querySelector(".slst-title");
         if (!t) return;
         if (r.ok) {
           t.classList.add("has-poem");
-        } else {
-          t.insertAdjacentHTML("beforeend", lockSVG);
+          t.insertAdjacentHTML("beforeend", penSVG);
         }
       }).catch(() => {
         item.dataset.hasPoem = "no";
-        const t = item.querySelector(".slst-title");
-        if (t) t.insertAdjacentHTML("beforeend", lockSVG);
       });
     });
   },
@@ -1921,9 +1919,11 @@ const buildTOCHTML = () => {
               <div class="contact-icons">
                 <a href="mailto:vitro@narida.art" class="contact-icon" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                  <span class="contact-icon-text">vitro@narida.art</span>
                 </a>
                 <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener noreferrer" class="contact-icon" title="Instagram">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+                  <span class="contact-icon-text">vitro.narida</span>
                 </a>
               </div>
             </div>
@@ -3032,9 +3032,13 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
   app.append(photoArea, ctrlArea);
 
   // 스와이프
-  let tx=0, ty=0;
-  photoArea.addEventListener("touchstart",(e)=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  let tx=null, ty=0;
+  photoArea.addEventListener("touchstart",(e)=>{
+    if(e.touches.length>1){tx=null;return;}
+    tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+  },{passive:true});
   photoArea.addEventListener("touchend",(e)=>{
+    if(tx===null||e.changedTouches.length>1)return;
     const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
     if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){
       if(dx<0&&SC.nextURL) goTo(SC.nextURL);
