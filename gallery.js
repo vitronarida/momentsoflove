@@ -621,10 +621,11 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .mob-thumb-grid .thumb-heart svg{ width:16px; height:16px; }
 .mob-thumb-grid .thumb-card.thumb-locked .thumb-lock-icon svg{ width:18px; height:18px; }
 .mob-thumb-grid .thumb-card.thumb-locked .thumb-title{ font-size:10px; bottom:18px; }
-.mob-contact-icons{ display:flex; gap:12px; padding-left:8px; margin-top:2px; }
-.mob-contact-icons a{ color:rgba(220,220,220,0.50); -webkit-tap-highlight-color:transparent; }
-.mob-contact-icons svg{ width:18px; height:18px; }
-.mob-copyright{ font-family:"Nanum Pen Script",cursive; font-size:14px; color:rgba(200,200,200,0.40); padding-left:8px; line-height:1.4; }
+.mob-contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
+.mob-contact-icons a{ display:flex; align-items:center; gap:8px; color:rgba(220,220,220,0.50); -webkit-tap-highlight-color:transparent; text-decoration:none; }
+.mob-contact-icons svg{ width:18px; height:18px; flex-shrink:0; }
+.mob-contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:16px; }
+.mob-copyright{ font-family:"Nanum Pen Script",cursive; font-size:14px; color:rgba(200,200,200,0.40); line-height:1.4; }
 .thumb-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; padding:4px 0 16px; }
 .thumb-section-head { grid-column:1/-1; font-family:"Nanum Pen Script",cursive; font-size:16px; color:rgba(230,230,230,0.65); padding:8px 2px 2px; border-top:1px solid rgba(255,255,255,0.06); margin-top:4px; }
 .thumb-section-head:first-child { border-top:none; margin-top:0; }
@@ -1037,12 +1038,12 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-thumb-body::-webkit-scrollbar{ display:none; }
   .unified-panel .toc-close{ top:12px; right:12px; }
   .unified-panel .toc-info-btn{ bottom:12px; left:14px; right:auto; }
-  .contact-icons{ display:flex; flex-direction:column; gap:8px; padding-left:14px; margin-top:2px; }
+  .contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
   .contact-icon{ display:flex; align-items:center; gap:8px; color:rgba(220,220,220,0.55); transition:color 180ms ease; text-decoration:none; }
   .contact-icon:hover{ color:rgba(235,235,235,0.92); }
   .contact-icon svg{ width:20px; height:20px; flex-shrink:0; }
   .contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:16px; letter-spacing:0.3px; }
-  .menu-copyright{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(200,200,200,0.45); padding-left:14px; line-height:1.4; }
+  .menu-copyright{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(200,200,200,0.45); line-height:1.4; }
   .has-tooltip{ position:relative; }
   .has-tooltip::after{ content:attr(data-tooltip); position:absolute; left:105%; top:50%; transform:translateY(-50%); white-space:nowrap;
     font-family:"Nanum Pen Script",cursive; font-size:16px; color:rgba(220,220,220,0.85);
@@ -1755,9 +1756,11 @@ const buildTOCHTML = () => {
               <div class="mob-contact-icons">
                 <a href="mailto:vitro@narida.art" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+                  <span class="mob-contact-icon-text">vitro@narida.art</span>
                 </a>
                 <a href="https://instagram.com/vitro.narida" target="_blank" rel="noopener">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+                  <span class="mob-contact-icon-text">vitro.narida</span>
                 </a>
               </div>
             </div>
