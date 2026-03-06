@@ -333,7 +333,7 @@ html, body {
 
 .toc-list { list-style: none; margin: 0 0 0 -8px; padding: 0; font-size: 18px; font-family: "Nanum Pen Script", cursive; }
 .toc-item {
-  padding: 2px 0 2px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   display: flex; align-items: center; gap: 6px;
   color: rgba(230,230,230,0.75);
@@ -953,7 +953,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 
   .toc-list{ font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.2;
   margin:0; padding-left: 0; list-style: none; }
-  .toc-item{ padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
+  .toc-item{ padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
   .toc-item:last-child{ border-bottom:none; }
 .toc-item:hover .toc-text{ text-decoration: underline; text-underline-offset: 6px; }
 .menu-h-link{ cursor:pointer; }
