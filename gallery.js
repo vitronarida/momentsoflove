@@ -324,14 +324,14 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
 }
-.menu-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 8px; }
+.menu-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-left: 0; }
 .menu-section:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
 .menu-h { font-size: 20px; color: rgba(235,235,235,0.92); margin: 0 0 2px 0; font-family: "Nanum Pen Script", cursive; }
 .menu-h-link{ display:inline-block; cursor:pointer; }
 .menu-h-link:hover{ text-decoration:underline; text-underline-offset:6px; }
 .menu-h-link:focus{ outline:none; text-decoration:underline; text-underline-offset:6px; }
 
-.toc-list { list-style: none; margin: 0; padding: 0; font-size: 18px; font-family: "Nanum Pen Script", cursive; }
+.toc-list { list-style: none; margin: 0 0 0 -8px; padding: 0; font-size: 18px; font-family: "Nanum Pen Script", cursive; }
 .toc-item {
   padding: 2px 0 2px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -603,13 +603,13 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-success-icon { font-size:32px; margin-bottom:16px; }
 .gb-success-msg { font-size:18px; line-height:1.7; color:rgba(230,230,230,0.80); }
 /* ===== Thumbnail Grid + Heart (모바일) ===== */
-.mob-unified-body{ display:flex; flex:1; min-height:0; margin:0 -24px -40px; }
+.mob-unified-body{ display:flex; flex:1; min-height:0; margin:-12px -24px -40px; }
 .mob-col-title{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.92); margin:0 0 6px; padding:4px 0; }
-.mob-unified-left{ flex:0 0 38%; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding:0 10px 24px 24px; }
+.mob-unified-left{ flex:0 0 38%; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; padding:12px 10px 24px 24px; }
 .mob-unified-left::-webkit-scrollbar{ display:none; }
-.mob-unified-right{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; border-left:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.12); padding:0 24px 24px 10px; }
+.mob-unified-right{ flex:1; overflow-y:auto; -ms-overflow-style:none; scrollbar-width:none; border-left:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.12); padding:12px 24px 24px 10px; }
 .mob-unified-right::-webkit-scrollbar{ display:none; }
-.mob-right-header{ display:flex; align-items:center; justify-content:space-between; padding:4px 0 6px; position:sticky; top:0; z-index:5; }
+.mob-right-header{ display:flex; align-items:center; justify-content:space-between; padding:0 0 6px; position:sticky; top:0; z-index:5; }
 .mob-right-header h3{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.90); margin:0; }
 .mob-expand-btn{ cursor:pointer; padding:4px; opacity:0.5; -webkit-tap-highlight-color:transparent; }
 .mob-expand-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; }
@@ -622,10 +622,12 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .mob-thumb-grid .thumb-card.thumb-locked .thumb-lock-icon svg{ width:18px; height:18px; }
 .mob-thumb-grid .thumb-card.thumb-locked .thumb-title{ font-size:10px; bottom:18px; }
 .mob-contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
-.mob-contact-icons a{ display:flex; align-items:center; gap:8px; color:rgba(220,220,220,0.50); -webkit-tap-highlight-color:transparent; text-decoration:none; }
+.mob-contact-icons a{ display:flex; align-items:center; gap:5px; color:rgba(220,220,220,0.50); -webkit-tap-highlight-color:transparent; text-decoration:none; overflow:hidden; }
 .mob-contact-icons svg{ width:18px; height:18px; flex-shrink:0; }
-.mob-contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:16px; }
+.mob-contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mob-copyright{ font-family:"Nanum Pen Script",cursive; font-size:14px; color:rgba(200,200,200,0.40); line-height:1.4; }
+.mob-bottom-bar{ display:flex; align-items:center; gap:6px; }
+.mob-info-btn{ width:36px; height:36px; border-radius:999px; display:grid; place-items:center; color:rgba(200,200,200,0.6); background:transparent; border:1px solid rgba(255,255,255,0.05); cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .thumb-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; padding:4px 0 16px; }
 .thumb-section-head { grid-column:1/-1; font-family:"Nanum Pen Script",cursive; font-size:16px; color:rgba(230,230,230,0.65); padding:8px 2px 2px; border-top:1px solid rgba(255,255,255,0.06); margin-top:4px; }
 .thumb-section-head:first-child { border-top:none; margin-top:0; }
@@ -1016,9 +1018,9 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-left::-webkit-scrollbar{ display:none; }
   .unified-left .toc-header{ padding-right:0; margin-bottom:6px; }
   .unified-left .toc-title{ font-size:24px; }
-  .unified-left .menu-section{ padding-left:14px; }
+  .unified-left .menu-section{ padding-left:0; }
   .unified-left .menu-h{ font-size:26px; }
-  .unified-left .toc-list{ font-size:20px; }
+  .unified-left .toc-list{ font-size:20px; margin-left:-8px; }
   .unified-left .toc-item{ gap:10px; }
   .unified-left .toc-bullet{ width:10px; flex:0 0 10px; font-size:10px; }
   .unified-right{ flex:1; display:flex; flex-direction:column; padding:16px 16px 14px; overflow:hidden; background:rgba(0,0,0,0.18); border-radius:0 16px 16px 0; }
@@ -1038,12 +1040,15 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
   .unified-thumb-body::-webkit-scrollbar{ display:none; }
   .unified-panel .toc-close{ top:12px; right:12px; }
   .unified-panel .toc-info-btn{ bottom:12px; left:14px; right:auto; }
-  .contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
-  .contact-icon{ display:flex; align-items:center; gap:8px; color:rgba(220,220,220,0.55); transition:color 180ms ease; text-decoration:none; }
+#thumbOverlay .toc-header{ background: rgba(30,28,26,0.92); margin: -14px -12px 8px; padding: 14px 12px 8px; border-radius: 20px 20px 0 0; }
+  .unified-bottom-bar{ position:absolute; bottom:12px; left:14px; display:flex; align-items:center; gap:6px; }
+  .unified-bottom-bar .toc-info-btn{ position:static; }
+  .contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; padding-left:12px; }
+  .contact-icon{ display:flex; align-items:center; gap:5px; color:rgba(220,220,220,0.55); transition:color 180ms ease; text-decoration:none; overflow:hidden; }
   .contact-icon:hover{ color:rgba(235,235,235,0.92); }
   .contact-icon svg{ width:20px; height:20px; flex-shrink:0; }
-  .contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:16px; letter-spacing:0.3px; }
-  .menu-copyright{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(200,200,200,0.45); line-height:1.4; }
+  .contact-icon-text{ font-family:"Nanum Pen Script",cursive; font-size:15px; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .menu-copyright{ font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(200,200,200,0.45); line-height:1.4; padding-left:12px; }
   .has-tooltip{ position:relative; }
   .has-tooltip::after{ content:attr(data-tooltip); position:absolute; left:105%; top:50%; transform:translateY(-50%); white-space:nowrap;
     font-family:"Nanum Pen Script",cursive; font-size:16px; color:rgba(220,220,220,0.85);
@@ -1533,7 +1538,7 @@ const LOCKED_TITLES = {
 
 const LANG_TEXTS = {
   KR:{tocTitle:"메뉴",menuH_TOC:"목차",menuH_INDEX:"작품 목록",menuH_CONTACT:"연락처",
-      menuH_ABOUT:"작가의 말",aboutTitle:"작가의 말",aboutBody:`눈부신 햇살,
+      menuH_ABOUT:"작가의 이야기",aboutTitle:"작가의 이야기",aboutBody:`눈부신 햇살,
 잔잔한 바람,
 백조의 우아한 자태에
 일렁이는 빛결은
@@ -1551,8 +1556,8 @@ const LANG_TEXTS = {
       infoBack:"뒤로",infoHelpTitle:"사용법",
       infoNav:"이전 / 다음 작품",infoMenu:"메뉴 열기 / 닫기",
       infoHelp:"도움말 열기 / 닫기",infoT:"텍스트 보기",
-      infoG:"독자의 말 열기 / 닫기",infoP:"작가의 말 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
-      menuH_GB:"독자의 말",gbTitle:"독자의 말",
+      infoG:"당신의 이야기 열기 / 닫기",infoP:"작가의 이야기 열기 / 닫기",copyright:"© Vitro Narida. All rights reserved.",
+      menuH_GB:"당신의 이야기",gbTitle:"당신의 이야기",
       introText:"모든 사랑의\n순간은\n당신으로\n열립니다"},
   EN:{tocTitle:"Menu",menuH_TOC:"Contents",menuH_INDEX:"Collection",menuH_CONTACT:"Contact",
       menuH_ABOUT:"About",aboutTitle:"Artist’s Note",aboutBody:`Dazzling sunlight,
@@ -1732,7 +1737,6 @@ const buildTOCHTML = () => {
       <div class="toc-panel">
         <div class="mob-unified-body">
           <div class="mob-unified-left">
-            <h3 class="mob-col-title" id="tocTitle">${t.tocTitle}</h3>
             <div class="menu-section">
               <h3 class="menu-h" id="menuH_TOC">${t.menuH_TOC}</h3>
               <ul class="toc-list">
@@ -1750,10 +1754,7 @@ const buildTOCHTML = () => {
               <h3 class="menu-h menu-h-link" id="menuH_ABOUT" tabindex="0">${t.menuH_ABOUT}</h3>
             </div>
             <div class="menu-section">
-              <h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">${t.menuH_GB}</h3>
-            </div>
-            <div class="menu-section">
-              <div class="mob-contact-icons">
+              <div class="mob-contact-icons" style="padding-left:12px;">
                 <a href="mailto:vitro@narida.art" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                   <span class="mob-contact-icon-text">vitro@narida.art</span>
@@ -1765,12 +1766,18 @@ const buildTOCHTML = () => {
               </div>
             </div>
             <div class="menu-section">
-              <div class="mob-copyright">© Vitro Narida.<br>All rights reserved.</div>
+              <div class="mob-copyright" style="padding-left:12px;">© Vitro Narida.<br>All rights reserved.</div>
             </div>
             <div class="menu-section">
-              <div class="lang-toggle">
-                <div class="lang-btn${curLang==="KR"?" active":""}" id="langKR">KR</div>
+              <h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">${t.menuH_GB}</h3>
+            </div>
+            <div class="menu-section">
+              <div class="mob-bottom-bar">
                 <div class="lang-btn${curLang==="EN"?" active":""}" id="langEN">EN</div>
+                <div class="lang-btn${curLang==="KR"?" active":""}" id="langKR">KR</div>
+                <div class="mob-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                </div>
               </div>
             </div>
           </div>
@@ -1786,9 +1793,6 @@ const buildTOCHTML = () => {
             </div>
             <div class="mob-thumb-grid" id="mobThumbGrid"></div>
           </div>
-        </div>
-        <div class="toc-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
         </div>
       </div>
     </div>
@@ -1892,13 +1896,6 @@ const buildTOCHTML = () => {
         <div class="toc-close" id="tocClose" aria-label="Close">✕</div>
         <div class="unified-left">
           <div class="toc-main">
-            <div class="toc-header">
-              <h2 class="toc-title" id="tocTitle">${t.tocTitle}</h2>
-              <div class="langToggle">
-                <div class="langBtn${curLang==="EN"?" active":""}" id="langEN" role="button" tabindex="0">EN</div>
-                <div class="langBtn${curLang==="KR"?" active":""}" id="langKR" role="button" tabindex="0">KR</div>
-              </div>
-            </div>
             <div class="menu-section">
               <h3 class="menu-h" id="menuH_TOC">${t.menuH_TOC}</h3>
               <ul class="toc-list">
@@ -1916,9 +1913,6 @@ const buildTOCHTML = () => {
               <h3 class="menu-h menu-h-link has-tooltip" id="menuH_ABOUT" tabindex="0" data-tooltip="${curLang==="KR"?"작가의 이야기":"Artist's story"}">${t.menuH_ABOUT}</h3>
             </div>
             <div class="menu-section">
-              <h3 class="menu-h menu-h-link has-tooltip" id="menuH_GB" tabindex="0" data-tooltip="${curLang==="KR"?"감상과 응원을 남겨주세요":"Leave your thoughts"}">${t.menuH_GB}</h3>
-            </div>
-            <div class="menu-section">
               <div class="contact-icons">
                 <a href="mailto:vitro@narida.art" class="contact-icon" title="E-Mail">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
@@ -1933,9 +1927,16 @@ const buildTOCHTML = () => {
             <div class="menu-section">
               <div class="menu-copyright" id="copyrightLine">© Vitro Narida.<br>All rights reserved.</div>
             </div>
+            <div class="menu-section">
+              <h3 class="menu-h menu-h-link has-tooltip" id="menuH_GB" tabindex="0" data-tooltip="${curLang==="KR"?"감상과 응원을 남겨주세요":"Leave your thoughts"}">${t.menuH_GB}</h3>
+            </div>
           </div>
-          <div class="toc-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+          <div class="unified-bottom-bar">
+            <div class="langBtn${curLang==="EN"?" active":""}" id="langEN" role="button" tabindex="0">EN</div>
+            <div class="langBtn${curLang==="KR"?" active":""}" id="langKR" role="button" tabindex="0">KR</div>
+            <div class="toc-info-btn" id="tocInfoBtn" aria-label="Help" tabindex="0">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+            </div>
           </div>
         </div>
         <div class="unified-right">
