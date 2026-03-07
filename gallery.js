@@ -63,6 +63,12 @@ html, body {
   transition: opacity 800ms ease;
 }
 .scene-img.show { opacity: 1; }
+.img-error-msg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.35); font-size: 14px; letter-spacing: 0.05em;
+  pointer-events: none;
+}
 /* 모바일 fog 오버레이 */
 .fog-overlay-m { position:absolute; inset:-12%; z-index:5; background-repeat:repeat; mix-blend-mode:screen;
   opacity: var(--fog-opacity, 0); transition: opacity 4000ms ease, transform 8000ms ease-in-out; pointer-events:none; transform: translateZ(0); }
@@ -2385,6 +2391,7 @@ const buildThumbGrid = (grid, hearts) => {
       img.loading = "lazy";
       img.src = "../assets/thumb/" + sc.file + ".jpg";
       img.addEventListener("load", () => img.classList.add("loaded"));
+      img.addEventListener("error", () => { img.style.display="none"; }, {once:true});
 
       const codeEl = document.createElement("div");
       codeEl.className = "thumb-code";
@@ -2938,9 +2945,18 @@ if (isMobile) {
         },300);
       }
     };
+    const onError = () => {
+      img.style.display = "none";
+      const errMsg = document.createElement("div");
+      errMsg.className = "img-error-msg";
+      errMsg.textContent = curLang === "KR" ? "이미지를 불러올 수 없어요" : "Image unavailable";
+      photoArea.appendChild(errMsg);
+      setTimeout(() => textEl.classList.add("show"), 400);
+    };
     if(img.complete&&img.naturalWidth>0){onLoad();}
     else{
       img.addEventListener("load",onLoad,{once:true});
+      img.addEventListener("error",onError,{once:true});
       const poll=setInterval(()=>{if(img.naturalWidth>0){clearInterval(poll);onLoad();}},16);
       img.addEventListener("load",()=>clearInterval(poll),{once:true});
     }
@@ -3126,6 +3142,13 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
     hero.append(lqip,hq,ov,fogAtmo,fogAtmo2,fog,txt); sq.appendChild(hero);
   } else if(SC.type==="img"){
     const img=document.createElement("img"); img.className="scene-img"; img.id=SC.id+"Img"; img.alt=SC.code||""; img.src=SC.imgSrc;
+    img.addEventListener("error",()=>{
+      img.style.display="none";
+      const errMsg=document.createElement("div");
+      errMsg.className="img-error-msg";
+      errMsg.textContent=curLang==="KR"?"이미지를 불러올 수 없어요":"Image unavailable";
+      sq.appendChild(errMsg);
+    },{once:true});
     const txt=document.createElement("div"); txt.className="scene-text long-text"; txt.id=SC.id+"Text";
     txt.textContent=curLang==="KR"?SC.textKR:SC.textEN;
     sq.append(img,txt);
