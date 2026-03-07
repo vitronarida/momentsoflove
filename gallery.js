@@ -3352,7 +3352,6 @@ bindCommon();
 // ===== Android 백 버튼 — 오버레이 닫기 =====
 history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => {
-  history.pushState(null, "", location.href);
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
     {id:"indexOverlay",     mgr: IndexManager},
@@ -3364,7 +3363,12 @@ window.addEventListener("popstate", () => {
     {id:"tocOverlay",       mgr: TOCManager},
   ];
   const open = overlays.find(o => document.getElementById(o.id)?.classList.contains("on"));
-  if (open) open.mgr.close();
+  if (open) {
+    // 오버레이 있을 때 — 닫고 스택 유지 (페이지 이탈 방지)
+    history.pushState(null, "", location.href);
+    open.mgr.close();
+  }
+  // 오버레이 없을 때 — pushState 없이 자연스럽게 이전 장면으로 이동
 });
 
 // ===== 언어 전환 후 오버레이 복원 =====
