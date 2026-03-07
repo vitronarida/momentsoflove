@@ -98,7 +98,7 @@ function renderForm(lang) {
 
       <textarea id="gbTextarea" class="gb-textarea"
         placeholder="${t.msg}"
-        maxlength="${GB_CONFIG.maxLength}" rows="4"></textarea>
+        maxlength="${GB_CONFIG.maxLength}" rows="3"></textarea>
 
       <div id="gbErrorMsg" class="gb-error-msg"></div>
 
@@ -108,13 +108,25 @@ function renderForm(lang) {
       </div>
     </div>`;
 
-  // 글자수 카운터
+  // 글자수 카운터 + textarea 자동 높이
   const textarea = $("gbTextarea");
   const counter  = $("gbCharCount");
+  const autoResize = () => {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  };
   textarea.addEventListener("input", () => {
     const n = textarea.value.length;
     counter.textContent = `${n} / ${GB_CONFIG.maxLength}`;
     counter.classList.toggle("gb-char-warn", n > GB_CONFIG.maxLength * 0.9);
+    autoResize();
+  });
+
+  // 모바일 키보드 올라올 때 입력 필드 가려짐 방지
+  [$("gbName"), textarea].forEach(el => {
+    el.addEventListener("focus", () => {
+      setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+    });
   });
 
   // 전송 버튼
@@ -182,7 +194,12 @@ async function handleSubmit(lang) {
 
   } catch (err) {
     console.error("Guestbook submit error:", err);
-    alert(t.errorMsg);
+    const errEl = $("gbErrorMsg");
+    if (errEl) {
+      errEl.textContent = t.errorMsg;
+      errEl.classList.add("show");
+      setTimeout(() => errEl.classList.remove("show"), 4000);
+    }
     btn.disabled = false;
     btn.textContent = t.submit;
   }

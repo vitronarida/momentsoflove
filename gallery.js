@@ -409,6 +409,7 @@ html, body {
 }
 #aboutOverlay .index-panel {
   width: min(480px, 90vw);
+  height: auto;
   max-height: 80dvh;
   border-radius: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -441,6 +442,7 @@ html, body {
 }
 #poemOverlay .index-panel {
   width: min(480px, 90vw);
+  height: auto;
   max-height: 90dvh;
   border-radius: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -462,6 +464,23 @@ html, body {
   white-space: pre-wrap;
   word-break: keep-all;
   padding: 0 16px;
+}
+/* help 모달 - 콘텐츠 높이에 맞춤 */
+#helpOverlay {
+  align-items: center;
+  justify-content: center;
+}
+#helpOverlay .index-panel {
+  width: min(480px, 90vw);
+  height: auto;
+  max-height: 80dvh;
+  border-radius: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 24px 32px;
+  transform: translateY(20px);
+}
+#helpOverlay.on .index-panel {
+  transform: translateY(0);
 }
 /* intro 버튼 오버레이 */
 #introOverlay {
@@ -672,6 +691,8 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
+@keyframes slst-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+.slst-shake { animation: slst-shake 0.35s ease; }
 .slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:8px; opacity:0.5; flex-shrink:0; }
 .slst-lock-tag svg{ width:13px; height:13px; stroke:rgba(212,175,55,0.9); fill:none; stroke-width:2.0; display:block; }
 .slst-current{ background:rgba(212,175,55,0.06); }
@@ -2526,8 +2547,12 @@ const bindCommon = () => {
     if (!title) return;
     const item = title.closest(".slst-item");
     if (!item) return;
-    // 이미 시 없음 확인된 경우 무시
-    if (item.dataset.hasPoem === "no") return;
+    // 이미 시 없음 확인된 경우 — 살짝 흔들기 피드백
+    if (item.dataset.hasPoem === "no") {
+      title.classList.add("slst-shake");
+      setTimeout(() => title.classList.remove("slst-shake"), 400);
+      return;
+    }
     openPoemFromList(item.dataset.code, item.dataset.kr, item.dataset.en, item);
   });
 
