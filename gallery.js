@@ -3425,9 +3425,11 @@ window.addEventListener("focus", () => {
 // bfcache 복귀 시 sq 크기가 0인 경우 재계산
 window.addEventListener("pageshow", (e) => {
   if (!e.persisted) return;
-  // bfcache 복원 시 blackout 제거 (goTo()가 켜둔 채로 복원되는 문제)
+  // bfcache 복원 시 blackout 제거
   const bo = document.getElementById("blackout");
   if (bo) { bo.classList.remove("on"); bo.style.opacity = ""; }
+  // bfcache 복원 시 history 가드 재등록 (백 키 첫 번째 눌림 방어)
+  history.pushState(null, "", location.href);
   const sqP = document.getElementById("mainContent") || document.getElementById("mPhotoArea");
   if (!sqP || sqP.offsetWidth > 0) return;
   requestAnimationFrame(() => {
