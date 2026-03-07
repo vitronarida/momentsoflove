@@ -3350,7 +3350,9 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 bindCommon();
 
 // ===== Android 백 버튼 — 오버레이 닫기 =====
+// 베이스 상태 2개 쌓기: 백 키를 눌러도 페이지 이탈 방지
 history.replaceState({overlay: null}, "");
+history.pushState({overlay: null}, "");
 window.addEventListener("popstate", () => {
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
@@ -3364,8 +3366,12 @@ window.addEventListener("popstate", () => {
   ];
   const open = overlays.find(o => document.getElementById(o.id)?.classList.contains("on"));
   if (open) {
+    // 오버레이 닫고 베이스 상태 복원
     open.mgr.close();
-    history.replaceState({overlay: null}, "");
+    history.pushState({overlay: null}, "");
+  } else {
+    // 오버레이 없을 때도 베이스 상태 유지 (페이지 이탈 방지)
+    history.pushState({overlay: null}, "");
   }
 });
 
