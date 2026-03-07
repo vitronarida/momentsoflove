@@ -558,7 +558,7 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-login-notice { font-family:"Nanum Pen Script",cursive; font-size:17px; color:rgba(220,220,220,0.50); padding:12px 0; }
 .gb-form { margin:14px 0; }
 .gb-input {
-  width:100%; box-sizing:border-box; padding:12px; background:rgba(255,255,255,0.06);
+  width:100%; box-sizing:border-box; padding:6px 12px; background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:#e6e6e6;
   font-family:"Nanum Pen Script",cursive; font-size:22px; line-height:1.5;
   outline:none; transition:border-color 200ms; margin-bottom:10px;
@@ -1323,7 +1323,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .gb-login-notice { font-family:"Nanum Pen Script",cursive; font-size:17px; color:rgba(220,220,220,0.45); padding:14px 0; }
 .gb-form { margin:16px 0; }
 .gb-input {
-  width:100%; box-sizing:border-box; padding:12px 14px; background:rgba(255,255,255,0.05);
+  width:100%; box-sizing:border-box; padding:6px 14px; background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.10); border-radius:10px; color:#e6e6e6;
   font-family:"Nanum Pen Script",cursive; font-size:clamp(22px, 3vw, 28px); line-height:1.5;
   outline:none; transition:border-color 200ms; margin-bottom:10px;
