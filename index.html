@@ -487,9 +487,10 @@
     };
 
     /* ===== 디바이스 감지 ===== */
-    const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
-      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const forced   = (() => { try { return sessionStorage.getItem("force_device"); } catch(e) { return null; } })();
+    // force_device가 설정된 경우 maxTouchPoints 무시 (iOS 데스크톱 모드 오감지 방지)
+    const detectedMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+      || (!forced && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const isMobile = forced ? (forced === "M") : detectedMobile;
     const TARGET_URL = "./scenes/LPL_01.html?from=index";
 

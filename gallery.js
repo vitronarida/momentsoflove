@@ -560,7 +560,7 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-input {
   width:100%; box-sizing:border-box; padding:12px; background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:#e6e6e6;
-  font-family:"Nanum Pen Script",cursive; font-size:17px; line-height:1.5;
+  font-family:"Nanum Pen Script",cursive; font-size:22px; line-height:1.5;
   outline:none; transition:border-color 200ms; margin-bottom:10px;
 }
 .gb-input:focus { border-color:rgba(212,175,55,0.50); }
@@ -568,18 +568,18 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-textarea {
   width:100%; box-sizing:border-box; padding:12px; background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:#e6e6e6;
-  font-family:"Nanum Pen Script",cursive; font-size:17px; line-height:1.5;
+  font-family:"Nanum Pen Script",cursive; font-size:22px; line-height:1.5;
   resize:none; outline:none; transition:border-color 200ms;
 }
 .gb-textarea:focus { border-color:rgba(212,175,55,0.50); }
 .gb-textarea::placeholder { color:rgba(220,220,220,0.35); }
 .gb-form-footer { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
-.gb-char-count { font-family:"Nanum Pen Script",cursive; font-size:14px; color:rgba(180,180,180,0.45); }
+.gb-char-count { font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(180,180,180,0.45); padding-left:12px; }
 .gb-char-count.gb-char-warn { color:rgba(212,120,80,0.80); }
 .gb-submit-btn {
-  padding:8px 24px; background:rgba(212,175,55,0.22); border:1px solid rgba(212,175,55,0.40);
+  padding:8px; background:rgba(212,175,55,0.22); border:1px solid rgba(212,175,55,0.40);
   border-radius:8px; color:rgba(255,250,230,0.90); font-family:"Nanum Pen Script",cursive;
-  font-size:17px; cursor:pointer; transition:background 200ms;
+  font-size:18px; cursor:pointer; transition:background 200ms;
 }
 .gb-submit-btn:active { background:rgba(212,175,55,0.40); }
 .gb-submit-btn:disabled { opacity:0.45; pointer-events:none; }
@@ -607,7 +607,8 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .gb-toast-error { border-color:rgba(200,60,60,0.40); }
 .gb-success { text-align:center; padding:48px 16px; font-family:"Nanum Pen Script",cursive; }
 .gb-success-icon { font-size:32px; margin-bottom:16px; }
-.gb-success-msg { font-size:18px; line-height:1.7; color:rgba(230,230,230,0.80); }
+.gb-success-msg { font-size:22px; line-height:1.7; color:rgba(230,230,230,0.80); }
+.gb-subtitle { font-family:"Nanum Pen Script",cursive; font-size:22px; color:rgba(220,220,220,0.55); margin:0 0 14px; line-height:1.5; }
 /* ===== Thumbnail Grid + Heart (모바일) ===== */
 .mob-unified-body{ display:flex; flex:1; min-height:0; margin:-12px -24px -40px; }
 .mob-col-title{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.92); margin:0 0 6px; padding:4px 0; }
@@ -1324,7 +1325,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .gb-input {
   width:100%; box-sizing:border-box; padding:12px 14px; background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.10); border-radius:10px; color:#e6e6e6;
-  font-family:"Nanum Pen Script",cursive; font-size:17px; line-height:1.5;
+  font-family:"Nanum Pen Script",cursive; font-size:clamp(22px, 3vw, 28px); line-height:1.5;
   outline:none; transition:border-color 200ms; margin-bottom:10px;
 }
 .gb-input:focus { border-color:rgba(212,175,55,0.45); }
@@ -1332,18 +1333,18 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .gb-textarea {
   width:100%; box-sizing:border-box; padding:12px 14px; background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.10); border-radius:10px; color:#e6e6e6;
-  font-family:"Nanum Pen Script",cursive; font-size:17px; line-height:1.5;
+  font-family:"Nanum Pen Script",cursive; font-size:clamp(22px, 3vw, 28px); line-height:1.5;
   resize:none; outline:none; transition:border-color 200ms;
 }
 .gb-textarea:focus { border-color:rgba(212,175,55,0.45); }
 .gb-textarea::placeholder { color:rgba(220,220,220,0.30); }
 .gb-form-footer { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
-.gb-char-count { font-family:"Nanum Pen Script",cursive; font-size:14px; color:rgba(180,180,180,0.40); }
+.gb-char-count { font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(180,180,180,0.40); padding-left:14px; }
 .gb-char-count.gb-char-warn { color:rgba(212,120,80,0.75); }
 .gb-submit-btn {
-  padding:8px 28px; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.35);
+  padding:8px; background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.35);
   border-radius:8px; color:rgba(255,250,230,0.85); font-family:"Nanum Pen Script",cursive;
-  font-size:17px; cursor:pointer; transition:background 200ms, border-color 200ms;
+  font-size:18px; cursor:pointer; transition:background 200ms, border-color 200ms;
 }
 .gb-submit-btn:hover { background:rgba(212,175,55,0.32); border-color:rgba(212,175,55,0.55); }
 .gb-submit-btn:disabled { opacity:0.4; pointer-events:none; }
@@ -1373,7 +1374,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 .gb-toast-error { border-color:rgba(200,60,60,0.35); }
 .gb-success { text-align:center; padding:52px 20px; font-family:"Nanum Pen Script",cursive; }
 .gb-success-icon { font-size:32px; margin-bottom:18px; }
-.gb-success-msg { font-size:18px; line-height:1.7; color:rgba(230,230,230,0.80); }
+.gb-success-msg { font-size:clamp(22px, 3vw, 28px); line-height:1.7; color:rgba(230,230,230,0.80); }
+.gb-subtitle { font-family:"Nanum Pen Script",cursive; font-size:clamp(22px, 3vw, 28px); color:rgba(220,220,220,0.55); margin:0 0 16px; line-height:1.5; }
 /* ===== Thumbnail Grid + Heart (데스크톱) ===== */
 .thumb-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; padding:4px 0 8px; }
 .thumb-section-head { grid-column:1/-1; font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(230,230,230,0.65); padding:8px 2px 2px; border-top:1px solid rgba(255,255,255,0.05); margin-top:4px; }

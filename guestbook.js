@@ -56,21 +56,23 @@ const loadGBFirebase = () => new Promise((resolve) => {
  * ────────────────────────────── */
 const T = {
   KR: {
-    name:        "성함",
-    msg:         "사진을 본 소중한 감상을 남겨주세요…",
-    submit:      "작가님께 전송하기",
+    subtitle:    "당신의 순간은 어떤가요?",
+    name:        "당신의 이름",
+    msg:         "",
+    submit:      "당신의 순간 보내기",
     sending:     "전송 중…",
-    emptyAlert:  "성함과 내용을 모두 적어주세요.",
-    successMsg:  "소중한 마음이 작가님께 잘 전달되었습니다.\n감사합니다.",
+    emptyAlert:  "이름과 내용을 모두 적어주세요.",
+    successMsg:  "당신의 이야기가 전해졌습니다.",
     errorMsg:    "오류가 발생했습니다. 다시 시도해주세요."
   },
   EN: {
-    name:        "Name",
-    msg:         "Leave your message for the artist…",
-    submit:      "Send to Artist",
+    subtitle:    "What did this moment mean to you?",
+    name:        "Your Name",
+    msg:         "",
+    submit:      "Send Your Moment",
     sending:     "Sending…",
     emptyAlert:  "Please fill in both name and message.",
-    successMsg:  "Your message has been delivered to the artist.\nThank you.",
+    successMsg:  "Your story has been delivered.",
     errorMsg:    "Something went wrong. Please try again."
   }
 };
@@ -90,6 +92,7 @@ function renderForm(lang) {
 
   area.innerHTML = `
     <div class="gb-form">
+      <p class="gb-subtitle">${t.subtitle}</p>
       <input type="text" id="gbName" class="gb-input"
         placeholder="${t.name}" maxlength="30">
 
@@ -155,7 +158,7 @@ async function handleSubmit(lang) {
     // 성공 화면 (gallery.js CSS 클래스 사용)
     $("gbFormArea").innerHTML = `
       <div class="gb-success">
-        <div class="gb-success-icon">✉️</div>
+        <div class="gb-success-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="rgba(212,175,55,0.85)" style="width:40px;height:40px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg></div>
         <p class="gb-success-msg">${t.successMsg.replace(/\n/g, "<br>")}</p>
       </div>`;
 
