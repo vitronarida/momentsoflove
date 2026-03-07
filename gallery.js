@@ -3352,8 +3352,8 @@ bindCommon();
 // ===== Android 백 버튼 — 오버레이 닫기 =====
 history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => {
-  // 즉시 현재 위치로 pushState → 스택 항상 유지 (연속 백 키 방지)
-  history.pushState(null, "", location.href);
+  // go(1)로 즉시 앞으로 복귀 → 연속 백 키에도 페이지 이탈 방지
+  history.go(1);
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
     {id:"indexOverlay",     mgr: IndexManager},
