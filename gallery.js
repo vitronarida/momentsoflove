@@ -333,7 +333,7 @@ html, body {
 
 .toc-list { list-style: none; margin: 0 0 0 -8px; padding: 0; font-size: 18px; font-family: "Nanum Pen Script", cursive; }
 .toc-item {
-  padding: 6px 0;
+  padding: 2px 0 2px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   display: flex; align-items: center; gap: 6px;
   color: rgba(230,230,230,0.75);
@@ -953,7 +953,7 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 
   .toc-list{ font-family:"Nanum Pen Script", cursive; font-size: 24px; line-height:1.2;
   margin:0; padding-left: 0; list-style: none; }
-  .toc-item{ padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
+  .toc-item{ padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:16px; }
   .toc-item:last-child{ border-bottom:none; }
 .toc-item:hover .toc-text{ text-decoration: underline; text-underline-offset: 6px; }
 .menu-h-link{ cursor:pointer; }
@@ -1687,6 +1687,7 @@ const buildSceneListHTML = () => {
 
 const SceneListManager = {
   open: () => {
+    history.pushState({overlay:"sceneList"}, "");
     const ov = document.getElementById("sceneListOverlay");
     if (!ov) return;
     ov.style.display = "flex";
@@ -2083,6 +2084,7 @@ const scrollToCurrent = (container, selector) => {
 };
 const TOCManager = {
   open: () => {
+    history.pushState({overlay:"toc"}, "");
     const ov=document.getElementById("tocOverlay");
     ov.classList.add("on"); ov.setAttribute("aria-hidden","false");
     if (isMobile) {
@@ -2103,6 +2105,7 @@ const TOCManager = {
 };
 const IndexManager = {
   open: () => {
+    history.pushState({overlay:"index"}, "");
     TOCManager.close();
     renderIndex();
     const ov=document.getElementById("indexOverlay");
@@ -2124,6 +2127,7 @@ const IndexManager = {
 
 const AboutManager = {
   open: () => {
+    history.pushState({overlay:"about"}, "");
     if (isMobile) TOCManager.close();
     const t = LANG_TEXTS[curLang] || LANG_TEXTS.KR;
     const ov = document.getElementById("aboutOverlay");
@@ -2155,6 +2159,7 @@ const AboutManager = {
 
 const HelpManager = {
   open: () => {
+    history.pushState({overlay:"help"}, "");
     const ov = document.getElementById("helpOverlay");
     if (!ov) return;
     ov.style.display = "flex";
@@ -2172,6 +2177,7 @@ const HelpManager = {
 
 const IntroManager = {
   open: () => {
+    history.pushState({overlay:"intro"}, "");
     const ov = document.getElementById("introOverlay");
     if (!ov) return;
     ov.style.display = "flex";
@@ -2193,6 +2199,7 @@ const IntroManager = {
 let gbScriptLoaded = false;
 const GuestbookManager = {
   open: () => {
+    history.pushState({overlay:"gb"}, "");
     if (isMobile) TOCManager.close();
     const ov = document.getElementById("gbOverlay");
     if (!ov) return;
@@ -2437,6 +2444,7 @@ const buildThumbGrid = (grid, hearts) => {
 // ===== 썸네일 매니저 =====
 const ThumbnailManager = {
   open: async () => {
+    history.pushState({overlay:"thumb"}, "");
     TOCManager.close();
     const ov = document.getElementById("thumbOverlay");
     if (!ov) return;
@@ -3340,6 +3348,26 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 
 // ===== 공통 이벤트 (반드시 DOM 삽입 후 실행) =====
 bindCommon();
+
+// ===== Android 백 버튼 — 오버레이 닫기 =====
+history.replaceState({overlay: null}, "");
+window.addEventListener("popstate", () => {
+  const overlays = [
+    {id:"thumbOverlay",     mgr: ThumbnailManager},
+    {id:"indexOverlay",     mgr: IndexManager},
+    {id:"aboutOverlay",     mgr: AboutManager},
+    {id:"gbOverlay",        mgr: GuestbookManager},
+    {id:"helpOverlay",      mgr: HelpManager},
+    {id:"introOverlay",     mgr: IntroManager},
+    {id:"sceneListOverlay", mgr: SceneListManager},
+    {id:"tocOverlay",       mgr: TOCManager},
+  ];
+  const open = overlays.find(o => document.getElementById(o.id)?.classList.contains("on"));
+  if (open) {
+    open.mgr.close();
+    history.replaceState({overlay: null}, "");
+  }
+});
 
 // ===== 언어 전환 후 오버레이 복원 =====
 try {

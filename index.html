@@ -651,9 +651,9 @@
       setTimeout(typeChar, 400);
       setTimeout(() => { skipBar?.classList.add("show"); }, 400);
     };
-    if (document.fonts && document.fonts.load) {
-      // 실제 사용할 텍스트로 폰트 로드 확인
-      document.fonts.load('32px "Nanum Pen Script"', TEXT).then(startTyping).catch(startTyping);
+    // fonts.ready: 전체 폰트 로드 완료 후 타이핑 시작 (iOS '든' 등 깨짐 방지)
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(startTyping);
     } else {
       setTimeout(startTyping, 800);
     }
@@ -700,7 +700,18 @@
       }
       document.addEventListener("mousemove", skipShowBars);
       document.addEventListener("keydown", skipShowBars);
-      document.addEventListener("touchstart", skipShowBars, {passive:true});
+      if (!isMobile) document.addEventListener("touchstart", skipShowBars, {passive:true});
+    });
+
+    /* ===== bfcache 복원 시 오버레이 잔상 제거 ===== */
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) {
+        document.querySelectorAll(".overlay-panel").forEach(el => {
+          el.classList.remove("on");
+          el.setAttribute("aria-hidden", "true");
+          el.style.display = "none";
+        });
+      }
     });
 
     /* ===== hover: Lock ↔ Unlock (PC만) ===== */
