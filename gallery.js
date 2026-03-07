@@ -3350,10 +3350,13 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 bindCommon();
 
 // ===== Android 백 버튼 — 오버레이 닫기 =====
+// 버퍼 2개 쌓기 — 연속 백 키에도 스택 소진 방지
+history.pushState(null, "", location.href);
 history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => {
-  // go(1)로 즉시 앞으로 복귀 → 연속 백 키에도 페이지 이탈 방지
-  history.go(1);
+  // 즉시 버퍼 2개 보충 (비동기 처리 전 스택 확보)
+  history.pushState(null, "", location.href);
+  history.pushState(null, "", location.href);
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
     {id:"indexOverlay",     mgr: IndexManager},
