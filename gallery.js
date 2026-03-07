@@ -3428,7 +3428,15 @@ window.addEventListener("pageshow", (e) => {
   // bfcache 복원 시 blackout 제거
   const bo = document.getElementById("blackout");
   if (bo) { bo.classList.remove("on"); bo.style.opacity = ""; }
-  // bfcache 복원 시 history 가드 재등록 (백 키 첫 번째 눌림 방어)
+  // bfcache 복원 시 overlay-panel 인라인 display:none 제거
+  // (goTo()가 설정한 인라인 스타일이 Manager.open()의 .on 클래스를 덮는 문제)
+  document.querySelectorAll(".overlay-panel").forEach(el => {
+    el.style.display = "";
+    el.style.opacity = "";
+    el.style.transition = "";
+    el.style.pointerEvents = "";
+  });
+  // bfcache 복원 시 history 가드 재등록
   history.pushState(null, "", location.href);
   const sqP = document.getElementById("mainContent") || document.getElementById("mPhotoArea");
   if (!sqP || sqP.offsetWidth > 0) return;
