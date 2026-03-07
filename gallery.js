@@ -583,6 +583,8 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 }
 .gb-submit-btn:active { background:rgba(212,175,55,0.40); }
 .gb-submit-btn:disabled { opacity:0.45; pointer-events:none; }
+.gb-error-msg { font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(212,120,80,0.85); padding-left:12px; max-height:0; overflow:hidden; opacity:0; transition:max-height 300ms ease, opacity 300ms ease; margin-bottom:0; }
+.gb-error-msg.show { max-height:40px; opacity:1; margin-bottom:8px; }
 .gb-entry { padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
 .gb-entry:last-child { border-bottom:none; }
 .gb-entry-pending { opacity:0.55; }
@@ -1348,6 +1350,8 @@ const CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum
 }
 .gb-submit-btn:hover { background:rgba(212,175,55,0.32); border-color:rgba(212,175,55,0.55); }
 .gb-submit-btn:disabled { opacity:0.4; pointer-events:none; }
+.gb-error-msg { font-family:"Nanum Pen Script",cursive; font-size:18px; color:rgba(212,120,80,0.85); padding-left:14px; max-height:0; overflow:hidden; opacity:0; transition:max-height 300ms ease, opacity 300ms ease; margin-bottom:0; }
+.gb-error-msg.show { max-height:40px; opacity:1; margin-bottom:8px; }
 .gb-entry { padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
 .gb-entry:last-child { border-bottom:none; }
 .gb-entry-pending { opacity:0.50; }

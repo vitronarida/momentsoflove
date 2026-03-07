@@ -100,6 +100,8 @@ function renderForm(lang) {
         placeholder="${t.msg}"
         maxlength="${GB_CONFIG.maxLength}" rows="4"></textarea>
 
+      <div id="gbErrorMsg" class="gb-error-msg"></div>
+
       <div class="gb-form-footer">
         <span class="gb-char-count" id="gbCharCount">0 / ${GB_CONFIG.maxLength}</span>
         <button class="gb-submit-btn" id="gbSubmitBtn">${t.submit}</button>
@@ -137,7 +139,12 @@ async function handleSubmit(lang) {
   const t       = T[lang] || T.KR;
 
   if (!name || !message) {
-    alert(t.emptyAlert);
+    const errEl = $("gbErrorMsg");
+    if (errEl) {
+      errEl.textContent = t.emptyAlert;
+      errEl.classList.add("show");
+      setTimeout(() => errEl.classList.remove("show"), 3000);
+    }
     return;
   }
 
