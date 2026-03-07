@@ -3350,10 +3350,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 bindCommon();
 
 // ===== Android 백 버튼 — 오버레이 닫기 =====
-// 베이스 상태 2개 쌓기: 백 키를 눌러도 페이지 이탈 방지
-history.replaceState({overlay: null}, "");
-history.pushState({overlay: null}, "");
+history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => {
+  // 즉시 현재 위치로 pushState → 스택 항상 유지 (연속 백 키 방지)
+  history.pushState(null, "", location.href);
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
     {id:"indexOverlay",     mgr: IndexManager},
@@ -3365,14 +3365,7 @@ window.addEventListener("popstate", () => {
     {id:"tocOverlay",       mgr: TOCManager},
   ];
   const open = overlays.find(o => document.getElementById(o.id)?.classList.contains("on"));
-  if (open) {
-    // 오버레이 닫고 베이스 상태 복원
-    open.mgr.close();
-    history.pushState({overlay: null}, "");
-  } else {
-    // 오버레이 없을 때도 베이스 상태 유지 (페이지 이탈 방지)
-    history.pushState({overlay: null}, "");
-  }
+  if (open) open.mgr.close();
 });
 
 // ===== 언어 전환 후 오버레이 복원 =====
