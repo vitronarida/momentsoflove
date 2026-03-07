@@ -1597,7 +1597,7 @@ const goTo = (url) => {
     el.style.pointerEvents = "none";
     el.style.display = "none";
   });
-  // 타임스탬프 추가로 bfcache 완전 무력화
+  // 타임스탬프 추가로 동일 URL 재진입 시 캐시 무력화
   const sep = url.includes("?") ? "&" : "?";
   const dest = url + sep + "_t=" + Date.now();
   const bo = document.getElementById("blackout");
@@ -3408,10 +3408,7 @@ if(!isMobile){
   },{passive:true});
 }
 
-// bfcache 완전 비활성화
-window.addEventListener("unload", ()=>{});
-
-// 브라우저 창 포커스 복귀 시 ripple 재시작
+// bfcache 복귀 시 ripple 재시작 및 blackout 제거
 window.addEventListener("focus", () => {
   const img = document.querySelector(".scene-img");
   const sqF = document.getElementById("mainContent") || document.getElementById("mPhotoArea");
