@@ -3350,12 +3350,8 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 bindCommon();
 
 // ===== Android 백 버튼 — 오버레이 닫기 =====
-// 버퍼 2개 쌓기 — 연속 백 키에도 스택 소진 방지
-history.pushState(null, "", location.href);
 history.pushState(null, "", location.href);
 window.addEventListener("popstate", () => {
-  // 즉시 버퍼 2개 보충 (비동기 처리 전 스택 확보)
-  history.pushState(null, "", location.href);
   history.pushState(null, "", location.href);
   const overlays = [
     {id:"thumbOverlay",     mgr: ThumbnailManager},
@@ -3429,6 +3425,9 @@ window.addEventListener("focus", () => {
 // bfcache 복귀 시 sq 크기가 0인 경우 재계산
 window.addEventListener("pageshow", (e) => {
   if (!e.persisted) return;
+  // bfcache 복원 시 blackout 제거 (goTo()가 켜둔 채로 복원되는 문제)
+  const bo = document.getElementById("blackout");
+  if (bo) { bo.classList.remove("on"); bo.style.opacity = ""; }
   const sqP = document.getElementById("mainContent") || document.getElementById("mPhotoArea");
   if (!sqP || sqP.offsetWidth > 0) return;
   requestAnimationFrame(() => {
