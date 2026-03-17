@@ -209,12 +209,10 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
 
   app.append(photoArea, ctrlArea);
 
-  // RST 모바일 반딧불 시작 (DOM 삽입 후)
-  if(SC.type==="rest") requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      if(window.rstStartFlyMobile) window.rstStartFlyMobile(photoArea);
-    });
-  });
+  // RST 모바일 반딧불 시작 (flex 레이아웃 완료 후 500ms)
+  if(SC.type==="rest") setTimeout(function(){
+    if(window.rstStartFlyMobile) window.rstStartFlyMobile(photoArea);
+  }, 500);
 
   // 스와이프
   let tx=null, ty=0;
@@ -731,13 +729,12 @@ window.addEventListener("pageshow", (e) => {
         }
         var op=fp.opacity;
         if(curX>=fadeStartX)op*=Math.max(0,1-(curX-fadeStartX)/(rX-fadeStartX));
-        var sz=(window._isMobile?10:7)*fp.size,glow=sz*1.3;
-        var sh=sz*0.7;
+        var sz=11*fp.size, sh=sz*0.45, glow=sz*1.5;
         fly.style.left=(curX-sz/2)+'px'; fly.style.top=(curY-sh/2)+'px';
         fly.style.width=sz+'px'; fly.style.height=sh+'px'; fly.style.opacity=op;
         fly.style.borderRadius='50%';
-        fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
-        fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
+        fly.style.background='radial-gradient(ellipse at center,rgba(255,252,165,1) 10%,rgba(212,175,55,0.5) 50%,transparent 80%)';
+        fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.3)+'px rgba(212,175,55,0.45),0 0 '+(glow*2)+'px '+(glow*0.6)+'px rgba(212,175,55,0.15)';
         if(!triggered&&curX>=rX-40){
           triggered=true;fly.style.opacity=0;
           setTimeout(function(){
@@ -767,9 +764,9 @@ window.addEventListener("pageshow", (e) => {
     var fly=document.getElementById('rst-fly');
     if(!fly){RST_FLY_RUNNING=false;return;}
     function launch(){
-      var sqR=sq.getBoundingClientRect(),W=sqR.width,H=sqR.height;
-      // 레이아웃 미완료 시 재시도
-      if(H===0||W===0){ setTimeout(launch,100); return; }
+      // photoArea 치수 대신 window 기준으로 계산 (가장 안정적)
+      var W = window.innerWidth;
+      var H = window.innerHeight * 0.55; // photoArea는 화면의 약 55%
       var start=null;
       function frame(ts){
         if(!document.getElementById('rst-fly')){RST_FLY_RUNNING=false;return;}
@@ -779,13 +776,12 @@ window.addEventListener("pageshow", (e) => {
         var x=t, y=p.yBase+Math.sin(t*Math.PI*p.freq+p.phase)*p.amp;
         var size=0.6+0.55*Math.abs(Math.sin(t*Math.PI*p.pFreq));
         var op=0.5+0.45*Math.abs(Math.sin(t*Math.PI*p.pFreq));
-        var sz=6*size,glow=sz*1.3;
-        var sh=sz*0.7;
+        var sz=10*size, sh=sz*0.45, glow=sz*1.5;
         fly.style.left=(x*W-sz/2)+'px';fly.style.top=(y*H-sh/2)+'px';
         fly.style.width=sz+'px';fly.style.height=sh+'px';fly.style.opacity=op;
         fly.style.borderRadius='50%';
-        fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
-        fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
+        fly.style.background='radial-gradient(ellipse at center,rgba(255,252,165,1) 10%,rgba(212,175,55,0.5) 50%,transparent 80%)';
+        fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.3)+'px rgba(212,175,55,0.45),0 0 '+(glow*2)+'px '+(glow*0.6)+'px rgba(212,175,55,0.15)';
         if(t<1)requestAnimationFrame(frame);
         else{fly.style.opacity=0;mRandomize();setTimeout(launch,RST_FLY_PAUSE);}
       }
