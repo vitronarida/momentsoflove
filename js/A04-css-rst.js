@@ -221,18 +221,20 @@ const CSS_A04_MOBILE = `
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
-/* ── RST 달 (모바일) — 데스크탑과 동일 선택자 사용 ── */
-.rest-photo-area{ position:relative; }
-.rest-icon-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;display:grid;place-items:center;cursor:pointer;z-index:15;overflow:visible;}
-.moon-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:999px;background:radial-gradient(circle,rgba(255,252,235,0.95) 0%,rgba(220,210,180,0.6) 50%,transparent 100%);animation:moonBreathe 6.4s ease-in-out infinite;z-index:3;}
-.moon-glow1{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;border-radius:999px;background:radial-gradient(circle,rgba(220,210,170,0.22) 0%,rgba(200,190,150,0.08) 55%,transparent 100%);animation:moonGlow1 6.4s ease-in-out infinite;z-index:2;}
-.moon-glow2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;height:480px;border-radius:999px;background:radial-gradient(circle,rgba(200,190,150,0.10) 0%,rgba(180,170,130,0.04) 55%,transparent 100%);animation:moonGlow2 6.4s ease-in-out infinite;z-index:1;}
-.moon-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:999px;border:0.5px solid rgba(220,210,170,0.25);animation:moonRing 6s ease-out infinite;z-index:2;}
-.moon-ring.r2{width:320px;height:320px;border-color:rgba(200,190,150,0.12);animation-delay:2s;}
+/* ── RST 배경 (모바일) ── */
+body.rst-active #app { background: #0a0801 !important; }
+body.rst-active .control-area { background: #0a0801 !important; }
+.rest-photo-area{ position:relative; overflow:visible !important; }
+.rest-icon-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;display:grid;place-items:center;cursor:pointer;z-index:5;}
+.moon-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:999px;background:radial-gradient(circle,rgba(255,252,235,0.98) 0%,rgba(220,210,180,0.7) 50%,transparent 100%);animation:moonBreathe 6.4s ease-in-out infinite;z-index:3;}
+.moon-glow1{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:999px;background:radial-gradient(circle,rgba(220,210,170,0.45) 0%,rgba(200,190,150,0.20) 55%,transparent 100%);animation:moonGlow1 6.4s ease-in-out infinite;z-index:2;}
+.moon-glow2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;border-radius:999px;background:radial-gradient(circle,rgba(200,190,150,0.22) 0%,rgba(180,170,130,0.10) 55%,transparent 100%);animation:moonGlow2 6.4s ease-in-out infinite;z-index:1;}
+.moon-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:130px;height:130px;border-radius:999px;border:1.5px solid rgba(220,210,170,0.55);animation:moonRing 6s ease-out infinite;z-index:2;}
+.moon-ring.r2{width:210px;height:210px;border-color:rgba(200,190,150,0.35);animation-delay:2s;}
 @keyframes moonBreathe{0%,100%{opacity:0.8;transform:translate(-50%,-50%) scale(0.95)}50%{opacity:1.0;transform:translate(-50%,-50%) scale(1.05)}}
 @keyframes moonGlow1{0%,100%{opacity:0.6;transform:translate(-50%,-50%) scale(0.92)}50%{opacity:1.0;transform:translate(-50%,-50%) scale(1.08)}}
 @keyframes moonGlow2{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(0.88)}50%{opacity:0.9;transform:translate(-50%,-50%) scale(1.12)}}
-@keyframes moonRing{0%{transform:translate(-50%,-50%) scale(1);opacity:0.5}70%{transform:translate(-50%,-50%) scale(1.8);opacity:0}100%{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
+@keyframes moonRing{0%{transform:translate(-50%,-50%) scale(1);opacity:0}20%{opacity:0.55}70%{transform:translate(-50%,-50%) scale(1.6);opacity:0.40}100%{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
 `;
 
 const CSS_A04_DESKTOP = `
@@ -244,7 +246,7 @@ const CSS_A04_DESKTOP = `
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 240px; height: 240px;
     display: grid; place-items: center;
-    cursor: pointer; z-index: 15;
+    cursor: default; z-index: 15;
   }
   .moon-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:999px;background:radial-gradient(circle,rgba(255,252,235,0.95) 0%,rgba(220,210,180,0.6) 50%,transparent 100%);animation:moonBreathe 6.4s ease-in-out infinite;z-index:3;}
   .moon-glow1{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;border-radius:999px;background:radial-gradient(circle,rgba(220,210,170,0.22) 0%,rgba(200,190,150,0.08) 55%,transparent 100%);animation:moonGlow1 6.4s ease-in-out infinite;z-index:2;}
@@ -349,7 +351,7 @@ const CSS_A04_DESKTOP = `
     color:rgba(235,235,235,0.35);
     cursor:pointer; z-index:30;
     opacity:0;
-    transition:opacity var(--nav-fade,600ms) ease, transform 200ms ease, box-shadow 200ms ease;
+    transition:opacity var(--nav-fade,600ms) ease, transform 200ms ease, box-shadow 1500ms ease;
     pointer-events:auto;
     -webkit-tap-highlight-color:transparent;
   }
@@ -373,17 +375,12 @@ const CSS_A04_DESKTOP = `
   /* ── RST 반딧불 (데스크탑) ── */
   #rst-fly{position:absolute;border-radius:50%;pointer-events:none;z-index:25;opacity:0;}
   /* ── RST 반딧불 nav-arrow breathe ── */
-  .rst-nav-btn.rst-breathe-in{
-    transition:box-shadow 3.2s ease-in-out,border-color 3.2s ease-in-out,color 3.2s ease-in-out,opacity 3.2s ease-in-out !important;
-    box-shadow:0 0 8px 4px rgba(212,175,55,0.4),0 0 16px 8px rgba(212,175,55,0.16) !important;
-    border-color:rgba(212,175,55,0.64) !important;
-    color:rgba(255,235,120,1) !important;
-    opacity:0.85 !important;
+  @keyframes rstBreatheGlow {
+    0%   { box-shadow:0 0 0 0 rgba(212,175,55,0),0 0 0 0 rgba(212,175,55,0); border-color:rgba(255,255,255,0.07); color:rgba(235,235,235,0.35); opacity:0.85; }
+    50%  { box-shadow:0 0 8px 4px rgba(212,175,55,0.4),0 0 16px 8px rgba(212,175,55,0.16); border-color:rgba(212,175,55,0.64); color:rgba(255,235,120,1); opacity:0.85; }
+    100% { box-shadow:0 0 0 0 rgba(212,175,55,0),0 0 0 0 rgba(212,175,55,0); border-color:rgba(255,255,255,0.07); color:rgba(235,235,235,0.35); opacity:0.85; }
   }
-  .rst-nav-btn.rst-breathe-out{
-    transition:box-shadow 3.2s ease-in-out,border-color 3.2s ease-in-out,color 3.2s ease-in-out !important;
-    box-shadow:none !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    color:rgba(235,235,235,0.35) !important;
+  .rst-nav-btn.rst-breathe {
+    animation: rstBreatheGlow 6.4s ease-in-out 3 forwards !important;
   }
 `;

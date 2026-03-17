@@ -37,12 +37,11 @@ if (isMobile) {
   textEl.textContent = curLang==="KR" ? SC.textKR : SC.textEN;
 
   if (SC.type === "rest") {
-    // photoArea 안에 배경+달빛 삽입 (네비게이션 영역은 건드리지 않음)
-    photoArea.style.cssText += ";background:linear-gradient(to bottom,#0a0801 0%,#1a150a 100%) !important;aspect-ratio:unset;flex:1;";
-    photoArea.classList.add('rest-photo-area');
+    photoArea.style.cssText += ";background:linear-gradient(to bottom,#0a0801 0%,#1a150a 100%) !important;aspect-ratio:unset;flex:1;overflow:visible !important;";
+    document.body.classList.add('rst-active');
     var mIconWrap = document.createElement("div");
     mIconWrap.className = "rest-icon-wrap";
-    mIconWrap.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;display:grid;place-items:center;cursor:pointer;z-index:5;overflow:visible;";
+    mIconWrap.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;display:grid;place-items:center;cursor:pointer;z-index:5;";
     mIconWrap.innerHTML = '<div class="moon-glow2"></div><div class="moon-glow1"></div><div class="moon-ring"></div><div class="moon-ring r2"></div><div class="moon-core"></div>';
     if(SC.nextURL) mIconWrap.addEventListener("click",()=>goTo(SC.nextURL));
     photoArea.appendChild(mIconWrap);
@@ -322,7 +321,6 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       const iconWrap=document.createElement("div");
       iconWrap.className="rest-icon-wrap";
       iconWrap.innerHTML='<div class="moon-glow2"></div><div class="moon-glow1"></div><div class="moon-ring"></div><div class="moon-ring r2"></div><div class="moon-core"></div>';
-      if(SC.nextURL) iconWrap.addEventListener("click",()=>goTo(SC.nextURL));
       sq.appendChild(iconWrap);
       // ── RST 중앙 네비 버튼 ──────────────────────────
       const rstLBtn=document.createElement("div");
@@ -669,7 +667,7 @@ window.addEventListener("pageshow", (e) => {
   var RST_FLY_DURATION=18000, RST_FLY_PAUSE=800;
   var RST_FLY_BP={inhale:3.2,exhale:3.2,gap:0};
   function rstRandomizePath(){
-    RST_FLY_PARAMS={freq:0.8+Math.random()*2.0,amp:0.02+Math.random()*0.03,
+    RST_FLY_PARAMS={freq:0.8+Math.random()*2.0,amp:0.06+Math.random()*0.09,
       phase:Math.random()*Math.PI*2,yBase:0.5,pFreq:2.5+Math.random()*3.5};
   }
   function rstFlyPath(t){
@@ -679,28 +677,18 @@ window.addEventListener("pageshow", (e) => {
       opacity:0.5+0.45*Math.abs(Math.sin(t*Math.PI*p.pFreq))};
   }
   function rstDoBreathe(btn,onDone){
-    var count=0,bp=RST_FLY_BP,stopped=false;
-    function stop(){
-      if(stopped)return;
-      stopped=true;
-      btn.classList.remove('rst-breathe-in','rst-breathe-out');
-      btn.removeEventListener('mouseenter',stop);
-      btn.removeEventListener('touchstart',stop);
-      if(onDone)onDone();
-    }
-    btn.addEventListener('mouseenter',stop,{once:true});
-    btn.addEventListener('touchstart',stop,{once:true,passive:true});
-    function breathe(){
-      if(stopped)return;
-      if(count>=3){stop();return;}count++;
-      btn.classList.remove('rst-breathe-out');btn.classList.add('rst-breathe-in');
-      setTimeout(function(){
-        if(stopped)return;
-        btn.classList.remove('rst-breathe-in');btn.classList.add('rst-breathe-out');
-        setTimeout(breathe,bp.exhale*1000+bp.gap*1000);
-      },bp.inhale*1000);
-    }
-    breathe();
+    // CSS keyframe(rstBreatheGlow)이 3회 in→out 전체를 처리 (6.4s × 3 = 19.2s)
+    btn.classList.remove('rst-breathe');
+    void btn.offsetWidth; // reflow로 애니메이션 재시작
+    btn.classList.add('rst-breathe');
+    var dur = 6.4 * 3 * 1000;
+    var mouseStop = function(){ /* 마우스 진입 시 무시 — 애니메이션이 자연스럽게 완료 */ };
+    btn.addEventListener('mouseenter', mouseStop, {once:true});
+    btn.addEventListener('touchstart', mouseStop, {once:true, passive:true});
+    setTimeout(function(){
+      btn.classList.remove('rst-breathe');
+      if(onDone) onDone();
+    }, dur);
   }
   window.rstStartFlyDesktop=function(sq){
     if(RST_FLY_RUNNING)return;
@@ -757,7 +745,7 @@ window.addEventListener("pageshow", (e) => {
     RST_FLY_RUNNING=true;
     // 모바일용 경로: yBase를 중앙(0.5) 고정, 진폭만 랜덤
     function mRandomize(){
-      RST_FLY_PARAMS={freq:0.8+Math.random()*1.5,amp:0.04+Math.random()*0.06,
+      RST_FLY_PARAMS={freq:0.8+Math.random()*1.5,amp:0.10+Math.random()*0.15,
         phase:Math.random()*Math.PI*2,yBase:0.5,pFreq:2.5+Math.random()*3.5};
     }
     mRandomize();
