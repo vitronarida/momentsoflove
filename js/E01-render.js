@@ -735,6 +735,7 @@ window.addEventListener("pageshow", (e) => {
         var sh=sz*0.7;
         fly.style.left=(curX-sz/2)+'px'; fly.style.top=(curY-sh/2)+'px';
         fly.style.width=sz+'px'; fly.style.height=sh+'px'; fly.style.opacity=op;
+        fly.style.borderRadius='50%';
         fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
         if(!triggered&&curX>=rX-40){
@@ -782,6 +783,7 @@ window.addEventListener("pageshow", (e) => {
         var sh=sz*0.7;
         fly.style.left=(x*W-sz/2)+'px';fly.style.top=(y*H-sh/2)+'px';
         fly.style.width=sz+'px';fly.style.height=sh+'px';fly.style.opacity=op;
+        fly.style.borderRadius='50%';
         fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
         if(t<1)requestAnimationFrame(frame);
