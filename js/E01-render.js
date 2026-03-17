@@ -381,9 +381,21 @@ const menuBtn = document.createElement("div"); menuBtn.className = "nav-btn";
       clearTimeout(rstNavTimer);
       rstNavTimer=setTimeout(function(){document.body.classList.remove('rst-nav-peek');},2000);
     });
+    window._rstMoonStartTime = Date.now();
     requestAnimationFrame(function(){requestAnimationFrame(function(){
       if(window.rstStartFlyDesktop) window.rstStartFlyDesktop(sq);
     });});
+    // 탭 복귀 시 달 애니메이션 재동기화
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden) return;
+      window._rstMoonStartTime = Date.now();
+      var moonEls = sq.querySelectorAll('.moon-core,.moon-glow1,.moon-glow2,.moon-ring');
+      moonEls.forEach(function(el){
+        el.style.animation='none';
+        void el.offsetWidth;
+        el.style.animation='';
+      });
+    });
   }
 
   // index에서 온 경우: 정사각형만 흰색 → 서서히 투명
@@ -677,18 +689,47 @@ window.addEventListener("pageshow", (e) => {
       opacity:0.5+0.45*Math.abs(Math.sin(t*Math.PI*p.pFreq))};
   }
   function rstDoBreathe(btn,onDone){
-    // CSS keyframe(rstBreatheGlow)이 3회 in→out 전체를 처리 (6.4s × 3 = 19.2s)
-    btn.classList.remove('rst-breathe');
-    void btn.offsetWidth; // reflow로 애니메이션 재시작
-    btn.classList.add('rst-breathe');
-    var dur = 6.4 * 3 * 1000;
-    var mouseStop = function(){ /* 마우스 진입 시 무시 — 애니메이션이 자연스럽게 완료 */ };
-    btn.addEventListener('mouseenter', mouseStop, {once:true});
-    btn.addEventListener('touchstart', mouseStop, {once:true, passive:true});
-    setTimeout(function(){
+    // 반딧불이 달 trough(최소)에 도착했을 때 호출됨
+    // animationDelay:0 → 달과 완벽 동기 (같이 밝아지고 같이 어두워짐)
+    var moonPeriod = 6400;
+    var breatheDur = moonPeriod * 1; // 1주기
+    var fadeOutDur = 2400;
+    var startTime  = Date.now();
+    var timer      = null;
+
+    function startBreathe(){
       btn.classList.remove('rst-breathe');
-      if(onDone) onDone();
-    }, dur);
+      void btn.offsetWidth;
+      btn.style.animationDelay = '0ms';
+      btn.classList.add('rst-breathe');
+    }
+    startBreathe();
+
+    // 탭 복귀: moon이 trough로 리셋되므로 button도 trough에서 재시작
+    function onVisible(){
+      if(document.hidden) return;
+      var elapsed = Date.now() - startTime;
+      var remaining = breatheDur - elapsed;
+      if(remaining <= 0){ startFadeOut(); return; }
+      clearTimeout(timer);
+      startBreathe();
+      timer = setTimeout(startFadeOut, remaining);
+    }
+    document.addEventListener('visibilitychange', onVisible);
+
+    function startFadeOut(){
+      document.removeEventListener('visibilitychange', onVisible);
+      // 모든 인라인 스타일 + 클래스 한번에 정리 후 opacity만 transition
+      btn.classList.remove('rst-breathe');
+      btn.style.cssText = 'opacity:0.30; transition:opacity 1600ms ease-out;';
+      btn.style.opacity = '0';
+      setTimeout(function(){
+        btn.style.cssText = '';
+        if(onDone) onDone();
+      }, 1700);
+    }
+
+    timer = setTimeout(startFadeOut, breatheDur);
   }
   window.rstStartFlyDesktop=function(sq){
     if(RST_FLY_RUNNING)return;
@@ -697,40 +738,70 @@ window.addEventListener("pageshow", (e) => {
     var lBtn=sq.querySelector('.rst-nav-left'),rBtn=sq.querySelector('.rst-nav-right');
     if(!fly||!lBtn||!rBtn){RST_FLY_RUNNING=false;return;}
     function launch(){
+      // 달의 다음 trough(최소) 시점에 버튼에 도달하도록 비행 시간 계산
+      var moonPeriod = 6400;
+      var moonElapsed = window._rstMoonStartTime ? (Date.now() - window._rstMoonStartTime) % moonPeriod : 0;
+      var timeToNextTrough = moonPeriod - moonElapsed; // 다음 trough까지 남은 시간
+      if(timeToNextTrough < 3000) timeToNextTrough += moonPeriod; // 최소 비행 3초 확보
+      var flyDuration = timeToNextTrough + moonPeriod; // 1/2 속도: 한 주기 더 (그 다음 trough 도착)
+
       var sqR=sq.getBoundingClientRect();
       var lr=lBtn.getBoundingClientRect(),rr=rBtn.getBoundingClientRect();
       var lX=lr.left-sqR.left+lr.width/2, lY=lr.top-sqR.top+lr.height/2;
       var rX=rr.left-sqR.left+rr.width/2, rY=rr.top-sqR.top+rr.height/2;
       var H=sqR.height, travelX=rX-lX;
       RST_FLY_PARAMS.yBase=lY/H;
-      var alignStartX=rX-travelX*0.25, fadeStartX=rX-54;
+      var alignStartX=rX-travelX*0.25;
+      // 흡수 시작 지점: 버튼까지 남은 거리의 30%
+      var absorbStartX=rX-travelX*0.12;
       var start=null,triggered=false;
       function frame(ts){
         if(!document.getElementById('rst-fly')){RST_FLY_RUNNING=false;return;}
         if(!start)start=ts;
-        var t=Math.min((ts-start)/RST_FLY_DURATION,1),fp=rstFlyPath(t);
+        var t=Math.min((ts-start)/flyDuration,1),fp=rstFlyPath(t);
         var curX=lX+fp.x*travelX,curY=fp.y*H;
+
+        // Y축 수렴
         if(curX>=alignStartX){
           var ar=Math.min(1,(curX-alignStartX)/(rX-alignStartX));
           var ease=ar<0.5?2*ar*ar:1-Math.pow(-2*ar+2,2)/2;
           curY=curY+(rY-curY)*ease;
         }
+
         var op=fp.opacity;
-        if(curX>=fadeStartX)op*=Math.max(0,1-(curX-fadeStartX)/(rX-fadeStartX));
-        var sz=11*fp.size, sh=sz*0.45, glow=sz*1.5;
+        var sz=11*fp.size, sh, glow;
+
+        // 흡수 구간: 감속 + 크기 축소 + 버튼 중앙으로 수렴
+        if(curX>=absorbStartX&&!triggered){
+          var absorbR=Math.min(1,(curX-absorbStartX)/(rX-absorbStartX));
+          var absorbEase=absorbR*absorbR;
+          var scaleFactor=1.0-absorbEase*0.8;
+          sz=sz*scaleFactor;
+          curX=curX+(rX-curX)*absorbEase;
+          curY=curY+(rY-curY)*absorbEase;
+          op=fp.opacity;
+          // 시각 효과(크기 축소 + 수렴)만 — glow는 완전 도달 시 점화
+        }
+
+        sh=sz*0.45; glow=sz*1.5;
         fly.style.left=(curX-sz/2)+'px'; fly.style.top=(curY-sh/2)+'px';
         fly.style.width=sz+'px'; fly.style.height=sh+'px'; fly.style.opacity=op;
         fly.style.borderRadius='50%';
         fly.style.background='radial-gradient(ellipse at center,rgba(255,252,165,1) 10%,rgba(212,175,55,0.5) 50%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.3)+'px rgba(212,175,55,0.45),0 0 '+(glow*2)+'px '+(glow*0.6)+'px rgba(212,175,55,0.15)';
-        if(!triggered&&curX>=rX-40){
-          triggered=true;fly.style.opacity=0;
-          setTimeout(function(){
+
+        // 버튼 중앙 완전 도달 시 반딧불 소멸 + glow 점화
+        if(!triggered&&curX>=rX-2){
+          triggered=true;
+          fly.style.opacity=0;
+          if(!rBtn._breatheStarted){
+            rBtn._breatheStarted=true;
             rstDoBreathe(rBtn,function(){
+              rBtn._breatheStarted=false;
               rBtn.classList.remove('rst-breathe-in','rst-breathe-out');
               rstRandomizePath();setTimeout(launch,RST_FLY_PAUSE);
             });
-          }, 1000);
+          }
           return;
         }
         if(t<1)requestAnimationFrame(frame);
