@@ -764,9 +764,12 @@ window.addEventListener("pageshow", (e) => {
     var fly=document.getElementById('rst-fly');
     if(!fly){RST_FLY_RUNNING=false;return;}
     function launch(){
-      // photoArea 치수 대신 window 기준으로 계산 (가장 안정적)
       var W = window.innerWidth;
-      var H = window.innerHeight * 0.55; // photoArea는 화면의 약 55%
+      var H = window.innerHeight;
+      // photoArea의 실제 위치 보정
+      var pa = document.getElementById('mPhotoArea');
+      var offsetTop = pa ? pa.getBoundingClientRect().top : 0;
+      var areaH = pa ? (pa.getBoundingClientRect().height || H * 0.55) : H * 0.55;
       var start=null;
       function frame(ts){
         if(!document.getElementById('rst-fly')){RST_FLY_RUNNING=false;return;}
@@ -777,8 +780,11 @@ window.addEventListener("pageshow", (e) => {
         var size=0.6+0.55*Math.abs(Math.sin(t*Math.PI*p.pFreq));
         var op=0.5+0.45*Math.abs(Math.sin(t*Math.PI*p.pFreq));
         var sz=10*size, sh=sz*0.45, glow=sz*1.5;
-        fly.style.left=(x*W-sz/2)+'px';fly.style.top=(y*H-sh/2)+'px';
-        fly.style.width=sz+'px';fly.style.height=sh+'px';fly.style.opacity=op;
+        var flyX = x * W - sz/2;
+        var flyY = offsetTop + y * areaH - sh/2;
+        fly.style.position='fixed';
+        fly.style.left=flyX+'px'; fly.style.top=flyY+'px';
+        fly.style.width=sz+'px'; fly.style.height=sh+'px'; fly.style.opacity=op;
         fly.style.borderRadius='50%';
         fly.style.background='radial-gradient(ellipse at center,rgba(255,252,165,1) 10%,rgba(212,175,55,0.5) 50%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.3)+'px rgba(212,175,55,0.45),0 0 '+(glow*2)+'px '+(glow*0.6)+'px rgba(212,175,55,0.15)';

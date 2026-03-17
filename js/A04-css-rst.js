@@ -222,7 +222,7 @@ const CSS_A04_MOBILE = `
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 /* ── RST 달 (모바일) — 데스크탑과 동일 선택자 사용 ── */
-.rest-photo-area{overflow:visible !important;position:relative !important;}
+.rest-photo-area{ position:relative; }
 .rest-icon-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;display:grid;place-items:center;cursor:pointer;z-index:15;overflow:visible;}
 .moon-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:999px;background:radial-gradient(circle,rgba(255,252,235,0.95) 0%,rgba(220,210,180,0.6) 50%,transparent 100%);animation:moonBreathe 6.4s ease-in-out infinite;z-index:3;}
 .moon-glow1{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;border-radius:999px;background:radial-gradient(circle,rgba(220,210,170,0.22) 0%,rgba(200,190,150,0.08) 55%,transparent 100%);animation:moonGlow1 6.4s ease-in-out infinite;z-index:2;}

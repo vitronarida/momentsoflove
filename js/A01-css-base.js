@@ -35,6 +35,9 @@ html, body {
   aspect-ratio: 1 / 1;
   touch-action: manipulation;
 }
+.photo-area.rest-photo-area {
+  overflow: visible;
+}
 .control-area {
   position: relative;
   flex: 1;
