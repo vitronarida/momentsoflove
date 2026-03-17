@@ -42,7 +42,7 @@ if (isMobile) {
     photoArea.classList.add('rest-photo-area');
     var mIconWrap = document.createElement("div");
     mIconWrap.className = "rest-icon-wrap";
-    mIconWrap.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,100vw);height:min(480px,100vw);display:grid;place-items:center;cursor:pointer;z-index:5;overflow:visible;";
+    mIconWrap.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:240px;height:240px;display:grid;place-items:center;cursor:pointer;z-index:5;overflow:visible;";
     mIconWrap.innerHTML = '<div class="moon-glow2"></div><div class="moon-glow1"></div><div class="moon-ring"></div><div class="moon-ring r2"></div><div class="moon-core"></div>';
     if(SC.nextURL) mIconWrap.addEventListener("click",()=>goTo(SC.nextURL));
     photoArea.appendChild(mIconWrap);
@@ -732,8 +732,9 @@ window.addEventListener("pageshow", (e) => {
         var op=fp.opacity;
         if(curX>=fadeStartX)op*=Math.max(0,1-(curX-fadeStartX)/(rX-fadeStartX));
         var sz=(window._isMobile?10:7)*fp.size,glow=sz*1.3;
-        fly.style.left=(curX-sz/2)+'px'; fly.style.top=(curY-sz/2)+'px';
-        fly.style.width=sz+'px'; fly.style.height=sz+'px'; fly.style.opacity=op;
+        var sh=sz*0.7;
+        fly.style.left=(curX-sz/2)+'px'; fly.style.top=(curY-sh/2)+'px';
+        fly.style.width=sz+'px'; fly.style.height=sh+'px'; fly.style.opacity=op;
         fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
         if(!triggered&&curX>=rX-40){
@@ -766,6 +767,8 @@ window.addEventListener("pageshow", (e) => {
     if(!fly){RST_FLY_RUNNING=false;return;}
     function launch(){
       var sqR=sq.getBoundingClientRect(),W=sqR.width,H=sqR.height;
+      // 레이아웃 미완료 시 재시도
+      if(H===0||W===0){ setTimeout(launch,100); return; }
       var start=null;
       function frame(ts){
         if(!document.getElementById('rst-fly')){RST_FLY_RUNNING=false;return;}
@@ -776,8 +779,9 @@ window.addEventListener("pageshow", (e) => {
         var size=0.6+0.55*Math.abs(Math.sin(t*Math.PI*p.pFreq));
         var op=0.5+0.45*Math.abs(Math.sin(t*Math.PI*p.pFreq));
         var sz=6*size,glow=sz*1.3;
-        fly.style.left=(x*W-sz/2)+'px';fly.style.top=(y*H-sz/2)+'px';
-        fly.style.width=sz+'px';fly.style.height=sz+'px';fly.style.opacity=op;
+        var sh=sz*0.7;
+        fly.style.left=(x*W-sz/2)+'px';fly.style.top=(y*H-sh/2)+'px';
+        fly.style.width=sz+'px';fly.style.height=sh+'px';fly.style.opacity=op;
         fly.style.background='radial-gradient(circle,rgba(255,252,165,1) 15%,rgba(212,175,55,0.55) 55%,transparent 80%)';
         fly.style.boxShadow='0 0 '+glow+'px '+(glow*0.55)+'px rgba(212,175,55,0.5),0 0 '+(glow*2.2)+'px '+glow+'px rgba(212,175,55,0.18)';
         if(t<1)requestAnimationFrame(frame);
