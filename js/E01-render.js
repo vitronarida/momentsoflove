@@ -37,12 +37,12 @@ if (isMobile) {
   textEl.textContent = curLang==="KR" ? SC.textKR : SC.textEN;
 
   if (SC.type === "rest") {
-    photoArea.style.cssText += ";background:linear-gradient(to bottom,#0a0801 0%,#1a150a 100%) !important;aspect-ratio:unset;flex:1;overflow:visible !important;";
+    photoArea.style.cssText += ";background:transparent !important;aspect-ratio:unset;flex:1;overflow:visible !important;";
     document.body.classList.add('rst-active');
     var mIconWrap = document.createElement("div");
     mIconWrap.className = "rest-icon-wrap";
     mIconWrap.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;display:grid;place-items:center;cursor:pointer;z-index:5;";
-    mIconWrap.innerHTML = '<div class="moon-glow2"></div><div class="moon-glow1"></div><div class="moon-ring"></div><div class="moon-ring r2"></div><div class="moon-core"></div>';
+    mIconWrap.innerHTML = '<div class="moon-glow2"></div><div class="moon-glow1"></div><div class="moon-ring"></div><div class="moon-ring r2"></div><div class="moon-ring r3"></div><div class="moon-core"></div>';
     if(SC.nextURL) mIconWrap.addEventListener("click",()=>goTo(SC.nextURL));
     photoArea.appendChild(mIconWrap);
       // ── RST 반딧불 (모바일) ──────────────────────
