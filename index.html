@@ -185,7 +185,7 @@
     /* ===== skip 버튼 ===== */
     .skip-bar {
       position: absolute; left: 50%; transform: translateX(-50%);
-      bottom: calc(6% + env(safe-area-inset-bottom) + 16px);
+      bottom: calc(6% + env(safe-area-inset-bottom));
       opacity: 0;
       transition: opacity 2000ms ease;
       pointer-events: none;
@@ -203,6 +203,54 @@
       cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .skip-btn:active { transform: scale(0.92); }
+
+    /* ===== 인트로 자동 모드 버튼 ===== */
+    #autoPlayBar {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      bottom: calc(6% + env(safe-area-inset-bottom));
+    }
+    .ap-intro-wrap {
+      display: inline-grid; place-items: center; position: relative;
+    }
+    .ap-intro-wrap::before,
+    .ap-intro-wrap::after {
+      content: ""; position: absolute;
+      width: 36px; height: 36px; border-radius: 999px;
+      pointer-events: none; opacity: 0;
+    }
+    .ap-intro-wrap.show::before {
+      border: 1.5px solid rgba(255,255,255,0.22);
+      animation: pulse-ring 2.4s ease-out infinite; opacity: 1;
+    }
+    .ap-intro-wrap.show::after {
+      border: 1px solid rgba(255,255,255,0.14);
+      animation: pulse-ring 2.4s ease-out 0.8s infinite; opacity: 1;
+    }
+    .ap-intro-wrap:hover::before,
+    .ap-intro-wrap:hover::after { animation: none; opacity: 0; }
+    .ap-intro-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      cursor: pointer; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0; pointer-events: none;
+      transition: opacity 1200ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+    .ap-intro-btn svg { width: 16px; height: 16px; stroke: rgba(200,200,200,0.75); }
+    .ap-intro-btn.show {
+      position: relative; pointer-events: auto;
+      animation: fadeInBreath 2s ease-in-out 1 forwards,
+                 breathe      2.8s ease-in-out 2s infinite,
+                 glow         2.8s ease-in-out 2s infinite;
+    }
+    .ap-intro-btn.show:hover {
+      animation: none; opacity: 1;
+      background: rgba(255,255,255,0.09);
+      box-shadow: 0 0 20px 6px rgba(255,255,255,0.18);
+    }
+    .ap-intro-btn.show:active { transform: scale(0.91); animation: none; }
 
     /* ===== 자물쇠 버튼 ===== */
     .lock-btn {
@@ -347,6 +395,11 @@
                    glow                2.8s ease-in-out 2s infinite;
       }
       .lock-wrap { bottom: 28%; }
+      .ap-intro-btn.show {
+        animation: fadeInBreathDesktop 1.2s ease-in-out 1 forwards,
+                   breatheDesktop      2.8s ease-in-out 1.2s infinite,
+                   glow                2.8s ease-in-out 2s infinite;
+      }
       .frame { background: linear-gradient(to bottom, #303030 0%, #222222 100%); }
       body { background: #222222; }
     }
@@ -402,6 +455,13 @@
   <div class="mob-bottom">
       <div class="skip-bar" id="skipBar">
         <button class="skip-btn" id="skipBtn" type="button">skip</button>
+      </div>
+      <div id="autoPlayBar" style="display:none;">
+        <div class="ap-intro-wrap" id="apIntroWrap">
+          <button class="ap-intro-btn" id="autoPlayBtn" type="button" data-tooltip="자동 모드" aria-label="자동 모드">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="lock-wrap" id="lockWrap">
@@ -529,11 +589,16 @@
     document.getElementById("btnEN").dataset.tooltip      = TT.en;
     document.getElementById("enterBtn").dataset.tooltip   = TT.enter;
 
-    /* ===== 타이핑 중 Enter/Esc → 바로 이동 ===== */
+    /* ===== 타이핑 중 Enter/Esc → 자물쇠 등장 후엔 doEnter(), 전엔 타이핑 스킵 ===== */
     document.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === "Escape" || e.key === "ArrowRight") {
-        try{sessionStorage.removeItem("gl_mode");}catch(err){}
-        location.href = TARGET_URL;
+        const lockBtn = document.getElementById("enterBtn");
+        if (lockBtn && lockBtn.classList.contains("show")) {
+          lockBtn.click();
+        } else {
+          try{sessionStorage.removeItem("gl_mode");}catch(err){}
+          location.href = TARGET_URL;
+        }
       }
     });
 
@@ -618,6 +683,19 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
+        /* 데스크탑: autoplay 버튼 lock과 동시 등장 */
+        if (!isMobile) {
+          const apBar = document.getElementById("autoPlayBar");
+          const apWrap = document.getElementById("apIntroWrap");
+          const apBtn = document.getElementById("autoPlayBtn");
+          if (apBar) {
+            apBar.style.display = "";
+            requestAnimationFrame(function(){ requestAnimationFrame(function(){
+              if(apWrap) apWrap.classList.add("show");
+              if(apBtn)  apBtn.classList.add("show");
+            }); });
+          }
+        }
         let idleTimer = null;
         const IDLE_MS = 5000;
         const hideFuncBars = () => {
@@ -694,6 +772,19 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
+        /* 데스크탑: autoplay 버튼도 함께 등장 */
+        if (!isMobile) {
+          const apBar = document.getElementById("autoPlayBar");
+          const apWrap = document.getElementById("apIntroWrap");
+          const apBtn  = document.getElementById("autoPlayBtn");
+          if (apBar) {
+            apBar.style.display = "";
+            requestAnimationFrame(function(){ requestAnimationFrame(function(){
+              if(apWrap) apWrap.classList.add("show");
+              if(apBtn)  apBtn.classList.add("show");
+            }); });
+          }
+        }
       }, 420);
       if (langBar) {
         langBar.style.pointerEvents = "none";
@@ -726,17 +817,147 @@
       if (!btn.classList.contains("show")) return;
       removeSkipBarListeners();
       try{sessionStorage.removeItem("gl_mode");}catch(e){}
+
+      const TARGET = "/scenes/LPL_01.html";
+
       if (isMobile) {
         showIcon("unlock");
-        setTimeout(() => { location.href = TARGET_URL; }, 320);
-      } else {
-        location.href = TARGET_URL;
+        setTimeout(() => { location.href = TARGET; }, 320);
+        return;
       }
+
+      /* 데스크탑: 글로우 → 입자 → 정사각형 흰색 fade in → LPL_01 */
+      const lineEl = document.getElementById("line");
+
+      /* 1. 글로우 펄스 (1000ms) */
+      let t0 = null;
+      function glowLoop(ts) {
+        if (!t0) t0 = ts;
+        const elapsed = ts - t0;
+        const g = Math.sin((elapsed / 1000) * Math.PI) * 22;
+        if (lineEl) lineEl.style.textShadow =
+          `0 0 ${g.toFixed(1)}px rgba(255,255,255,0.95), 0 0 ${(g*2.2).toFixed(1)}px rgba(255,255,255,0.4)`;
+        if (elapsed < 1000) { requestAnimationFrame(glowLoop); }
+        else {
+          if (lineEl) lineEl.style.textShadow = "";
+
+          /* 2. 입자 산개 시작 — 텍스트 + 자물쇠 페이드아웃 */
+          const lockWrap = document.getElementById("lockWrap");
+          if (lineEl) { lineEl.style.transition = "opacity 400ms ease"; lineEl.style.opacity = "0"; }
+          if (lockWrap) { lockWrap.style.transition = "opacity 400ms ease"; lockWrap.style.opacity = "0"; }
+          if (langBar)   { langBar.style.transition   = "opacity 400ms ease"; langBar.style.opacity   = "0"; langBar.style.pointerEvents   = "none"; }
+          if (deviceBar) { deviceBar.style.transition = "opacity 400ms ease"; deviceBar.style.opacity = "0"; deviceBar.style.pointerEvents = "none"; }
+          if (skipBar)   { skipBar.style.transition   = "opacity 400ms ease"; skipBar.style.opacity   = "0"; skipBar.style.pointerEvents   = "none"; }
+
+          /* 입자 산개 (3000ms) DOM div 방식 — stanza와 동일한 형태 */
+          const W = window.innerWidth, H = window.innerHeight;
+
+          /* 텍스트 위치 기준 출발 */
+          const lineR = lineEl ? lineEl.getBoundingClientRect() : null;
+          const cx = lineR ? lineR.left + lineR.width * 0.5 : W * 0.5;
+          const cy = lineR ? lineR.top  + lineR.height * 0.5 : H * 0.44;
+          const tw = lineR ? lineR.width  : W * 0.4;
+          const th = lineR ? lineR.height : H * 0.06;
+
+          const DURATION = 3000;
+          let whiteFadeStarted = false;
+
+          /* 정사각형 흰색 fade (2000ms) */
+          function startWhiteFade() {
+            if (whiteFadeStarted) return;
+            whiteFadeStarted = true;
+            const sqSize = Math.min(W, H);
+            const sqCv = document.createElement("canvas");
+            sqCv.style.cssText = `position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:${sqSize}px;height:${sqSize}px;pointer-events:none;z-index:9999;`;
+            sqCv.width = sqSize; sqCv.height = sqSize;
+            document.body.appendChild(sqCv);
+            const sqCtx = sqCv.getContext("2d");
+            const FADE = 2000; const fadeStart = performance.now();
+            function fadeToWhite(ts3) {
+              const p = Math.min((ts3 - fadeStart) / FADE, 1);
+              sqCtx.clearRect(0, 0, sqSize, sqSize);
+              sqCtx.fillStyle = `rgba(255,255,255,${p.toFixed(3)})`;
+              sqCtx.fillRect(0, 0, sqSize, sqSize);
+              if (p < 1) { requestAnimationFrame(fadeToWhite); }
+              else { location.href = TARGET + "?from=index"; }
+            }
+            requestAnimationFrame(fadeToWhite);
+          }
+
+          /* 입자 22개 생성 — DOM div + radial-gradient ellipse */
+          const timers = [], rafs = {};
+          for (let i = 0; i < 22; i++) {
+            (function(idx) {
+              const sz  = 3 + Math.random() * 5;
+              const sx  = cx + (Math.random() - 0.5) * tw;
+              const sy  = cy + (Math.random() - 0.5) * th;
+              const a   = -Math.PI * 0.5 + (Math.random() - 0.5) * Math.PI * 1.2;
+              const sp  = 0.3 + Math.random() * 0.8;
+              const vx  = Math.cos(a) * sp;
+              const vy  = Math.sin(a) * sp;
+              const dur = DURATION * (0.7 + Math.random() * 0.5);
+
+              const p = document.createElement("div");
+              p.style.cssText = [
+                "position:fixed",
+                `width:${sz}px`,
+                `height:${sz * 0.6}px`,
+                "border-radius:50%",
+                `left:${sx}px`,
+                `top:${sy}px`,
+                "pointer-events:none",
+                "z-index:9998",
+                "opacity:0",
+                "background:radial-gradient(ellipse at center,rgba(255,255,255,0.95) 10%,rgba(220,220,220,0.3) 50%,transparent 80%)",
+                `box-shadow:0 0 ${sz * 1.2}px rgba(255,255,255,0.25)`
+              ].join(";");
+              document.body.appendChild(p);
+
+              let st = null;
+              let curX = sx, curY = sy, curVy = vy;
+              function frame(ts) {
+                if (!st) st = ts;
+                const t = (ts - st) / dur;
+                curX += vx;
+                curY += curVy; curVy += 0.004;
+                p.style.left    = curX + "px";
+                p.style.top     = curY + "px";
+                p.style.opacity = Math.max(0, Math.min(t * 4, 1) * (1 - t)).toFixed(3);
+                if (t < 1) rafs["p"+idx] = requestAnimationFrame(frame);
+                else p.remove();
+              }
+              timers.push(setTimeout(function() {
+                rafs["p"+idx] = requestAnimationFrame(frame);
+              }, idx * 20));
+            })(i);
+          }
+
+          /* 30% 시점에 흰색 fade 시작 */
+          timers.push(setTimeout(startWhiteFade, DURATION * 0.3));
+          /* DURATION 후 정리 */
+          timers.push(setTimeout(function() {
+            Object.keys(rafs).forEach(function(k){ cancelAnimationFrame(rafs[k]); });
+            document.querySelectorAll("div[style*='z-index:9998']").forEach(function(el){ el.remove(); });
+            startWhiteFade();
+          }, DURATION));
+        }
+      }
+      requestAnimationFrame(glowLoop);
     };
     btn.addEventListener("click", doEnter);
     if (isMobile) {
       btn.addEventListener("touchend", (e) => { e.preventDefault(); doEnter(); }, {passive:false});
     }
+
+    /* ===== 인트로 자동 모드 버튼 ===== */
+    document.getElementById("autoPlayBtn")?.addEventListener("click", () => {
+      const apBar = document.getElementById("autoPlayBar");
+      if (apBar) { apBar.classList.remove("show"); apBar.style.display = "none"; }
+      document.body.style.cursor = "none";
+      try { sessionStorage.setItem("mol_autoplay_start", "1"); } catch(e) {}
+      showIcon("unlock");
+      btn.click();
+    });
 
     /* ===== 언어 전환 ===== */
     function applyLang(newLang) {
