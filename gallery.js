@@ -2209,14 +2209,12 @@ function renderScene(scene, sceneURL) {
 
 
   /* 인트로에서 자동 모드 버튼으로 진입한 경우 AutoPlay 자동 시작 */
-  if (!isMobile) {
-    try {
-      if (sessionStorage.getItem('mol_autoplay_start') === '1') {
-        sessionStorage.removeItem('mol_autoplay_start');
-        AutoPlay.activate();
-      }
-    } catch(e) {}
-  }
+  try {
+    if (sessionStorage.getItem('mol_autoplay_start') === '1') {
+      sessionStorage.removeItem('mol_autoplay_start');
+      AutoPlay.activate();
+    }
+  } catch(e) {}
 
   /* viewport 높이 */
   document.documentElement.style.setProperty('--vh100', window.innerHeight+'px');
@@ -2341,6 +2339,11 @@ var AutoPlay = (function(){
     if(_active){
       menuBtn.innerHTML = _paused ? PLAY_SVG : PAUSE_SVG;
       menuBtn.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
+      /* 기존 TOC 핸들러 제거 후 ap핸들러 등록 */
+      if(!menuBtn._origHandler){
+        menuBtn._origHandler = TOCManager.open;
+        menuBtn.removeEventListener('click', TOCManager.open);
+      }
       if(!menuBtn._apHandler){
         menuBtn._apHandler = function(e){ e.stopPropagation(); _paused ? _resumeMobile() : _pauseMobile(); };
         menuBtn.addEventListener('click', menuBtn._apHandler);
@@ -2350,6 +2353,10 @@ var AutoPlay = (function(){
       }
       listBtn.innerHTML = STOP_SVG;
       listBtn.style.color = 'rgba(212,175,55,0.7)';
+      if(!listBtn._origHandler){
+        listBtn._origHandler = SceneListManager.open;
+        listBtn.removeEventListener('click', SceneListManager.open);
+      }
       if(!listBtn._apHandler){
         listBtn._apHandler = function(e){ e.stopPropagation(); stop(); };
         listBtn.addEventListener('click', listBtn._apHandler);
@@ -2359,6 +2366,9 @@ var AutoPlay = (function(){
       listBtn.innerHTML = LIST_SVG; listBtn.style.color = '';
       if(menuBtn._apHandler){ menuBtn.removeEventListener('click', menuBtn._apHandler); menuBtn._apHandler = null; }
       if(listBtn._apHandler){ listBtn.removeEventListener('click', listBtn._apHandler); listBtn._apHandler = null; }
+      /* 기존 핸들러 복원 */
+      if(menuBtn._origHandler){ menuBtn.addEventListener('click', menuBtn._origHandler); menuBtn._origHandler = null; }
+      if(listBtn._origHandler){ listBtn.addEventListener('click', listBtn._origHandler); listBtn._origHandler = null; }
     }
   }
 
