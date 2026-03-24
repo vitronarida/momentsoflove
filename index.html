@@ -428,7 +428,7 @@
       .mob-bottom .skip-bar {
         position:absolute; left:50%; top:calc(50% - 21px);
         right:auto; bottom:auto;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, calc(-50% - 46px));
         opacity:0; transition: opacity 2000ms ease;
         pointer-events:none; margin:0; z-index:1;
       }
@@ -436,7 +436,7 @@
       .mob-bottom .lang-bar.show { opacity:1; transform:translateY(0); pointer-events:auto; }
       .mob-bottom .skip-bar.show { opacity:1; pointer-events:auto; }
       .mob-bottom .lock-wrap {
-        position:static; transform:none; margin-bottom:6px;
+        position:static; transform:none; margin-bottom:46px;
       }
       /* 모바일 오토플레이 버튼 (mob-bottom-row 중앙) */
       #mobAutoPlayBtn {
