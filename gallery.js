@@ -2015,6 +2015,8 @@ function _applyScene(url, scene) {
   sceneURL_       = url;
   history.pushState({ url:url }, '', url);
   renderScene(scene, url);
+  /* 오토플레이 중 모바일 nav-bar 업데이트 */
+  if(isMobile && AutoPlay.isActive()) setTimeout(function(){ AutoPlay.updateNavBar(); }, 50);
 }
 
 /* ============================================================
@@ -2283,11 +2285,88 @@ var AutoPlay = (function(){
     _startIdleTimer();
   }
 
-  function _bindMouseMove(){
+  var _paused = false;
+
+  function _bindInteraction(){
+    if(isMobile){
+      document.removeEventListener('touchstart', _onTouch);
+      document.addEventListener('touchstart', _onTouch, {passive:true});
+    } else {
+      document.removeEventListener('mousemove', _onMouseMove);
+      document.addEventListener('mousemove', _onMouseMove);
+    }
+  }
+  function _unbindInteraction(){
+    document.removeEventListener('mousemove', _onMouseMove);
+    document.removeEventListener('touchstart', _onTouch);
+  }
+
+  function _onTouch(e){
+    if(!_active) return;
+    if(e.target.closest('.nav-btn')) return;
+    if(_paused) _resumeMobile(); else _pauseMobile();
+  }
+
+  function _pauseMobile(){
+    if(!_active || _paused) return;
+    _paused = true;
+    clearTimeout(_timer);
+    _updateNavBar();
+  }
+
+  function _resumeMobile(){
+    if(!_active || !_paused) return;
+    _paused = false;
+    _updateNavBar();
+    if(_scene && _scene.nextURL && _sceneURL){
+      clearTimeout(_timer);
+      _timer = setTimeout(function(){
+        if(!_active || _paused) return;
+        window.goTo(resolveURL(_sceneURL, _scene.nextURL), {direction:'next'});
+      }, DELAY_MS);
+    }
+  }
+
+  var PAUSE_SVG = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>';
+  var PLAY_SVG  = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
+  var STOP_SVG  = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
+  var MENU_SVG  = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>';
+  var LIST_SVG  = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>';
+
+  function _updateNavBar(){
+    if(!isMobile) return;
+    var menuBtn = document.querySelector('.nav-bar .nav-btn:nth-child(2)');
+    var listBtn = document.querySelector('.nav-bar .nav-btn:nth-child(3)');
+    if(!menuBtn || !listBtn) return;
+    if(_active){
+      menuBtn.innerHTML = _paused ? PLAY_SVG : PAUSE_SVG;
+      menuBtn.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
+      if(!menuBtn._apHandler){
+        menuBtn._apHandler = function(e){ e.stopPropagation(); _paused ? _resumeMobile() : _pauseMobile(); };
+        menuBtn.addEventListener('click', menuBtn._apHandler);
+      } else {
+        menuBtn.innerHTML = _paused ? PLAY_SVG : PAUSE_SVG;
+        menuBtn.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
+      }
+      listBtn.innerHTML = STOP_SVG;
+      listBtn.style.color = 'rgba(212,175,55,0.7)';
+      if(!listBtn._apHandler){
+        listBtn._apHandler = function(e){ e.stopPropagation(); stop(); };
+        listBtn.addEventListener('click', listBtn._apHandler);
+      }
+    } else {
+      menuBtn.innerHTML = MENU_SVG; menuBtn.style.color = '';
+      listBtn.innerHTML = LIST_SVG; listBtn.style.color = '';
+      if(menuBtn._apHandler){ menuBtn.removeEventListener('click', menuBtn._apHandler); menuBtn._apHandler = null; }
+      if(listBtn._apHandler){ listBtn.removeEventListener('click', listBtn._apHandler); listBtn._apHandler = null; }
+    }
+  }
+
+  function _bindInteraction(){
     document.removeEventListener('mousemove', _onMouseMove);
     document.addEventListener('mousemove', _onMouseMove);
   }
-  function _unbindMouseMove(){
+  function _unbindInteraction(){
     document.removeEventListener('mousemove', _onMouseMove);
   }
 
@@ -2310,24 +2389,26 @@ var AutoPlay = (function(){
   function onSceneChange(){
     _clearAll();
     _advTimerPaused = false;
+    _paused = false;
     _hideButtons();
-
-    if(!_active) _unbindMouseMove();
+    if(!_active) _unbindInteraction();
   }
 
   /* TOC 플레이 버튼 — 현재 씬에서 바로 시작 */
   function start(scene, sceneURL){
-    _active = true;
+    _active = true; _paused = false;
     _updateTocBtn(true);
-    _bindMouseMove();
+    _bindInteraction();
+    _updateNavBar();
     onTypingDone(scene, sceneURL);
   }
 
   /* 인트로 플레이 버튼 — 새 페이지 로드 후 타이핑 완료 시 onTypingDone 으로 이어받음 */
   function activate(){
-    _active = true;
+    _active = true; _paused = false;
     _updateTocBtn(true);
-    _bindMouseMove();
+    _bindInteraction();
+    _updateNavBar();
   }
 
   /* 씬 내 플레이 버튼 클릭 — 즉시 재개 */
@@ -2346,13 +2427,14 @@ var AutoPlay = (function(){
   }
 
   function stop(){
-    _active = false;
+    _active = false; _paused = false;
     _advTimerPaused = false;
     _clearAll();
-    _unbindMouseMove();
+    _unbindInteraction();
     document.body.classList.remove('ap-peek');
     var b=_getBar(); if(b) b.classList.remove('ap-visible');
     _updateTocBtn(false);
+    _updateNavBar();
   }
 
   function isActive(){ return _active; }
@@ -2368,7 +2450,7 @@ var AutoPlay = (function(){
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
            onTypingDone:onTypingDone, onSceneChange:onSceneChange,
-           resumeFromBtn:resumeFromBtn };
+           resumeFromBtn:resumeFromBtn, updateNavBar:_updateNavBar };
 })();
 
 
@@ -2399,7 +2481,7 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
       setTimeout(function(){ FogFX.bind(fogEl); FogFX.start(); },600);
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN); }
+        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
       },400);
     };
     hqImg.src=imgSrc;
@@ -2451,7 +2533,7 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
       img.classList.add('show');
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN); }
+        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
       },400);
       /* ripple 효과: prague(LPL_03) / dreams(LPL_04) */
       if (scene.id==='prague' || scene.id==='dreams') {
@@ -2466,7 +2548,7 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
     img.onerror=function(){
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN); }
+        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
       },300);
     };
     img.src=imgSrc;

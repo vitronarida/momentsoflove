@@ -438,6 +438,19 @@
       .mob-bottom .lock-wrap {
         position:static; transform:none; margin-bottom:6px;
       }
+      /* 모바일 오토플레이 버튼 (mob-bottom-row 중앙) */
+      #mobAutoPlayBtn {
+        display:none;
+        width:36px; height:36px; border-radius:999px;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.12);
+        color:rgba(235,235,235,0.70);
+        cursor:pointer; place-items:center;
+        -webkit-tap-highlight-color:transparent;
+        opacity:0; transition:opacity 1200ms ease;
+      }
+      #mobAutoPlayBtn.show { opacity:1; display:grid; }
+      #mobAutoPlayBtn svg { width:14px; height:14px; stroke:rgba(200,200,200,0.75); }
     }
   </style>
 </head>
@@ -494,6 +507,11 @@
           </svg>
         </button>
       </div>
+
+      <!-- 모바일 전용 오토플레이 버튼 (중앙) -->
+      <button id="mobAutoPlayBtn" type="button" aria-label="자동 감상">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
+      </button>
 
       <div class="lang-bar">
         <button class="lang-btn" id="btnKR" aria-label="Korean" data-tooltip="">
@@ -695,8 +713,11 @@
               if(apBtn)  apBtn.classList.add("show");
             }); });
           }
+        } else {
+          /* 모바일: 작은 ▶ 버튼 등장 */
+          const mobBtn = document.getElementById("mobAutoPlayBtn");
+          if (mobBtn) { mobBtn.style.display = "grid"; requestAnimationFrame(function(){ requestAnimationFrame(function(){ mobBtn.classList.add("show"); }); }); }
         }
-        let idleTimer = null;
         const IDLE_MS = 5000;
         const hideFuncBars = () => {
           langBar?.classList.remove("show");
@@ -784,6 +805,9 @@
               if(apBtn)  apBtn.classList.add("show");
             }); });
           }
+        } else {
+          const mobBtn = document.getElementById("mobAutoPlayBtn");
+          if (mobBtn) { mobBtn.style.display = "grid"; requestAnimationFrame(function(){ requestAnimationFrame(function(){ mobBtn.classList.add("show"); }); }); }
         }
       }, 420);
       if (langBar) {
@@ -848,6 +872,8 @@
           if (langBar)   { langBar.style.transition   = "opacity 400ms ease"; langBar.style.opacity   = "0"; langBar.style.pointerEvents   = "none"; }
           if (deviceBar) { deviceBar.style.transition = "opacity 400ms ease"; deviceBar.style.opacity = "0"; deviceBar.style.pointerEvents = "none"; }
           if (skipBar)   { skipBar.style.transition   = "opacity 400ms ease"; skipBar.style.opacity   = "0"; skipBar.style.pointerEvents   = "none"; }
+          const apBar2 = document.getElementById("autoPlayBar");
+          if (apBar2)  { apBar2.style.transition  = "opacity 400ms ease"; apBar2.style.opacity  = "0"; apBar2.style.pointerEvents  = "none"; }
 
           /* 입자 산개 (3000ms) DOM div 방식 — stanza와 동일한 형태 */
           const W = window.innerWidth, H = window.innerHeight;
@@ -954,6 +980,15 @@
       const apBar = document.getElementById("autoPlayBar");
       if (apBar) { apBar.classList.remove("show"); apBar.style.display = "none"; }
       document.body.style.cursor = "none";
+      try { sessionStorage.setItem("mol_autoplay_start", "1"); } catch(e) {}
+      showIcon("unlock");
+      btn.click();
+    });
+
+    /* 모바일 오토플레이 버튼 */
+    document.getElementById("mobAutoPlayBtn")?.addEventListener("click", () => {
+      const mobBtn = document.getElementById("mobAutoPlayBtn");
+      if (mobBtn) { mobBtn.classList.remove("show"); mobBtn.style.display = "none"; }
       try { sessionStorage.setItem("mol_autoplay_start", "1"); } catch(e) {}
       showIcon("unlock");
       btn.click();
