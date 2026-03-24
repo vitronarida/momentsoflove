@@ -576,11 +576,6 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .mob-right-header h3{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.90); margin:0; }
 .mob-expand-btn{ cursor:pointer; padding:4px; opacity:0.5; -webkit-tap-highlight-color:transparent; }
 .mob-expand-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; }
-.mob-expand-btn .icon-collapse{ display:none; }
-.toc-panel.mob-expanded .mob-unified-left{ display:none; }
-.toc-panel.mob-expanded .mob-unified-right{ border-left:none; }
-.toc-panel.mob-expanded .mob-expand-btn .icon-expand{ display:none; }
-.toc-panel.mob-expanded .mob-expand-btn .icon-collapse{ display:block; }
 .mob-thumb-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:0 0 16px; }
 .mob-thumb-grid .thumb-section-head{ grid-column:1/-1; font-family:"Nanum Pen Script",cursive; font-size:13px; color:rgba(230,230,230,0.60); padding:6px 2px 2px; border-top:1px solid rgba(255,255,255,0.06); margin-top:2px; }
 .mob-thumb-grid .thumb-section-head:first-child{ border-top:none; margin-top:0; }
@@ -1740,9 +1735,6 @@ function buildOverlayHTML() {
       '<div id="tocOverlay" class="overlay-panel" aria-hidden="true">'
       +'<div class="overlay-backdrop" id="tocBackdrop"></div>'
       +'<div class="toc-panel">'
-      +'<div class="toc-handle"></div>'
-      +'<div class="toc-header"><h2 class="toc-title">'+t.tocTitle+'</h2>'
-      +'<div class="toc-close" id="tocClose">✕</div></div>'
       +'<div class="mob-unified-body">'
       +'<div class="mob-unified-left">'
       +'<div class="menu-section">'
@@ -1777,10 +1769,21 @@ function buildOverlayHTML() {
       +'</div></div></div>'
       +'</div>'
       +'<div class="mob-unified-right">'
-      +'<div class="mob-right-header"><h3>'+t.indexTitle+'</h3><div id="mobThumbExpand" class="mob-expand-btn" tabindex="0"><svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg><svg class="icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/></svg></div></div>'
-      +'<div class="mob-thumb-grid" id="thumbGrid"></div>'
+      +'<div class="mob-right-header"><h3 class="mob-col-title">'+t.indexTitle+'</h3><div style="display:flex;align-items:center;gap:6px;"><div class="mob-expand-btn" id="mobExpandBtn"><svg viewBox="0 0 24 24"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg></div><div class="toc-close" id="tocClose">✕</div></div></div>'
+      +'<div class="mob-thumb-grid" id="mobThumbGrid"></div>'
       +'</div>'
       +'</div>'
+      +'</div></div>'
+      /* Thumb Overlay (모바일 전체화면 썸네일) */
+      +'<div id="thumbOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
+      +'<div class="overlay-backdrop" id="thumbBackdrop"></div>'
+      +'<div class="index-panel panel-box">'
+      +'<div class="toc-header" style="margin-bottom:8px;">'
+      +'<div><h2 class="index-title" id="thumbTitle">'+t.indexTitle+'</h2></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<div class="toc-close" id="thumbClose">✕</div>'
+      +'</div></div>'
+      +'<div class="index-body"><div class="thumb-grid" id="thumbGrid"></div></div>'
       +'</div></div>'
       /* Scene List */
       +'<div id="sceneListOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
@@ -2003,7 +2006,7 @@ window.goTo = function(url, opts) {
 
 function _applyScene(url, scene) {
   /* 모든 오버레이 즉시 닫기 */
-  ['tocOverlay','sceneListOverlay','aboutOverlay','poemOverlay','helpOverlay','introOverlay','gbOverlay'].forEach(function(id){
+  ['tocOverlay','thumbOverlay','sceneListOverlay','aboutOverlay','poemOverlay','helpOverlay','introOverlay','gbOverlay'].forEach(function(id){
     var el = document.getElementById(id);
     if (el) { el.classList.remove('on'); el.setAttribute('aria-hidden','true'); el.style.display='none'; el.style.opacity=''; }
   });
@@ -2141,13 +2144,13 @@ function _stanzaSpawnParticles(app, textEl, done) {
   /* 반딧불 횡단: square-frame 오른쪽 끝까지 sin파 */
   function launchFirefly(el, startX, startY) {
     var endX = sqW + 20;
-    var dur  = 4200;
+    var dur  = isMobile ? 2100 : 4200;
     var st   = null;
     function frame(ts) {
       if (!st) st = ts;
       var ft   = Math.min((ts - st) / dur, 1);
       var fx   = startX + ft * (endX - startX);
-      var fy   = startY + Math.sin(ft * Math.PI * 2.8) * 18;
+      var fy   = startY + Math.sin(ft * Math.PI * 2.8) * 9;
       var fsz  = 9 + 5 * Math.abs(Math.sin(ft * Math.PI * 5));
       var fop  = 0.7 + 0.3 * Math.abs(Math.sin(ft * Math.PI * 5));
       var glow = fsz * 1.8;
@@ -2888,11 +2891,11 @@ function _bindSceneInput(scene, sceneURL) {
 }
 
 function _isOverlayOpen() {
-  return ['tocOverlay','sceneListOverlay','aboutOverlay','poemOverlay','helpOverlay','introOverlay','gbOverlay']
+  return ['tocOverlay','thumbOverlay','sceneListOverlay','aboutOverlay','poemOverlay','helpOverlay','introOverlay','gbOverlay']
     .some(function(id){ var el=$id(id); return el && el.classList.contains('on'); });
 }
 function _closeTopOverlay() {
-  ['introOverlay','helpOverlay','poemOverlay','aboutOverlay','gbOverlay','sceneListOverlay','tocOverlay']
+  ['introOverlay','helpOverlay','poemOverlay','aboutOverlay','gbOverlay','thumbOverlay','sceneListOverlay','tocOverlay']
     .find(function(id){ var el=$id(id); if(el&&el.classList.contains('on')){ _closeOverlay(el); return true; } return false; });
 }
 function _closeOverlay(el) {
@@ -2910,7 +2913,7 @@ var TOCManager = {
     ov.style.display='flex'; ov.setAttribute('aria-hidden','false');
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ ov.classList.add('on'); }); });
     if (!isMobile) { _buildThumbGrid(); scrollToCurrent($id('thumbGrid'),'.thumb-current'); }
-    else { _buildThumbGrid(); scrollToCurrent($id('thumbGrid'),'.thumb-current'); }
+    else { _buildMobThumbGrid(); scrollToCurrent($id('mobThumbGrid'),'.thumb-current'); }
     _updateTOCCurrent(S.currentScene||{});
   },
   close: function() {
@@ -2923,16 +2926,19 @@ var TOCManager = {
 
 var ThumbnailManager = {
   open: function() {
-    var ov=$id('tocOverlay'); if(!ov) return;
-    TOCManager.open();
-    /* 썸네일 그리드로 스크롤 */
-    setTimeout(function(){
-      var right=$id('tocOverlay') && $id('tocOverlay').querySelector('.mob-unified-right');
-      if(right) right.scrollTop=0;
-      scrollToCurrent($id('thumbGrid'),'.thumb-current');
-    },100);
+    history.pushState({overlay:'thumb'},'');
+    TOCManager.close();
+    var ov=$id('thumbOverlay'); if(!ov) return;
+    ov.style.display='flex'; ov.setAttribute('aria-hidden','false');
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ ov.classList.add('on'); }); });
+    _buildThumbGrid();
+    setTimeout(function(){ scrollToCurrent($id('thumbGrid'),'.thumb-current'); }, 80);
   },
-  close: TOCManager.close
+  close: function() {
+    var ov=$id('thumbOverlay'); if(!ov) return;
+    ov.classList.remove('on'); ov.setAttribute('aria-hidden','true');
+    setTimeout(function(){ ov.style.display='none'; var g=$id('thumbGrid'); if(g) g.innerHTML=''; }, 420);
+  }
 };
 
 var SceneListManager = {
@@ -3133,6 +3139,13 @@ var _currentHearts = {};
 var HEART_PATH='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
 var LOCK_SVG='<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" ry="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
+function _buildMobThumbGrid() {
+  var grid=$id('mobThumbGrid'); if(!grid) return;
+  grid.innerHTML='';
+  _currentHearts=_getHeartsCache();
+  _renderThumbGrid(grid,_currentHearts);
+}
+
 function _buildThumbGrid() {
   var grid=$id('thumbGrid'); if(!grid) return;
   grid.innerHTML='';
@@ -3195,6 +3208,7 @@ function bindCommonEvents() {
     $id(closeId)    && $id(closeId).addEventListener('click',    mgr.close.bind(mgr));
   }
   onClose('tocBackdrop','tocClose',TOCManager);
+  onClose('thumbBackdrop','thumbClose',ThumbnailManager);
   onClose('slstBackdrop','slstClose',SceneListManager);
   onClose('aboutBackdrop','aboutClose',AboutManager);
   onClose('helpBackdrop','helpClose',HelpManager);
@@ -3203,10 +3217,7 @@ function bindCommonEvents() {
   onClose('poemBackdrop','poemClose',PoemManager);
 
   $id('tocInfoBtn')   && $id('tocInfoBtn').addEventListener('click',HelpManager.open.bind(HelpManager));
-  $id('mobThumbExpand') && $id('mobThumbExpand').addEventListener('click', function(){
-    var panel = document.querySelector('#tocOverlay .toc-panel');
-    if(panel) panel.classList.toggle('mob-expanded');
-  });
+  $id('mobExpandBtn') && $id('mobExpandBtn').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); TOCManager.close(); setTimeout(function(){ ThumbnailManager.open(); }, 200); });
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('click',function(){
     TOCManager.close();
     setTimeout(function(){ AutoPlay.start(S.currentScene, sceneURL_); }, 440);
@@ -3237,7 +3248,8 @@ function bindCommonEvents() {
     var el=$id(id); if(!el) return;
     el.addEventListener('click',function(e){
       e.preventDefault();
-      var grid=$id('thumbGrid'); if(!grid) return;
+      var grid=isMobile ? $id('mobThumbGrid') : $id('thumbGrid');
+      if(!grid) return;
       var heads=grid.querySelectorAll('.thumb-section-head');
       for(var i=0;i<heads.length;i++){
         if(heads[i].textContent.trim().startsWith(prefix)){
