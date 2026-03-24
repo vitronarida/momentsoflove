@@ -426,7 +426,7 @@
         pointer-events:none;
       }
             .mob-bottom .skip-bar {
-        position:absolute; left:50%; top:50%;
+        position:absolute; left:50%; top:calc(50% - 21px);
         right:auto; bottom:auto;
         transform: translate(-50%, -50%);
         opacity:0; transition: opacity 2000ms ease;
@@ -435,16 +435,8 @@
       .mob-bottom .device-bar.show,
       .mob-bottom .lang-bar.show { opacity:1; transform:translateY(0); pointer-events:auto; }
       .mob-bottom .skip-bar.show { opacity:1; pointer-events:auto; }
-      .mob-bottom .lock-group {
-        position:relative; display:flex; flex-direction:column; align-items:center;
-        margin-bottom:46px;
-      }
-      .mob-bottom .lock-group .skip-bar {
-        top:auto; bottom:calc(100% + 8px);
-        transform: translateX(-50%);
-      }
       .mob-bottom .lock-wrap {
-        position:static; transform:none;
+        position:static; transform:none; margin-bottom:6px;
       }
       #mobAutoPlayBtn {
         display:none;
@@ -473,6 +465,9 @@
     </div>
   </div>
   <div class="mob-bottom">
+      <div class="skip-bar" id="skipBar">
+        <button class="skip-btn" id="skipBtn" type="button">skip</button>
+      </div>
       <div id="autoPlayBar" style="display:none;">
         <div class="ap-intro-wrap" id="apIntroWrap">
           <button class="ap-intro-btn" id="autoPlayBtn" type="button" data-tooltip="자동 모드" aria-label="자동 모드">
@@ -481,20 +476,15 @@
         </div>
       </div>
 
-      <div class="lock-group">
-        <div class="skip-bar" id="skipBar">
-          <button class="skip-btn" id="skipBtn" type="button">skip</button>
-        </div>
-        <div class="lock-wrap" id="lockWrap">
-          <button class="lock-btn" id="enterBtn" type="button" aria-label="Enter" data-tooltip="">
-            <svg id="svgLock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-            </svg>
-            <svg id="svgUnlock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display:none;">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-            </svg>
-          </button>
-        </div>
+      <div class="lock-wrap" id="lockWrap">
+        <button class="lock-btn" id="enterBtn" type="button" aria-label="Enter" data-tooltip="">
+          <svg id="svgLock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+          </svg>
+          <svg id="svgUnlock" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display:none;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+          </svg>
+        </button>
       </div>
 
       <div class="mob-bottom-row">

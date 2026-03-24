@@ -1764,6 +1764,9 @@ function buildOverlayHTML() {
       +'<div class="menu-section"><h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">'+t.menuH_GB+'</h3></div>'
       +'<div class="menu-section"><div style="display:flex;gap:8px;align-items:center;padding-left:8px;">'
       +langToggle
+      +'<div id="tocAutoPlayBtn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.5;margin-left:4px;" tabindex="0">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
+      +'</div>'
       +'<div id="tocInfoBtn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.5;margin-left:4px;">'
       +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
       +'</div></div></div>'
@@ -2389,8 +2392,9 @@ var AutoPlay = (function(){
     if(scene.id === LAST_SCENE_ID){ stop(); return; }
     _advTimerPaused = false;
     clearTimeout(_timer);
+    if(_paused) return; /* pause 중이면 타이머 시작 안 함 */
     _timer = setTimeout(function(){
-      if(!_active) return;
+      if(!_active || _paused) return;
       if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
     }, DELAY_MS);
   }
@@ -2399,7 +2403,7 @@ var AutoPlay = (function(){
   function onSceneChange(){
     _clearAll();
     _advTimerPaused = false;
-    _paused = false;
+    /* _paused는 유지 — pause 중 씬 이동 시에도 pause 상태 유지 */
     _hideButtons();
     if(!_active) _unbindInteraction();
   }
