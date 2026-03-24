@@ -64,8 +64,7 @@ html, body {
 .scene-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: contain;
-  background: #000;
+  object-fit: cover;
   opacity: 0;
   transition: opacity 800ms ease;
 }
@@ -156,6 +155,8 @@ html, body {
 
 .nav-bar {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -575,6 +576,11 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .mob-right-header h3{ font-family:"Nanum Pen Script",cursive; font-size:20px; color:rgba(235,235,235,0.90); margin:0; }
 .mob-expand-btn{ cursor:pointer; padding:4px; opacity:0.5; -webkit-tap-highlight-color:transparent; }
 .mob-expand-btn svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; }
+.mob-expand-btn .icon-collapse{ display:none; }
+.toc-panel.mob-expanded .mob-unified-left{ display:none; }
+.toc-panel.mob-expanded .mob-unified-right{ border-left:none; }
+.toc-panel.mob-expanded .mob-expand-btn .icon-expand{ display:none; }
+.toc-panel.mob-expanded .mob-expand-btn .icon-collapse{ display:block; }
 .mob-thumb-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px; padding:0 0 16px; }
 .mob-thumb-grid .thumb-section-head{ grid-column:1/-1; font-family:"Nanum Pen Script",cursive; font-size:13px; color:rgba(230,230,230,0.60); padding:6px 2px 2px; border-top:1px solid rgba(255,255,255,0.06); margin-top:2px; }
 .mob-thumb-grid .thumb-section-head:first-child{ border-top:none; margin-top:0; }
@@ -622,7 +628,7 @@ font-size:16px; color: rgba(180,180,180,0.35); }
 .slst-img.loaded{ opacity:1; }
 .slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
 .slst-lock svg{ width:18px; height:18px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
-.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.72); line-height:1.3; cursor:pointer; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
 @keyframes slst-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
@@ -659,6 +665,30 @@ font-size:16px; color: rgba(180,180,180,0.35); }
   transition: opacity 700ms ease;
 }
 .stanza-text-wrap.visible { opacity: 1; }
+.work-code {
+  font-size: 13px;
+  color: rgba(235,235,235,0.45);
+  letter-spacing: 0.8px;
+  margin-bottom: 18px;
+  user-select: none;
+  font-family: "Nanum Pen Script", cursive;
+}
+.scene-text {
+  font-size: clamp(22px, 3vw, 28px);
+  color: rgba(235,235,235,0.92);
+  text-align: center;
+  line-height: 1.6;
+  padding: 0 28px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 600ms ease, transform 600ms ease;
+  user-select: none;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  margin-bottom: 32px;
+  font-family: "Nanum Pen Script", cursive;
+}
+.scene-text.show { opacity: 1; transform: translateY(0); }
 `;
 var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 /* CSS 변수 */
@@ -1419,7 +1449,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
 .slst-img.loaded{ opacity:1; }
 .slst-lock{ display:grid; place-items:center; width:100%; height:100%; }
 .slst-lock svg{ width:20px; height:20px; stroke:rgba(255,255,255,0.22); fill:none; stroke-width:1.5; }
-.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:default; word-break:keep-all; }
+.slst-title{ font-family:"Nanum Pen Script",cursive; font-size:clamp(20px,2.5vw,26px); color:rgba(235,235,235,0.75); line-height:1.3; cursor:pointer; word-break:keep-all; }
 .slst-title.has-poem{ cursor:pointer; }
 .slst-title.has-poem:hover{ text-decoration:underline; text-underline-offset:4px; }
 .slst-lock-tag{ display:inline-block; vertical-align:middle; margin-left:8px; opacity:0.5; flex-shrink:0; }
@@ -1713,6 +1743,8 @@ function buildOverlayHTML() {
       +'<div class="toc-handle"></div>'
       +'<div class="toc-header"><h2 class="toc-title">'+t.tocTitle+'</h2>'
       +'<div class="toc-close" id="tocClose">✕</div></div>'
+      +'<div class="mob-unified-body">'
+      +'<div class="mob-unified-left">'
       +'<div class="menu-section">'
       +'<h3 class="menu-h" id="menuH_TOC">'+t.menuH_TOC+'</h3>'
       +'<ul class="toc-list">'
@@ -1743,6 +1775,12 @@ function buildOverlayHTML() {
       +'<div id="tocInfoBtn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.5;margin-left:4px;">'
       +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
       +'</div></div></div>'
+      +'</div>'
+      +'<div class="mob-unified-right">'
+      +'<div class="mob-right-header"><h3>'+t.indexTitle+'</h3><div id="mobThumbExpand" class="mob-expand-btn" tabindex="0"><svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg><svg class="icon-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"/></svg></div></div>'
+      +'<div class="mob-thumb-grid" id="thumbGrid"></div>'
+      +'</div>'
+      +'</div>'
       +'</div></div>'
       /* Scene List */
       +'<div id="sceneListOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
@@ -1915,12 +1953,12 @@ function buildOverlayHTML() {
 function ensureSPAOverlays() {
   if (!$id('trans-overlay')) {
     var t = document.createElement('div'); t.id='trans-overlay';
-    t.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;background:#000;pointer-events:none;opacity:0;z-index:8000;';
+    t.style.cssText='position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;z-index:8000;';
     document.body.appendChild(t);
   }
   if (!$id('white-overlay')) {
     var w = document.createElement('div'); w.id='white-overlay';
-    w.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;background:#fff;pointer-events:none;opacity:0;z-index:8100;';
+    w.style.cssText='position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:8100;';
     document.body.appendChild(w);
   }
 }
@@ -1943,8 +1981,8 @@ window.goTo = function(url, opts) {
   S._navigating = true;
   AutoPlay.onSceneChange();
 
-  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향 */
-  if (direction === 'next' && S.currentScene && S.currentScene.stanzaTransition) {
+  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우 */
+  if (direction === 'next' && !opts.direct && S.currentScene && S.currentScene.stanzaTransition) {
     _stanzaTransition(url);
     return;
   }
@@ -2164,8 +2202,6 @@ function renderScene(scene, sceneURL) {
   _bindSceneInput(scene, sceneURL);
   _updateTOCCurrent(scene);
 
-  /* 오토플레이 활성 중: DOM 생성 직후 즉시 커서 차단 */
-  if (!isMobile && AutoPlay.isActive()) AutoPlay.showCursorStyle();
 
   /* 인트로에서 자동 모드 버튼으로 진입한 경우 AutoPlay 자동 시작 */
   if (!isMobile) {
@@ -2219,25 +2255,11 @@ var AutoPlay = (function(){
     var b=_getBar(); if(b) b.classList.remove('ap-visible');
   }
 
-  /* --- 커서 숨김: style 태그 주입 (정지 마우스도 즉시 적용) --- */
-  function _showCursorStyle(){
-    if(document.getElementById('ap-cursor-style')) return;
-    var st = document.createElement('style');
-    st.id = 'ap-cursor-style';
-    st.textContent = '* { cursor: none !important; }';
-    document.head.appendChild(st);
-  }
-  function _hideCursorStyle(){
-    var st = document.getElementById('ap-cursor-style');
-    if(st) st.parentNode.removeChild(st);
-  }
-
-  /* --- idle 타이머: 마우스 정지 후 커서 숨김 + 자동 재개 --- */
+  /* --- idle 타이머: 마우스 정지 후 자동 재개 --- */
   function _startIdleTimer(){
     clearTimeout(_idleTimer);
     _idleTimer = setTimeout(function(){
       if(!_active) return;
-      _showCursorStyle();
       _hideButtons();
       if(_advTimerPaused && _scene && _scene.nextURL && _sceneURL){
         _advTimerPaused = false;
@@ -2252,7 +2274,6 @@ var AutoPlay = (function(){
   /* --- mousemove 핸들러 --- */
   function _onMouseMove(){
     if(!_active) return;
-    _hideCursorStyle();
     _showButtons();
     clearTimeout(_timer);
     _advTimerPaused = true;
@@ -2276,7 +2297,6 @@ var AutoPlay = (function(){
     if(scene.id === LAST_SCENE_ID){ stop(); return; }
     _advTimerPaused = false;
     clearTimeout(_timer);
-    _showCursorStyle(); /* 씬마다 타이핑 완료 시 커서 차단 */
     _timer = setTimeout(function(){
       if(!_active) return;
       if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
@@ -2288,7 +2308,7 @@ var AutoPlay = (function(){
     _clearAll();
     _advTimerPaused = false;
     _hideButtons();
-    /* style 태그는 document.head에 있으므로 씬 전환 후에도 유지됨 */
+
     if(!_active) _unbindMouseMove();
   }
 
@@ -2297,7 +2317,6 @@ var AutoPlay = (function(){
     _active = true;
     _updateTocBtn(true);
     _bindMouseMove();
-    _showCursorStyle();
     onTypingDone(scene, sceneURL);
   }
 
@@ -2306,7 +2325,6 @@ var AutoPlay = (function(){
     _active = true;
     _updateTocBtn(true);
     _bindMouseMove();
-    _showCursorStyle();
   }
 
   /* 씬 내 플레이 버튼 클릭 — 즉시 재개 */
@@ -2315,7 +2333,6 @@ var AutoPlay = (function(){
     _advTimerPaused = false;
     clearTimeout(_idleTimer);
     _hideButtons();
-    _showCursorStyle();
     if(_scene && _scene.nextURL && _sceneURL){
       clearTimeout(_timer);
       _timer = setTimeout(function(){
@@ -2330,7 +2347,6 @@ var AutoPlay = (function(){
     _advTimerPaused = false;
     _clearAll();
     _unbindMouseMove();
-    _hideCursorStyle();
     document.body.classList.remove('ap-peek');
     var b=_getBar(); if(b) b.classList.remove('ap-visible');
     _updateTocBtn(false);
@@ -2349,7 +2365,7 @@ var AutoPlay = (function(){
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
            onTypingDone:onTypingDone, onSceneChange:onSceneChange,
-           resumeFromBtn:resumeFromBtn, showCursorStyle:_showCursorStyle };
+           resumeFromBtn:resumeFromBtn };
 })();
 
 
@@ -2434,6 +2450,15 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
         var ta=app.querySelector('.scene-text');
         if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN); }
       },400);
+      /* ripple 효과: prague(LPL_03) / dreams(LPL_04) */
+      if (scene.id==='prague' || scene.id==='dreams') {
+        setTimeout(function(){
+          if(img._rippleStarted) return;
+          img._rippleStarted = true;
+          if(scene.id==='prague') _initRipple(img, photoArea);
+          else _initRippleTop(img, photoArea);
+        }, 300);
+      }
     };
     img.onerror=function(){
       setTimeout(function(){
@@ -2709,6 +2734,7 @@ function _buildMobileNav(scene, sceneURL) {
 
   /* 네비바 */
   var navBar=document.createElement('div'); navBar.className='nav-bar';
+  navBar.style.cssText='display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:space-between;width:100%;padding:0 24px;gap:12px;';
   var leftBtn=document.createElement('div');
   if(!scene.prevURL && scene.pageNum===1){
     leftBtn.className='nav-btn'; leftBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>';
@@ -2884,6 +2910,7 @@ var TOCManager = {
     ov.style.display='flex'; ov.setAttribute('aria-hidden','false');
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ ov.classList.add('on'); }); });
     if (!isMobile) { _buildThumbGrid(); scrollToCurrent($id('thumbGrid'),'.thumb-current'); }
+    else { _buildThumbGrid(); scrollToCurrent($id('thumbGrid'),'.thumb-current'); }
     _updateTOCCurrent(S.currentScene||{});
   },
   close: function() {
@@ -2892,6 +2919,20 @@ var TOCManager = {
     setTimeout(function(){ ov.style.display=''; }, 420);
     document.querySelector('.unified-panel') && document.querySelector('.unified-panel').classList.remove('expanded');
   }
+};
+
+var ThumbnailManager = {
+  open: function() {
+    var ov=$id('tocOverlay'); if(!ov) return;
+    TOCManager.open();
+    /* 썸네일 그리드로 스크롤 */
+    setTimeout(function(){
+      var right=$id('tocOverlay') && $id('tocOverlay').querySelector('.mob-unified-right');
+      if(right) right.scrollTop=0;
+      scrollToCurrent($id('thumbGrid'),'.thumb-current');
+    },100);
+  },
+  close: TOCManager.close
 };
 
 var SceneListManager = {
@@ -3021,7 +3062,13 @@ function _checkPoemLinks() {
       if(!r.ok) return;
       var t=item.querySelector('.slst-title'); if(!t) return;
       t.classList.add('has-poem');
-      if(!t.querySelector('.slst-lock-tag')) t.insertAdjacentHTML('beforeend',penSVG);
+      if(!item.querySelector('.slst-poem-btn')){
+        var poemBtn=document.createElement('span');
+        poemBtn.className='slst-poem-btn slst-lock-tag';
+        poemBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 4.76a6 6 0 0 0-8.49 0L4 12.5V20h7.5l7.74-7.75a6 6 0 0 0 0-8.49z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>';
+        poemBtn.style.cssText='cursor:pointer;flex-shrink:0;opacity:0.55;';
+        item.appendChild(poemBtn);
+      }
     }).catch(function(){});
   });
 }
@@ -3156,6 +3203,10 @@ function bindCommonEvents() {
   onClose('poemBackdrop','poemClose',PoemManager);
 
   $id('tocInfoBtn')   && $id('tocInfoBtn').addEventListener('click',HelpManager.open.bind(HelpManager));
+  $id('mobThumbExpand') && $id('mobThumbExpand').addEventListener('click', function(){
+    var panel = document.querySelector('#tocOverlay .toc-panel');
+    if(panel) panel.classList.toggle('mob-expanded');
+  });
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('click',function(){
     TOCManager.close();
     setTimeout(function(){ AutoPlay.start(S.currentScene, sceneURL_); }, 440);
@@ -3199,22 +3250,29 @@ function bindCommonEvents() {
 
   /* 씬 목록 이벤트 위임 */
   document.addEventListener('click',function(e){
-    /* slst 썸네일 클릭 */
+    /* slst 썸네일 클릭 → 씬 이동 */
     var thumb=e.target.closest('.slst-thumb[data-url]');
-    if(thumb){ SceneListManager.close(); window.goTo(thumb.dataset.url); return; }
-    /* slst 제목 클릭 → 시 */
-    var title=e.target.closest('.slst-title.has-poem');
-    if(title){
-      var item=title.closest('.slst-item'); if(!item) return;
-      var code=item.dataset.code; if(!code) return;
-      var poemCode=code.replace(/#/g,'_');
-      fetch('../poems/'+poemCode+'.txt').then(function(r){ if(!r.ok) throw 0; return r.text(); })
+    if(thumb){ SceneListManager.close(); window.goTo(thumb.dataset.url, {direct:true}); return; }
+    /* slst 깃털 버튼 클릭 → 시 */
+    var poemBtn=e.target.closest('.slst-poem-btn');
+    if(poemBtn){
+      var pItem=poemBtn.closest('.slst-item'); if(!pItem) return;
+      var pCode=pItem.dataset.code; if(!pCode) return;
+      var pTitleEl=pItem.querySelector('.slst-title');
+      fetch('../poems/'+pCode.replace(/#/g,'_')+'.txt').then(function(r){ if(!r.ok) throw 0; return r.text(); })
         .then(function(txt){
           SceneListManager.close();
-          setTimeout(function(){
-            PoemManager.open(title.textContent.trim().replace(/\s+$/,''), txt);
-          },220);
+          setTimeout(function(){ PoemManager.open(pTitleEl?pTitleEl.textContent.trim():'', txt); },220);
         }).catch(function(){});
+      return;
+    }
+    /* slst 제목 클릭 → 씬 이동 */
+    var title=e.target.closest('.slst-title');
+    if(title){
+      var item=title.closest('.slst-item'); if(!item) return;
+      var file=item.dataset.file; if(!file) return;
+      SceneListManager.close(); window.goTo('/scenes/'+file+'.html', {direct:true});
+      return;
     }
   });
 
