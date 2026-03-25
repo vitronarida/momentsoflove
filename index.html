@@ -204,54 +204,6 @@
     }
     .skip-btn:active { transform: scale(0.92); }
 
-    /* ===== 인트로 자동 모드 버튼 ===== */
-    #autoPlayBar {
-      position: absolute; left: 50%; transform: translateX(-50%);
-      bottom: calc(6% + env(safe-area-inset-bottom));
-    }
-    .ap-intro-wrap {
-      display: inline-grid; place-items: center; position: relative;
-    }
-    .ap-intro-wrap::before,
-    .ap-intro-wrap::after {
-      content: ""; position: absolute;
-      width: 36px; height: 36px; border-radius: 999px;
-      pointer-events: none; opacity: 0;
-    }
-    .ap-intro-wrap.show::before {
-      border: 1.5px solid rgba(255,255,255,0.22);
-      animation: pulse-ring 2.4s ease-out infinite; opacity: 1;
-    }
-    .ap-intro-wrap.show::after {
-      border: 1px solid rgba(255,255,255,0.14);
-      animation: pulse-ring 2.4s ease-out 0.8s infinite; opacity: 1;
-    }
-    .ap-intro-wrap:hover::before,
-    .ap-intro-wrap:hover::after { animation: none; opacity: 0; }
-    .ap-intro-btn {
-      width: 36px; height: 36px; border-radius: 999px;
-      display: grid; place-items: center;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.18);
-      cursor: pointer; user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      opacity: 0; pointer-events: none;
-      transition: opacity 1200ms ease, background 150ms ease, box-shadow 150ms ease;
-    }
-    .ap-intro-btn svg { width: 16px; height: 16px; stroke: rgba(200,200,200,0.75); }
-    .ap-intro-btn.show {
-      position: relative; pointer-events: auto;
-      animation: fadeInBreath 2s ease-in-out 1 forwards,
-                 breathe      2.8s ease-in-out 2s infinite,
-                 glow         2.8s ease-in-out 2s infinite;
-    }
-    .ap-intro-btn.show:hover {
-      animation: none; opacity: 1;
-      background: rgba(255,255,255,0.09);
-      box-shadow: 0 0 20px 6px rgba(255,255,255,0.18);
-    }
-    .ap-intro-btn.show:active { transform: scale(0.91); animation: none; }
-
     /* ===== 자물쇠 버튼 ===== */
     .lock-btn {
       margin: 0;
@@ -395,11 +347,6 @@
                    glow                2.8s ease-in-out 2s infinite;
       }
       .lock-wrap { bottom: 28%; }
-      .ap-intro-btn.show {
-        animation: fadeInBreathDesktop 1.2s ease-in-out 1 forwards,
-                   breatheDesktop      2.8s ease-in-out 1.2s infinite,
-                   glow                2.8s ease-in-out 2s infinite;
-      }
       .frame { background: linear-gradient(to bottom, #303030 0%, #222222 100%); }
       body { background: #222222; }
     }
@@ -438,18 +385,6 @@
       .mob-bottom .lock-wrap {
         position:static; transform:none; margin-bottom:6px;
       }
-      #mobAutoPlayBtn {
-        display:none;
-        width:36px; height:36px; border-radius:999px;
-        background:rgba(255,255,255,0.04);
-        border:1px solid rgba(255,255,255,0.12);
-        color:rgba(235,235,235,0.70);
-        cursor:pointer; place-items:center;
-        -webkit-tap-highlight-color:transparent;
-        opacity:0; transition:opacity 1200ms ease;
-      }
-      #mobAutoPlayBtn.show { opacity:1; display:grid; }
-      #mobAutoPlayBtn svg { width:14px; height:14px; stroke:rgba(200,200,200,0.75); }
     }
   </style>
 </head>
@@ -467,13 +402,6 @@
   <div class="mob-bottom">
       <div class="skip-bar" id="skipBar">
         <button class="skip-btn" id="skipBtn" type="button">skip</button>
-      </div>
-      <div id="autoPlayBar" style="display:none;">
-        <div class="ap-intro-wrap" id="apIntroWrap">
-          <button class="ap-intro-btn" id="autoPlayBtn" type="button" data-tooltip="자동 모드" aria-label="자동 모드">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
-          </button>
-        </div>
       </div>
 
       <div class="lock-wrap" id="lockWrap">
@@ -501,9 +429,6 @@
             </svg>
           </button>
         </div>
-        <button id="mobAutoPlayBtn" type="button" aria-label="자동 감상">
-          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
-        </button>
         <div class="lang-bar">
           <button class="lang-btn" id="btnKR" aria-label="Korean" data-tooltip="">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" aria-hidden="true">
@@ -604,6 +529,7 @@
           lockBtn.click();
         } else {
           try{sessionStorage.removeItem("gl_mode");}catch(err){}
+          try{sessionStorage.setItem("mol_autoplay_start","1");}catch(err){}
           location.href = TARGET_URL;
         }
       }
@@ -690,23 +616,6 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
-        /* 데스크탑: autoplay 버튼 lock과 동시 등장 */
-        if (!isMobile) {
-          const apBar = document.getElementById("autoPlayBar");
-          const apWrap = document.getElementById("apIntroWrap");
-          const apBtn = document.getElementById("autoPlayBtn");
-          if (apBar) {
-            apBar.style.display = "";
-            requestAnimationFrame(function(){ requestAnimationFrame(function(){
-              if(apWrap) apWrap.classList.add("show");
-              if(apBtn)  apBtn.classList.add("show");
-            }); });
-          }
-        } else {
-          /* 모바일: 작은 ▶ 버튼 등장 */
-          const mobBtn = document.getElementById("mobAutoPlayBtn");
-          if (mobBtn) { mobBtn.style.display = "grid"; requestAnimationFrame(function(){ requestAnimationFrame(function(){ mobBtn.classList.add("show"); }); }); }
-        }
         const IDLE_MS = 5000;
         const hideFuncBars = () => {
           langBar?.classList.remove("show");
@@ -782,22 +691,6 @@
         lockWrapEl.style.visibility = "";
         btn.classList.add("show");
         lockWrapEl.classList.add("show");
-        /* 데스크탑: autoplay 버튼도 함께 등장 */
-        if (!isMobile) {
-          const apBar = document.getElementById("autoPlayBar");
-          const apWrap = document.getElementById("apIntroWrap");
-          const apBtn  = document.getElementById("autoPlayBtn");
-          if (apBar) {
-            apBar.style.display = "";
-            requestAnimationFrame(function(){ requestAnimationFrame(function(){
-              if(apWrap) apWrap.classList.add("show");
-              if(apBtn)  apBtn.classList.add("show");
-            }); });
-          }
-        } else {
-          const mobBtn = document.getElementById("mobAutoPlayBtn");
-          if (mobBtn) { mobBtn.style.display = "grid"; requestAnimationFrame(function(){ requestAnimationFrame(function(){ mobBtn.classList.add("show"); }); }); }
-        }
       }, 420);
       if (langBar) {
         langBar.style.pointerEvents = "none";
@@ -830,6 +723,7 @@
       if (!btn.classList.contains("show")) return;
       removeSkipBarListeners();
       try{sessionStorage.removeItem("gl_mode");}catch(e){}
+      try{sessionStorage.setItem("mol_autoplay_start", "1");}catch(e){}
 
       const TARGET = "/scenes/LPL_01.html";
 
@@ -861,8 +755,6 @@
           if (langBar)   { langBar.style.transition   = "opacity 400ms ease"; langBar.style.opacity   = "0"; langBar.style.pointerEvents   = "none"; }
           if (deviceBar) { deviceBar.style.transition = "opacity 400ms ease"; deviceBar.style.opacity = "0"; deviceBar.style.pointerEvents = "none"; }
           if (skipBar)   { skipBar.style.transition   = "opacity 400ms ease"; skipBar.style.opacity   = "0"; skipBar.style.pointerEvents   = "none"; }
-          const apBar2 = document.getElementById("autoPlayBar");
-          if (apBar2)  { apBar2.style.transition  = "opacity 400ms ease"; apBar2.style.opacity  = "0"; apBar2.style.pointerEvents  = "none"; }
 
           /* 입자 산개 (3000ms) DOM div 방식 — stanza와 동일한 형태 */
           const W = window.innerWidth, H = window.innerHeight;
@@ -963,25 +855,6 @@
     if (isMobile) {
       btn.addEventListener("touchend", (e) => { e.preventDefault(); doEnter(); }, {passive:false});
     }
-
-    /* ===== 인트로 자동 모드 버튼 ===== */
-    document.getElementById("autoPlayBtn")?.addEventListener("click", () => {
-      const apBar = document.getElementById("autoPlayBar");
-      if (apBar) { apBar.classList.remove("show"); apBar.style.display = "none"; }
-      document.body.style.cursor = "none";
-      try { sessionStorage.setItem("mol_autoplay_start", "1"); } catch(e) {}
-      showIcon("unlock");
-      btn.click();
-    });
-
-    /* 모바일 오토플레이 버튼 */
-    document.getElementById("mobAutoPlayBtn")?.addEventListener("click", () => {
-      const mobBtn = document.getElementById("mobAutoPlayBtn");
-      if (mobBtn) { mobBtn.classList.remove("show"); mobBtn.style.display = "none"; }
-      try { sessionStorage.setItem("mol_autoplay_start", "1"); } catch(e) {}
-      showIcon("unlock");
-      btn.click();
-    });
 
     /* ===== 언어 전환 ===== */
     function applyLang(newLang) {

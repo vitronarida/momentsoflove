@@ -65,7 +65,6 @@ html, body {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0;
   transition: opacity 800ms ease;
 }
 .scene-img.show { opacity: 1; }
@@ -1081,19 +1080,6 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
     padding:4px 12px; pointer-events:none; opacity:0; transition:opacity 200ms ease; z-index:30; }
   .has-tooltip:hover::after{ opacity:1; }
 
-  /* ===== 오토플레이 바 ===== */
-  .autoplay-bar{ position:absolute; top:6%; left:50%; transform:translate(-50%, 0); z-index:60;
-    display:flex; gap:20px; align-items:center;
-    opacity:0; pointer-events:none; transition:opacity 300ms ease; }
-  .autoplay-bar.ap-visible{ opacity:1; pointer-events:auto; }
-  .autoplay-scene-btn{ width:52px; height:52px; border-radius:999px;
-    display:grid; place-items:center;
-    background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.15);
-    color:rgba(235,235,235,0.82); cursor:pointer;
-    transition:background 200ms ease, color 200ms ease, border-color 200ms ease; }
-  .autoplay-scene-btn:hover{ background:rgba(0,0,0,0.6); color:rgba(255,255,255,1); border-color:rgba(255,255,255,0.35); }
-  body.ap-peek .scene-text, body.ap-peek .fog-text{ opacity:0 !important; transition:opacity 300ms ease !important; }
-
   /* INDEX 오버레이 */
   #aboutOverlay{ z-index:10002; }
   .index-panel{ width:min(720px, 92vw); max-height: min(86vh, 900px); overflow:hidden; padding: 16px 16px 14px; }
@@ -1698,7 +1684,7 @@ function injectCSS() {
     '#app{position:fixed;top:0;left:0;width:100%;height:100%;}',
     /* 전환 오버레이 (SPA용) */
     '#trans-overlay{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;z-index:8000;}',
-    '#white-overlay{position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:8100;}',
+    '#white-overlay{position:fixed;width:100vmin;height:100vmin;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;pointer-events:none;opacity:0;z-index:8100;}',
     /* stanza */
     '.stanza-scene{position:absolute;inset:0;background:#000;overflow:hidden;}',
     '.stanza-canvas{position:absolute;inset:0;pointer-events:none;}',
@@ -1998,18 +1984,11 @@ window.goTo = function(url, opts) {
     return;
   }
 
-  /* Case C: 일반 전환 */
-  ensureSPAOverlays();
-  var o = $id('trans-overlay');
-  o.style.transition = 'none'; o.style.opacity = '0'; o.offsetHeight;
-  o.style.transition = 'opacity 300ms ease'; o.style.opacity = '1';
-
-  setTimeout(function() {
-    fetchScene(url).then(function(scene) {
-      _applyScene(url, scene);
-      setTimeout(function(){ transOverlay(0, 300); S._navigating=false; }, 50);
-    }).catch(function(){ S._navigating=false; location.href=url; });
-  }, 300);
+  /* Case C: 즉시 전환 */
+  fetchScene(url).then(function(scene) {
+    _applyScene(url, scene);
+    S._navigating = false;
+  }).catch(function(){ S._navigating=false; location.href=url; });
 };
 
 function _applyScene(url, scene) {
@@ -2023,8 +2002,8 @@ function _applyScene(url, scene) {
   sceneURL_       = url;
   history.pushState({ url:url }, '', url);
   renderScene(scene, url);
-  /* 오토플레이 중 모바일 nav-bar 업데이트 */
-  if(isMobile && AutoPlay.isActive()) setTimeout(function(){ AutoPlay.updateNavBar(); }, 50);
+  /* 오토플레이 중 nav-bar 업데이트 — 모바일은 fade in 완료 후 */
+  if(AutoPlay.isActive()) setTimeout(function(){ AutoPlay.updateNavBar(); }, isMobile ? 2100 : 50);
 }
 
 /* ============================================================
@@ -2183,13 +2162,13 @@ function _stanzaSpawnParticles(app, textEl, done) {
     rafs['ff'] = requestAnimationFrame(frame);
   }
 
-  /* done 호출 (5200ms 후) */
+  /* done 호출 — 반딧불 횡단 완료(데스크탑 4200ms, 모바일 2100ms) 후 1초 대기 */
   sched(function() {
     if (doneFired) return;
     doneFired = true;
     cleanup();
     if (done) done();
-  }, 5200);
+  }, isMobile ? 3100 : 5200);
 }
 
 /* ============================================================
@@ -2243,75 +2222,16 @@ function _updateTOCCurrent(scene) {
 var AutoPlay = (function(){
   var _active   = false;
   var _timer    = null;   /* 3초 씬 이동 타이머 */
-  var _idleTimer= null;   /* 마우스 idle → 커서 숨김 타이머 */
   var LAST_SCENE_ID = 'LEL_01';
-  var DELAY_MS  = 3000;
-  var IDLE_MS   = 1500;   /* 마우스 정지 후 커서 숨김까지 */
-  var PAUSE_MS  = 2500;   /* 마우스 이동 후 자동 재개까지 */
+  var DELAY_MS      = 3000;
+  var LPL_DELAY_MS  = 6000; /* LPL 씬: 애니메이션 감상을 위해 2배 대기 */
   var _scene    = null;
   var _sceneURL = null;
-  var _advTimerPaused = false; /* 마우스 이동으로 3초 타이머 일시정지 */
 
   /* --- 내부 유틸 --- */
-  function _clearAll(){ clearTimeout(_timer); clearTimeout(_idleTimer); }
-
-  function _getBar(){ return document.querySelector('.autoplay-bar'); }
-
-  function _showButtons(){
-    document.body.classList.add('ap-peek');
-    var b=_getBar(); if(b) b.classList.add('ap-visible');
-  }
-  function _hideButtons(){
-    document.body.classList.remove('ap-peek');
-    var b=_getBar(); if(b) b.classList.remove('ap-visible');
-  }
-
-  /* --- idle 타이머: 마우스 정지 후 자동 재개 --- */
-  function _startIdleTimer(){
-    clearTimeout(_idleTimer);
-    _idleTimer = setTimeout(function(){
-      if(!_active) return;
-      _hideButtons();
-      if(_advTimerPaused && _scene && _scene.nextURL && _sceneURL){
-        _advTimerPaused = false;
-        _timer = setTimeout(function(){
-          if(!_active) return;
-          window.goTo(resolveURL(_sceneURL, _scene.nextURL), {direction:'next'});
-        }, DELAY_MS);
-      }
-    }, IDLE_MS);
-  }
-
-  /* --- mousemove 핸들러 --- */
-  function _onMouseMove(){
-    if(!_active) return;
-    _showButtons();
-    clearTimeout(_timer);
-    _advTimerPaused = true;
-    _startIdleTimer();
-  }
+  function _clearAll(){ clearTimeout(_timer); }
 
   var _paused = false;
-
-  function _bindInteraction(){
-    if(isMobile){
-      document.removeEventListener('touchstart', _onTouch);
-      document.addEventListener('touchstart', _onTouch, {passive:true});
-    } else {
-      document.removeEventListener('mousemove', _onMouseMove);
-      document.addEventListener('mousemove', _onMouseMove);
-    }
-  }
-  function _unbindInteraction(){
-    document.removeEventListener('mousemove', _onMouseMove);
-    document.removeEventListener('touchstart', _onTouch);
-  }
-
-  function _onTouch(e){
-    if(!_active) return;
-    if(e.target.closest('.nav-btn')) return;
-    if(_paused) _resumeAP(); else _pauseAP();
-  }
 
   function _pauseAP(){
     if(!_active || _paused) return;
@@ -2346,6 +2266,7 @@ var AutoPlay = (function(){
     if(!btn._origHandler && origHandler){
       btn._origHandler = origHandler;
       btn.removeEventListener('click', origHandler);
+      btn.removeEventListener('touchend', origHandler);
     }
     if(!btn._apHandler){
       btn._apHandler = apHandler;
@@ -2355,7 +2276,11 @@ var AutoPlay = (function(){
   function _restoreBtn(btn, svg, sz){
     if(!btn) return;
     if(btn._apHandler){ btn.removeEventListener('click', btn._apHandler); btn._apHandler = null; }
-    if(btn._origHandler){ btn.addEventListener('click', btn._origHandler); btn._origHandler = null; }
+    if(btn._origHandler){
+      btn.addEventListener('click', btn._origHandler);
+      btn.addEventListener('touchend', btn._origHandler);
+      btn._origHandler = null;
+    }
     if(svg) btn.innerHTML = _svg(sz||26, svg);
     btn.style.color = '';
   }
@@ -2403,14 +2328,6 @@ var AutoPlay = (function(){
     }
   }
 
-  function _bindInteraction(){
-    document.removeEventListener('mousemove', _onMouseMove);
-    document.addEventListener('mousemove', _onMouseMove);
-  }
-  function _unbindInteraction(){
-    document.removeEventListener('mousemove', _onMouseMove);
-  }
-
   /* --- 공개 API --- */
 
   /* 타이핑 완료 콜백 — 3초 후 다음 씬 이동 */
@@ -2418,29 +2335,25 @@ var AutoPlay = (function(){
     if(!_active || !scene) return;
     _scene = scene; _sceneURL = sceneURL;
     if(scene.id === LAST_SCENE_ID){ stop(); return; }
-    _advTimerPaused = false;
     clearTimeout(_timer);
     if(_paused) return; /* pause 중이면 타이머 시작 안 함 */
+    var delay = (scene.code && scene.code.indexOf('LPL') === 0) ? LPL_DELAY_MS : DELAY_MS;
     _timer = setTimeout(function(){
       if(!_active || _paused) return;
       if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
-    }, DELAY_MS);
+    }, delay);
   }
 
   /* 씬 이동 감지 — goTo() 에서 호출 */
   function onSceneChange(){
     _clearAll();
-    _advTimerPaused = false;
     /* _paused는 유지 — pause 중 씬 이동 시에도 pause 상태 유지 */
-    _hideButtons();
-    if(!_active) _unbindInteraction();
   }
 
   /* TOC 플레이 버튼 — 현재 씬에서 바로 시작 */
   function start(scene, sceneURL){
     _active = true; _paused = false;
     _updateTocBtn(true);
-    _bindInteraction();
     _updateNavBar();
     onTypingDone(scene, sceneURL);
   }
@@ -2449,32 +2362,12 @@ var AutoPlay = (function(){
   function activate(){
     _active = true; _paused = false;
     _updateTocBtn(true);
-    _bindInteraction();
     _updateNavBar();
-  }
-
-  /* 씬 내 플레이 버튼 클릭 — 즉시 재개 */
-  function resumeFromBtn(){
-    if(!_active) return;
-    _advTimerPaused = false;
-    clearTimeout(_idleTimer);
-    _hideButtons();
-    if(_scene && _scene.nextURL && _sceneURL){
-      clearTimeout(_timer);
-      _timer = setTimeout(function(){
-        if(!_active) return;
-        window.goTo(resolveURL(_sceneURL, _scene.nextURL), {direction:'next'});
-      }, DELAY_MS);
-    }
   }
 
   function stop(){
     _active = false; _paused = false;
-    _advTimerPaused = false;
     _clearAll();
-    _unbindInteraction();
-    document.body.classList.remove('ap-peek');
-    var b=_getBar(); if(b) b.classList.remove('ap-visible');
     _updateTocBtn(false);
     _updateNavBar();
   }
@@ -2492,8 +2385,7 @@ var AutoPlay = (function(){
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
            onTypingDone:onTypingDone, onSceneChange:onSceneChange,
-           resumeFromBtn:resumeFromBtn, updateNavBar:_updateNavBar,
-           pauseAP:_pauseAP };
+           updateNavBar:_updateNavBar, pauseAP:_pauseAP };
 })();
 
 
@@ -2573,7 +2465,6 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
     app.appendChild(photoArea);
     app.appendChild(_buildMobileNav(scene, sceneURL));
     img.onload=function(){
-      img.classList.add('show');
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
         if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
@@ -2588,6 +2479,7 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
         }, 300);
       }
     };
+    img.classList.add('show'); /* 즉시 표시 — 로드되는 대로 자연 렌더링 */
     img.onerror=function(){
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
@@ -2601,7 +2493,7 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
     var sq=document.createElement('div'); sq.className='square-frame'; sq.id='mainContent';
     sq.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(0);width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;background:#000;overflow:hidden;';
     var img=document.createElement('img'); img.className='scene-img'; img.id=scene.id+'Img'; img.alt=scene.code||''; img.src=imgSrc;
-    img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity 2500ms ease;';
+    img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;';
     var txt=document.createElement('div'); txt.className='scene-text long-text'; txt.id=scene.id+'Text';
     txt.style.zIndex='30';
     sq.append(img,txt);
@@ -2609,18 +2501,15 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
     scWrap.appendChild(sq); wrap.appendChild(scWrap); app.appendChild(wrap);
     document.body.classList.add('ui-text-only','ui-mode-ready');
     var began=false;
-    function begin(){ if(began)return; began=true; requestAnimationFrame(function(){ requestAnimationFrame(function(){
-      img.style.opacity='1';
-      wrap.classList.add('hq-show');
-      wrap.classList.add('nav-ready');
-      /* ripple 효과: prague(LPL_03) / dreams(LPL_04) */
+    function begin(){ if(began)return; began=true;
+      wrap.classList.add('hq-show','nav-ready');
       if (scene.id==='prague') _initRipple(img, sq);
       else if (scene.id==='dreams') _initRippleTop(img, sq);
       setTimeout(function(){
         wrap.classList.add('show-text');
         _typeText(txt, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); });
-      }, 2500);
-    }); }); }
+      }, 400);
+    }
     if(img.complete&&img.naturalWidth>0) begin();
     else { img.addEventListener('load',begin,{once:true}); img.addEventListener('error',begin,{once:true}); }
   }
@@ -2866,7 +2755,7 @@ function _buildMobileNav(scene, sceneURL) {
   var leftBtn=document.createElement('div');
   if(!scene.prevURL && scene.pageNum===1){
     leftBtn.className='nav-btn'; leftBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>';
-    leftBtn.addEventListener('click',function(){ AboutManager.open(); });
+    leftBtn._navHandler=function(){ AboutManager.open(); }; leftBtn.addEventListener('click',leftBtn._navHandler);
   } else {
     leftBtn.className='nav-btn'+(scene.prevURL?'':' disabled');
     leftBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>';
@@ -2911,19 +2800,6 @@ function _buildMobileNav(scene, sceneURL) {
    S. 데스크탑 네비게이션 (square-frame 안에 삽입)
    ============================================================ */
 function _buildDesktopNav(sq, scene, sceneURL) {
-  /* 오토플레이 바 (상단 중앙) */
-  var apBar=document.createElement('div'); apBar.className='autoplay-bar';
-  var playBtn=document.createElement('div'); playBtn.className='autoplay-scene-btn'; playBtn.id='apScenePlayBtn';
-  playBtn.title=curLang==='KR'?'자동 감상':'Auto Play';
-  playBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
-  var stopBtn=document.createElement('div'); stopBtn.className='autoplay-scene-btn'; stopBtn.id='apSceneStopBtn';
-  stopBtn.title=curLang==='KR'?'자동 감상 중지':'Stop Auto Play';
-  stopBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
-  playBtn.addEventListener('click', function(){ AutoPlay.resumeFromBtn(); });
-  stopBtn.addEventListener('click', function(){ AutoPlay.stop(); apBar.classList.remove('ap-visible'); document.body.classList.remove('ap-peek'); });
-  apBar.appendChild(playBtn); apBar.appendChild(stopBtn);
-  sq.appendChild(apBar);
-
   /* 메뉴 버튼 */
   var mb=document.createElement('div'); mb.className='nav-menu nav-btn';
   mb.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>';
@@ -2957,7 +2833,7 @@ function _buildDesktopNav(sq, scene, sceneURL) {
       btn.setAttribute('data-tip', curLang==='KR'?(dir==='left'?'이전':'다음'):(dir==='left'?'Previous':'Next'));
       btn._navHandler = function(){ window.goTo(resolveURL(sceneURL,url),{direction:dir==='right'?'next':'prev'}); };
       btn.addEventListener('click', btn._navHandler);
-      btn.addEventListener('touchend', function(e){ e.preventDefault(); window.goTo(resolveURL(sceneURL,url),{direction:dir==='right'?'next':'prev'}); }, {passive:false});
+      btn.addEventListener('touchend', btn._navHandler, {passive:false});
       btn.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); window.goTo(resolveURL(sceneURL,url),{direction:dir==='right'?'next':'prev'}); } });
     }
     return btn;
