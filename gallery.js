@@ -1,5 +1,5 @@
 /* ================================================================
-   gallery.js — Vitro Narida MOL  VER_31
+   gallery.js — Vitro Narida MOL  VER_32
    SPA + 전체 UI 통합 (MOL_Spec + 백업 참조)
    ================================================================ */
 (function () {
@@ -30,6 +30,7 @@ html, body {
 #app {
   position: fixed; inset: 0;
   display: flex; flex-direction: column;
+  overflow: hidden;
 }
 .photo-area {
   position: relative;
@@ -681,8 +682,12 @@ font-size:16px; color: rgba(180,180,180,0.35); }
   word-break: keep-all;
   margin-bottom: 32px;
   font-family: "Nanum Pen Script", cursive;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.65), 0 0 8px rgba(0,0,0,0.4);
 }
 .scene-text.show { opacity: 1; transform: translateY(0); }
+@keyframes typeCursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+.type-wrap { display:inline; white-space:inherit; }
+.type-cursor { display:inline-block; width:0; height:1em; border-left:2px solid rgba(230,230,230,0.85); vertical-align:text-bottom; margin-left:2px; animation:typeCursorBlink 0.8s step-start infinite; }
 `;
 var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 /* CSS 변수 */
@@ -860,11 +865,15 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   display:flex; align-items:center; justify-content:center; text-align:center; padding:0;
   font-family:"Nanum Pen Script", cursive; font-size:clamp(24px, 2.5vw, 29px); line-height:1.75; color:#e6e6e6;
   opacity:0; transform: translateY(6px) translateZ(0); pointer-events:none; user-select:none; z-index:6; isolation:isolate;
-  white-space:nowrap; overflow:hidden; }
+  white-space:nowrap; overflow:hidden;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.65), 0 0 8px rgba(0,0,0,0.4); }
   .fog-text > *, .scene-text > *{ max-width:95%; display:inline-block; }
   .fog-text{ transition: opacity var(--fog-text-fade) ease, transform var(--fog-text-fade) ease; }
   .scene-text{ transition: opacity var(--scene-text-fade) ease, transform var(--scene-text-fade) ease; z-index:10; }
   .scene-text.long-text{ height:auto; white-space:pre-wrap; overflow:visible; }
+  @keyframes typeCursorBlink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+  .type-wrap { display:inline; white-space:inherit; }
+  .type-cursor { display:inline-block; width:0; height:1em; border-left:2px solid rgba(230,230,230,0.85); vertical-align:text-bottom; margin-left:2px; animation:typeCursorBlink 0.8s step-start infinite; }
   .hero.show-text .fog-text, .scene.show-text .scene-text{ opacity:0.92; transform: translateY(0) translateZ(0); }
   .scene.show-text .scene-text{ opacity:0.95; }
 
@@ -895,17 +904,6 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .scene-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000;
   opacity:0; transition: opacity var(--scene-hq-fade) ease; transform: translateZ(0); will-change: opacity; }
   .scene.hq-show .scene-img{ opacity:1; }
-
-  /* 그라데이션 */
-  .scene .square-frame::after{ content:""; position:absolute; left:0; right:0; bottom:0;
-  height: clamp(420px, 46%, 900px); opacity:0; pointer-events:none; z-index:9; background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.00) 72%);
-  transition: opacity var(--scene-text-fade) ease; }
-  .hero.show-text::after, .scene.show-text .square-frame::after{ opacity:1; }
-  body.ui-hide-all .square-frame::after,
-  .screen.hidden .square-frame::after{ opacity:0 !important; transition:none !important; }
-  /* prague/dreams: 그라데이션 제거, 텍스트를 ripple 위로 */
-  #pragueScreen .square-frame::after,
-  #dreamsScreen .square-frame::after{ display:none !important; }
 
   /* === RST 파도 배경 === */
   
@@ -942,8 +940,8 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   50%{opacity:0.9;transform:translate(-50%,-50%) scale(1.12)}}
   70%{transform:translate(-50%,-50%) scale(1.8);opacity:0}100%{transform:translate(-50%,-50%) scale(1.8);opacity:0}}
   
-  #pragueScreen .scene-text,
-  #dreamsScreen .scene-text{ z-index:20 !important; }
+  #LPL_03Screen .scene-text,
+  #LPL_04Screen .scene-text{ z-index:20 !important; }
 
   /* 오버레이 공통 */
   .overlay-panel{ position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center;
@@ -1461,33 +1459,33 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
    B. DATA
    ============================================================ */
 var SCENES_ALL = [
-  {id:"fog",      code:"LPL#01",kr:"안개가 휘감은 세상에",                      en:"In a world wrapped in fog",                               file:"LPL_01"},
+  {id:"LPL_01",   code:"LPL#01",kr:"안개가 휘감은 세상에",                      en:"In a world wrapped in fog",                               file:"LPL_01"},
   {id:"LPL_02",   code:"LPL#02",kr:"당신의 온기가 스며들면",                    en:"When your warmth seeps in",  file:"LPL_02"},
   {id:"LPL_03",   code:"LPL#03",kr:"세상은 본연의 모습을 되찾고",               en:"The world regains its true colors",                    file:"LPL_03"},
-  {id:"dreams",   code:"LPL#04",kr:"그 품안에서 사랑의 꿈이 일렁입니다",        en:"In that embrace, dreams of love ripple",           file:"LPL_04"},
-  {id:"dreams00", code:"LDR#00",kr:"사랑의 꿈은",                              en:"Dreams of love",                                       file:"LDR_00"},
-  {id:"dreams01", code:"LDR#11",kr:"이끌림을 따라",                            en:"Following the pull",                                   file:"LDR_11"},
-  {id:"dreams02", code:"LDR#21",kr:"설렘에 실려",                              en:"Carried by excitement",                                file:"LDR_21"},
-  {id:"dreams03", code:"LDR#31",kr:"그리움과 함께 넓어지며",                   en:"Expanding with longing",                               file:"LDR_31"},
-  {id:"dreams04", code:"LDR#41",kr:"애틋함으로 깊어져",                        en:"Deepening with tenderness",                            file:"LDR_41"},
-  {id:"dreams05", code:"LDR#51",kr:"행복의 바다에 이르고",                     en:"Reaching the sea of happiness",                        file:"LDR_51"},
-  {id:"song01",   code:"LSN#01",kr:"사랑의 노래가 되어",                       en:"Becoming a song of love",                              file:"LSN_01"},
-  {id:"song02",   code:"LSN#02",kr:"당신만을 바라고 또 바라 봅니다",            en:"I gaze at you, and gaze again",                        file:"LSN_02"},
-  {id:"song03",   code:"LSN#03",kr:"어제, 오늘 그리고 내일",                   en:"Yesterday, today, and tomorrow",                       file:"LSN_03"},
-  {id:"song04",   code:"LSN#04",kr:"하루의 모든 순간",                         en:"Every moment of the day",                              file:"LSN_04"},
-  {id:"song05",   code:"LSN#05",kr:"잠 못 이루는 밤",                          en:"Sleepless nights",                                     file:"LSN_05"},
-  {id:"song06",   code:"LSN#06",kr:"꿈속에서도",                               en:"Even in dreams",                                       file:"LSN_06"},
-  {id:"song07",   code:"LSN#07",kr:"내가 머물고 싶은 공간",                    en:"The space I want to dwell",                            file:"LSN_07"},
-  {id:"song08",   code:"LSN#08",kr:"끝없이 샘솟는 기쁨",                       en:"Endlessly springing joy",                              file:"LSN_08"},
-  {id:"song09",   code:"LSN#09",kr:"마음을 울리는 노래 속에도",                en:"Even in songs that move my heart",                     file:"LSN_09"},
-  {id:"song10",   code:"LSN#10",kr:"언제나 당신이 있습니다",                   en:"You are always there",                                 file:"LSN_10"},
-  {id:"song11",   code:"LSN#11",kr:"당신의",                                   en:"Your",                                                 file:"LSN_11"},
-  {id:"song12",   code:"LSN#12",kr:"해맑은 미소와 따스한 온기에",              en:"Pure smile and warm embrace",                          file:"LSN_12"},
-  {id:"song13",   code:"LSN#13",kr:"모든 순간이 낙원이 되고",                  en:"Every moment becomes paradise",                        file:"LSN_13"},
-  {id:"song14",   code:"LSN#14",kr:"온 세상이 사랑으로 물들면",                en:"When the whole world is tinted with love",             file:"LSN_14"},
-  {id:"song15",   code:"LSN#15",kr:"나는 당신의 사랑안에서",                   en:"In your love",                                         file:"LSN_15"},
-  {id:"song16",   code:"LSN#16",kr:"새로이 태어납니다",                        en:"I am born anew",                                       file:"LSN_16"},
-  {id:"LEL_01", code:"LEL#01",kr:"사랑이 감싸 안은 세상,\n세상도 내 마음도 사랑으로 가득합니다",                    en:"A world embraced by love,\nthe world and my heart are filled with love",                             file:"LEL_01"},
+  {id:"LPL_04",   code:"LPL#04",kr:"그 품안에서 사랑의 꿈이 일렁입니다",        en:"In that embrace, dreams of love ripple",           file:"LPL_04"},
+  {id:"LDR_00",   code:"LDR#00",kr:"사랑의 꿈은",                              en:"Dreams of love",                                       file:"LDR_00"},
+  {id:"LDR_11",   code:"LDR#11",kr:"이끌림을 따라",                            en:"Following the pull",                                   file:"LDR_11"},
+  {id:"LDR_21",   code:"LDR#21",kr:"설렘에 실려",                              en:"Carried by excitement",                                file:"LDR_21"},
+  {id:"LDR_31",   code:"LDR#31",kr:"그리움과 함께 넓어지며",                   en:"Expanding with longing",                               file:"LDR_31"},
+  {id:"LDR_41",   code:"LDR#41",kr:"애틋함으로 깊어져",                        en:"Deepening with tenderness",                            file:"LDR_41"},
+  {id:"LDR_51",   code:"LDR#51",kr:"행복의 바다에 이르고",                     en:"Reaching the sea of happiness",                        file:"LDR_51"},
+  {id:"LSN_01",   code:"LSN#01",kr:"사랑의 노래가 되어",                       en:"Becoming a song of love",                              file:"LSN_01"},
+  {id:"LSN_02",   code:"LSN#02",kr:"당신만을 바라고 또 바라 봅니다",            en:"I gaze at you, and gaze again",                        file:"LSN_02"},
+  {id:"LSN_03",   code:"LSN#03",kr:"어제, 오늘 그리고 내일",                   en:"Yesterday, today, and tomorrow",                       file:"LSN_03"},
+  {id:"LSN_04",   code:"LSN#04",kr:"하루의 모든 순간",                         en:"Every moment of the day",                              file:"LSN_04"},
+  {id:"LSN_05",   code:"LSN#05",kr:"잠 못 이루는 밤",                          en:"Sleepless nights",                                     file:"LSN_05"},
+  {id:"LSN_06",   code:"LSN#06",kr:"꿈속에서도",                               en:"Even in dreams",                                       file:"LSN_06"},
+  {id:"LSN_07",   code:"LSN#07",kr:"내가 머물고 싶은 공간",                    en:"The space I want to dwell",                            file:"LSN_07"},
+  {id:"LSN_08",   code:"LSN#08",kr:"끝없이 샘솟는 기쁨",                       en:"Endlessly springing joy",                              file:"LSN_08"},
+  {id:"LSN_09",   code:"LSN#09",kr:"마음을 울리는 노래 속에도",                en:"Even in songs that move my heart",                     file:"LSN_09"},
+  {id:"LSN_10",   code:"LSN#10",kr:"언제나 당신이 있습니다",                   en:"You are always there",                                 file:"LSN_10"},
+  {id:"LSN_11",   code:"LSN#11",kr:"당신의",                                   en:"Your",                                                 file:"LSN_11"},
+  {id:"LSN_12",   code:"LSN#12",kr:"해맑은 미소와 따스한 온기에",              en:"Pure smile and warm embrace",                          file:"LSN_12"},
+  {id:"LSN_13",   code:"LSN#13",kr:"모든 순간이 낙원이 되고",                  en:"Every moment becomes paradise",                        file:"LSN_13"},
+  {id:"LSN_14",   code:"LSN#14",kr:"온 세상이 사랑으로 물들면",                en:"When the whole world is tinted with love",             file:"LSN_14"},
+  {id:"LSN_15",   code:"LSN#15",kr:"나는 당신의 사랑안에서",                   en:"In your love",                                         file:"LSN_15"},
+  {id:"LSN_16",   code:"LSN#16",kr:"새로이 태어납니다",                        en:"I am born anew",                                       file:"LSN_16"},
+  {id:"LEL_01",   code:"LEL#01",kr:"사랑이 감싸 안은 세상,\n세상도 내 마음도 사랑으로 가득합니다",                    en:"A world embraced by love,\nthe world and my heart are filled with love",                             file:"LEL_01"},
 ];
 
 var INDEX_ROWS = [
@@ -1658,10 +1656,44 @@ function extractScene(html) {
   return (new Function('return ' + m[1]))();
 }
 
+/* 씬 데이터 캐시 — 한 번 로드한 씬은 재요청 없이 즉시 반환 (진짜 SPA) */
+var _sceneCache = {};
+
+/* 현재 씬이 THIS_SCENE으로 직접 접근된 경우 캐시에 선등록 */
+(function() {
+  if (window.THIS_SCENE && window.THIS_SCENE.id) {
+    var key = (location.pathname || location.href).split('?')[0];
+    _sceneCache[key] = window.THIS_SCENE;
+  }
+})();
+
 function fetchScene(url) {
+  var key = url.split('?')[0];
+  if (_sceneCache[key]) return Promise.resolve(_sceneCache[key]);
   return fetch(url)
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
-    .then(function(html){ return extractScene(html); });
+    .then(function(html){
+      var scene = extractScene(html);
+      _sceneCache[key] = scene;
+      return scene;
+    });
+}
+
+/* 다음 씬 백그라운드 프리로드 — 씬 로드 1초 후 next/prev 미리 캐싱 */
+function _preloadAdjacentScenes(scene, sceneURL) {
+  if (!scene) return;
+  var urls = [];
+  if (scene.nextURL) urls.push(resolveURL(sceneURL, scene.nextURL));
+  if (scene.prevURL) urls.push(resolveURL(sceneURL, scene.prevURL));
+  urls.forEach(function(u) {
+    if (!u || _sceneCache[u.split('?')[0]]) return;
+    setTimeout(function() {
+      fetch(u)
+        .then(function(r){ return r.ok ? r.text() : null; })
+        .then(function(html){ if (html) _sceneCache[u.split('?')[0]] = extractScene(html); })
+        .catch(function(){});
+    }, 1000);
+  });
 }
 
 /* ============================================================
@@ -1695,7 +1727,6 @@ function injectCSS() {
     /* fog canvas SPA */
     '#fog-canvas{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 2000ms ease;}',
     '#fog-canvas.active{opacity:1;}',
-    '@keyframes sceneCurBlink{0%,100%{opacity:1}50%{opacity:0}}',
   ].join('\n');
   document.head.appendChild(extra);
 }
@@ -1955,7 +1986,7 @@ function ensureSPAOverlays() {
   }
   if (!$id('white-overlay')) {
     var w = document.createElement('div'); w.id='white-overlay';
-    w.style.cssText='position:fixed;inset:0;background:#fff;pointer-events:none;opacity:0;z-index:8100;';
+    w.style.cssText='position:fixed;width:100vmin;height:100vmin;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;pointer-events:none;opacity:0;z-index:8100;';
     document.body.appendChild(w);
   }
 }
@@ -1975,7 +2006,9 @@ window.goTo = function(url, opts) {
   if (!url) return;
   opts = opts || {};
   var direction = opts.direction || 'next';
+  S._transDirection = opts.direct ? 'none' : direction;
   S._navigating = true;
+  S._wasPaused = AutoPlay.isActive() && AutoPlay.isPaused();
   AutoPlay.onSceneChange();
 
   /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우 */
@@ -1992,6 +2025,16 @@ window.goTo = function(url, opts) {
 };
 
 function _applyScene(url, scene) {
+  _ensureAppReady(); /* index.html SPA 최초 진입 시 갤러리 DOM 생성 */
+  /* 데스크탑 인트로 canvas fade-out */
+  var introCv = document.getElementById('_introCanvas');
+  if (introCv) {
+    setTimeout(function() {
+      introCv.style.transition = 'opacity 800ms ease';
+      introCv.style.opacity = '0';
+      setTimeout(function() { if (introCv.parentNode) introCv.parentNode.removeChild(introCv); }, 850);
+    }, 100);
+  }
   /* 모든 오버레이 즉시 닫기 */
   ['tocOverlay','thumbOverlay','sceneListOverlay','aboutOverlay','poemOverlay','helpOverlay','introOverlay','gbOverlay'].forEach(function(id){
     var el = document.getElementById(id);
@@ -2002,8 +2045,11 @@ function _applyScene(url, scene) {
   sceneURL_       = url;
   history.pushState({ url:url }, '', url);
   renderScene(scene, url);
+  /* 다음/이전 씬 백그라운드 프리로드 */
+  _preloadAdjacentScenes(scene, url);
   /* 오토플레이 중 nav-bar 업데이트 — 모바일은 fade in 완료 후 */
-  if(AutoPlay.isActive()) setTimeout(function(){ AutoPlay.updateNavBar(); }, isMobile ? 2100 : 50);
+  if(S._wasPaused){ S._wasPaused=false; if(AutoPlay.isActive()) AutoPlay.pauseAP(); }
+  if(AutoPlay.isActive()) setTimeout(function(){ AutoPlay.updateNavBar(); }, isMobile ? 400 : 3100);
 }
 
 /* ============================================================
@@ -2017,8 +2063,8 @@ function _stanzaTransition(destURL) {
 
   /* t=1000: 텍스트 산화 + 입자 산개 */
   setTimeout(function() {
-    var cursor = textEl.querySelector('.scene-cursor');
-    if (cursor) { cursor.style.animation='none'; cursor.style.opacity='0'; }
+    var cursor = null; /* ::after 방식으로 교체 — span 없음 */
+    textEl.classList.remove('typing');
     textEl.style.transition = 'opacity 900ms ease,filter 900ms ease';
     textEl.style.filter = 'blur(3px)'; textEl.style.opacity = '0';
     _stanzaSpawnParticles(app, textEl, function() { _stanzaGoToDest(destURL); });
@@ -2026,15 +2072,39 @@ function _stanzaTransition(destURL) {
 }
 
 function _stanzaGoToDest(destURL) {
-  /* RST fetch 없이 목적지로 직행 */
-  fetchScene(destURL).then(function(destScene) {
-    ensureSPAOverlays();
-    var o = $id('trans-overlay'); o.style.transition='none'; o.style.opacity='1'; o.offsetHeight;
-    _applyScene(destURL, destScene);
-    setTimeout(function(){ transOverlay(0,300); S._navigating=false; }, 80);
-  }).catch(function(){ S._navigating=false; location.href=destURL; });
-}
+  /* 스탄자 전환: Fade to Black (정사각형 기준, 모바일은 photo-area 기준) */
+  var app = $id('app');
+  var sq = app && (app.querySelector('.square-frame') || app.querySelector('.photo-area'));
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity 2000ms ease;';
+  if (sq) sq.appendChild(overlay);
 
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    overlay.style.opacity = '1';
+    setTimeout(function(){
+      /* 2000ms fadeIn + 2000ms 정지 후 씬 교체 */
+      fetchScene(destURL).then(function(destScene) {
+        ensureSPAOverlays();
+        S._transDirection = 'none';
+        _applyScene(destURL, destScene);
+        S._navigating = false;
+        /* app.innerHTML='' 로 overlay 소멸 → 새 컨테이너에 재부착 후 fadeOut */
+        var newApp = $id('app');
+        var newSq = newApp && (newApp.querySelector('.square-frame') || newApp.querySelector('.photo-area'));
+        if (newSq) {
+          overlay.style.transition = 'none';
+          overlay.style.opacity = '1';
+          newSq.appendChild(overlay);
+          requestAnimationFrame(function(){ requestAnimationFrame(function(){
+            overlay.style.transition = 'opacity 4000ms ease';
+            overlay.style.opacity = '0';
+            setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 4000);
+          }); });
+        }
+      }).catch(function(){ S._navigating=false; location.href=destURL; });
+    }, 4000);
+  }); });
+}
 function _stanzaSpawnParticles(app, textEl, done) {
   var sq = app.querySelector('.square-frame') || app;
 
@@ -2044,8 +2114,7 @@ function _stanzaSpawnParticles(app, textEl, done) {
 
   /* 텍스트/커서 위치 (square-frame 기준 상대좌표) */
   var txtR = textEl.getBoundingClientRect();
-  var cursor = textEl.querySelector('.scene-cursor');
-  var curR = cursor ? cursor.getBoundingClientRect() : txtR;
+  var curR = txtR; /* ::after 방식 — span 없으므로 텍스트 영역 기준 사용 */
 
   var flyStartX = curR.left - sqR.left + curR.width / 2;
   var flyStartY = curR.top  - sqR.top  + curR.height / 2;
@@ -2178,24 +2247,122 @@ var sceneURL_ = '';
 
 function renderScene(scene, sceneURL) {
   if (S._fogRAF)    { cancelAnimationFrame(S._fogRAF);    S._fogRAF=null; }
+  S._typingToken = (S._typingToken || 0) + 1;
   var app = $id('app'); if (!app) return;
 
-  /* sceneURL_ 동기화 */
   sceneURL_ = sceneURL;
 
-  /* app 내 씬 콘텐츠 초기화 */
-  app.innerHTML = '';
-
+  var transDir = S._transDirection || 'next';
+  S._transDirection = null;
+  var SLIDE_MS = 3000;
   var imgSrc = resolveURL(sceneURL, scene.imgSrc);
+  var isLSN = scene.id && scene.id.indexOf('LSN') === 0;
 
-  if      (scene.type==='fog')    renderFogScene(app, scene, imgSrc, sceneURL);
-  else                             renderPhotoScene(app, scene, imgSrc, sceneURL);
+  if (transDir === 'none') {
+    /* 즉시 전환 (direct 이동 / fog씬 모바일) */
+    _renderImmediate(app, scene, imgSrc, sceneURL);
+
+  } else if (isLSN) {
+    /* LSN: Fade to Black — 모바일/데스크탑 공통 */
+    var oldContainer = _getSceneContainer(app);
+    _doFadeToBlack(oldContainer, 2000, function() {
+      _renderImmediate(app, scene, imgSrc, sceneURL, true);
+      var newContainer = _getSceneContainer(app);
+      _doFadeFromBlack(newContainer, 4000);
+    });
+
+  } else if (!isMobile) {
+    /* 데스크탑: Stacking 슬라이드 */
+    var oldEl = app.firstElementChild || null;
+    var tmpDiv = document.createElement('div');
+    tmpDiv.style.cssText = 'position:fixed;inset:0;visibility:hidden;';
+    app.appendChild(tmpDiv);
+    if (scene.type==='fog') renderFogScene(tmpDiv, scene, imgSrc, sceneURL, true);
+    else                    renderPhotoScene(tmpDiv, scene, imgSrc, sceneURL, true);
+    var newEl = tmpDiv.firstElementChild;
+    if (newEl) { tmpDiv.removeChild(newEl); app.removeChild(tmpDiv); }
+    else       { app.removeChild(tmpDiv); app.innerHTML=''; }
+
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      var oldSq  = oldEl ? oldEl.querySelector('.square-frame') : null;
+      var newSq  = newEl ? newEl.querySelector('.square-frame') : null;
+      var newImg = newSq ? (newSq.querySelector('img.scene-img') || newSq.querySelector('#fogHq')) : null;
+
+      if (!oldSq || !newImg) {
+        app.innerHTML = '';
+        if (newEl) app.appendChild(newEl);
+        return;
+      }
+
+      var oldTexts = oldEl ? oldEl.querySelectorAll('.scene-text,.fog-text,.long-text,.work-code') : [];
+      Array.prototype.forEach.call(oldTexts, function(el){ el.style.transition='none'; el.style.opacity='0'; });
+      var newTxt = newEl ? (newEl.querySelector('.scene-text') || newEl.querySelector('.fog-text') || newEl.querySelector('.long-text')) : null;
+      if (newTxt) { newTxt.textContent=''; newTxt.style.opacity='0'; }
+
+      var xIn  = transDir === 'next' ? '100%' : '-100%';
+      var newRipple = newSq ? (newSq.querySelector('[data-ripple-el-prague]') || newSq.querySelector('[data-ripple-el]')) : null;
+
+      var oldTrack = document.createElement('div');
+      oldTrack.style.cssText = 'position:absolute;inset:0;z-index:1;';
+      var newTrack = document.createElement('div');
+      newTrack.style.cssText = 'position:absolute;inset:0;z-index:2;transform:translateX('+xIn+');';
+
+      var navBtns = [];
+      Array.prototype.forEach.call(oldSq.querySelectorAll('.nav-btn'), function(el){ navBtns.push(el); });
+      while (oldSq.firstChild) { oldTrack.appendChild(oldSq.firstChild); }
+      navBtns.forEach(function(el){ oldSq.appendChild(el); });
+
+      var newGrad = newSq ? newSq.querySelector('.scene-grad-bottom') : null;
+      newImg.style.transition = 'none'; newImg.style.opacity = '1'; newImg.style.transform = '';
+      newTrack.appendChild(newImg);
+      if (newGrad) newTrack.appendChild(newGrad);
+      if (newRipple) { newRipple.style.transition='none'; newRipple.style.transform=''; newTrack.appendChild(newRipple); }
+
+      oldSq.appendChild(oldTrack);
+      oldSq.appendChild(newTrack);
+      void newTrack.offsetHeight;
+
+      var trStack = 'transform '+SLIDE_MS+'ms cubic-bezier(0.0,0.0,0.2,1)';
+      newTrack.style.transition = trStack; newTrack.style.transform = 'translateX(0)';
+
+      setTimeout(function(){
+        app.innerHTML = '';
+        if (newEl) {
+          newImg.style.transition = 'none'; newImg.style.transform = ''; newImg.style.opacity = '1';
+          if (newRipple) { newRipple.style.transition=''; newRipple.style.transform=''; newSq.appendChild(newRipple); }
+          newSq.style.removeProperty('--scene-text-fade');
+          while (newTrack.firstChild) { newSq.appendChild(newTrack.firstChild); }
+          var newWrap = newEl.classList.contains('screen') ? newEl : newEl.querySelector('.screen');
+          if (newWrap) { newWrap.classList.add('hq-show','nav-ready'); }
+          app.appendChild(newEl);
+          _initRippleForScene(newImg, newSq, scene);
+          var txt = newEl.querySelector('.scene-text') || newEl.querySelector('.fog-text') || newEl.querySelector('.long-text');
+          if (txt) {
+            txt.textContent = ''; txt.style.opacity = ''; txt.classList.add('show');
+            function startTypingAfterImgLoad() {
+              setTimeout(function(){
+                if (newWrap) newWrap.classList.add('show-text');
+                _startSceneTyping(txt, scene, sceneURL);
+              }, 400);
+            }
+            if (newImg.complete && newImg.naturalWidth > 0) startTypingAfterImgLoad();
+            else {
+              newImg.addEventListener('load',  startTypingAfterImgLoad, {once:true});
+              newImg.addEventListener('error', startTypingAfterImgLoad, {once:true});
+            }
+          }
+        }
+      }, SLIDE_MS);
+    }); });
+
+  } else {
+    /* 모바일: 슬라이드 */
+    _mobileSlide(app, scene, imgSrc, sceneURL, transDir);
+  }
 
   _bindSceneInput(scene, sceneURL);
   _updateTOCCurrent(scene);
 
-
-  /* 인트로에서 자동 모드 버튼으로 진입한 경우 AutoPlay 자동 시작 */
   try {
     if (sessionStorage.getItem('mol_autoplay_start') === '1') {
       sessionStorage.removeItem('mol_autoplay_start');
@@ -2203,9 +2370,9 @@ function renderScene(scene, sceneURL) {
     }
   } catch(e) {}
 
-  /* viewport 높이 */
   document.documentElement.style.setProperty('--vh100', window.innerHeight+'px');
 }
+
 
 function _updateTOCCurrent(scene) {
   var sec = scene.tocSection || '';
@@ -2286,45 +2453,34 @@ var AutoPlay = (function(){
   }
 
   function _updateNavBar(){
-    /* 모바일: .nav-bar 안 1~4번 버튼 */
-    var leftBtn  = document.querySelector('.nav-bar .nav-btn:nth-child(1)');
-    var rightBtn = document.querySelector('.nav-bar .nav-btn:nth-child(4)');
-    /* 데스크탑: .nav-left / .nav-right */
-    var dLeft  = document.querySelector('.nav-left');
-    var dRight = document.querySelector('.nav-right');
+    /* 모바일: .nav-bar 좌/우버튼, 데스크탑: .nav-left/.nav-right — 동일 로직 적용 */
+    var btns = [
+      { el: document.querySelector('.nav-bar .nav-btn:nth-child(1)'), sz: 26, side: 'left'  },
+      { el: document.querySelector('.nav-bar .nav-btn:nth-child(4)'), sz: 26, side: 'right' },
+      { el: document.querySelector('.nav-left'),                       sz: 28, side: 'left'  },
+      { el: document.querySelector('.nav-right'),                      sz: 28, side: 'right' }
+    ];
 
-    if(_active){
+    if (_active) {
       var pauseResume = function(e){ e.stopPropagation(); _paused ? _resumeAP() : _pauseAP(); };
-      var doStop = function(e){ e.stopPropagation(); stop(); };
-
-      /* 모바일 좌/우 */
-      if(leftBtn){
-        leftBtn.innerHTML = _svg(26, _paused ? _P_PLAY : _P_PAUSE);
-        leftBtn.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
-        _apBtn(leftBtn, leftBtn._navHandler, pauseResume);
-      }
-      if(rightBtn){
-        rightBtn.innerHTML = _svg(26, _P_STOP);
-        rightBtn.style.color = 'rgba(212,175,55,0.7)';
-        _apBtn(rightBtn, rightBtn._navHandler, doStop);
-      }
-      /* 데스크탑 좌/우 */
-      if(dLeft){
-        dLeft.innerHTML = _svg(28, _paused ? _P_PLAY : _P_PAUSE);
-        dLeft.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
-        _apBtn(dLeft, dLeft._navHandler, pauseResume);
-      }
-      if(dRight){
-        dRight.innerHTML = _svg(28, _P_STOP);
-        dRight.style.color = 'rgba(212,175,55,0.7)';
-        _apBtn(dRight, dRight._navHandler, doStop);
-      }
+      var doStop      = function(e){ e.stopPropagation(); stop(); };
+      btns.forEach(function(b) {
+        if (!b.el) return;
+        if (b.side === 'left') {
+          b.el.innerHTML = _svg(b.sz, _paused ? _P_PLAY : _P_PAUSE);
+          b.el.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
+          _apBtn(b.el, b.el._navHandler, pauseResume);
+        } else {
+          b.el.innerHTML = _svg(b.sz, _P_STOP);
+          b.el.style.color = 'rgba(212,175,55,0.7)';
+          _apBtn(b.el, b.el._navHandler, doStop);
+        }
+      });
     } else {
-      /* 원복 */
-      if(leftBtn)  _restoreBtn(leftBtn,  _P_LARR, 26);
-      if(rightBtn) _restoreBtn(rightBtn, _P_RARR, 26);
-      if(dLeft)    _restoreBtn(dLeft,    _P_LARR, 28);
-      if(dRight)   _restoreBtn(dRight,   _P_RARR, 28);
+      btns.forEach(function(b) {
+        if (!b.el) return;
+        _restoreBtn(b.el, b.side === 'left' ? _P_LARR : _P_RARR, b.sz);
+      });
     }
   }
 
@@ -2337,7 +2493,7 @@ var AutoPlay = (function(){
     if(scene.id === LAST_SCENE_ID){ stop(); return; }
     clearTimeout(_timer);
     if(_paused) return; /* pause 중이면 타이머 시작 안 함 */
-    var delay = (scene.code && scene.code.indexOf('LPL') === 0) ? LPL_DELAY_MS : DELAY_MS;
+    var delay = LPL_DELAY_MS;
     _timer = setTimeout(function(){
       if(!_active || _paused) return;
       if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
@@ -2373,6 +2529,7 @@ var AutoPlay = (function(){
   }
 
   function isActive(){ return _active; }
+  function isPaused(){ return _paused; }
 
   function _updateTocBtn(on){
     var btn = document.getElementById('tocAutoPlayBtn');
@@ -2384,15 +2541,152 @@ var AutoPlay = (function(){
   }
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
-           onTypingDone:onTypingDone, onSceneChange:onSceneChange,
+           isPaused:isPaused, onTypingDone:onTypingDone, onSceneChange:onSceneChange,
            updateNavBar:_updateNavBar, pauseAP:_pauseAP };
 })();
 
 
 /* ============================================================
+   K-0. 씬 공통 헬퍼
+   ============================================================ */
+
+/* 하단 그라디언트 alpha — LPL 시리즈 0.22, 나머지 0.45 */
+function _gradAlpha(scene) {
+  return (scene.id && scene.id.indexOf('LPL') === 0) ? '0.22' : '0.45';
+}
+
+/* ripple 효과 초기화 — LPL_03(하단 물결), LPL_04(상단 물결) */
+function _initRippleForScene(img, container, scene) {
+  if (scene.id === 'prague' || scene.id === 'LPL_03') _initRipple(img, container);
+  else if (scene.id === 'dreams' || scene.id === 'LPL_04') _initRippleTop(img, container);
+}
+
+/* ============================================================
+   K-0-1. 씬 전환 공통 헬퍼
+   ============================================================ */
+
+/* 플랫폼별 씬 컨테이너 반환 — 데스크탑: square-frame, 모바일: photo-area */
+function _getSceneContainer(app) {
+  return app.querySelector('.square-frame') || app.querySelector('.photo-area') || null;
+}
+
+/* 즉시 전환 — 플랫폼 공통. fadeIn=true 시 모바일 opacity 페이드 적용 */
+function _renderImmediate(app, scene, imgSrc, sceneURL, fadeIn) {
+  app.innerHTML = '';
+  if (scene.type==='fog') renderFogScene(app, scene, imgSrc, sceneURL);
+  else                    renderPhotoScene(app, scene, imgSrc, sceneURL);
+  if (fadeIn && isMobile) {
+    var el = app.firstElementChild;
+    if (el) {
+      el.style.opacity = '0';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        el.style.transition = 'opacity 250ms ease';
+        el.style.opacity = '1';
+      }); });
+    }
+  }
+}
+
+/* Fade to Black — container를 검정으로 덮고 fadeInMs 후 onDone 호출 */
+function _doFadeToBlack(container, fadeInMs, onDone) {
+  if (!container) { if (onDone) onDone(); return; }
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity '+fadeInMs+'ms ease;';
+  container.appendChild(overlay);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    overlay.style.opacity = '1';
+    setTimeout(function(){
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (onDone) onDone();
+    }, fadeInMs);
+  }); });
+}
+
+/* Fade from Black — container 위에 검정 overlay를 얹고 fadeOutMs에 걸쳐 사라짐 */
+function _doFadeFromBlack(container, fadeOutMs) {
+  if (!container) return;
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;inset:0;background:#000;opacity:1;z-index:9999;pointer-events:none;transition:none;';
+  container.appendChild(overlay);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    overlay.style.transition = 'opacity '+fadeOutMs+'ms ease';
+    overlay.style.opacity = '0';
+    setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, fadeOutMs);
+  }); });
+}
+
+/* ============================================================
+   K-1. _mobileSlide — 모바일 슬라이드 전환
+   photo-area: 슬라이드, control-area: 페이드
+   ============================================================ */
+function _mobileSlide(app, scene, imgSrc, sceneURL, transDir) {
+  var MOB_SLIDE_MS  = 400;
+  var oldPhotoArea  = app.querySelector('.photo-area');
+  var oldCtrlArea   = app.querySelector('.control-area');
+
+  /* 새 씬을 숨겨진 tmpDiv에 렌더 (skipTyping=true — 슬라이드 완료 후 시작) */
+  var mTmpDiv = document.createElement('div');
+  mTmpDiv.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none;';
+  document.body.appendChild(mTmpDiv);
+  renderPhotoScene(mTmpDiv, scene, imgSrc, sceneURL, true);
+  var newPhotoArea = mTmpDiv.querySelector('.photo-area');
+  var newCtrlArea  = mTmpDiv.querySelector('.control-area');
+  if (newPhotoArea) mTmpDiv.removeChild(newPhotoArea);
+  if (newCtrlArea)  mTmpDiv.removeChild(newCtrlArea);
+  document.body.removeChild(mTmpDiv);
+
+  if (!oldPhotoArea || !newPhotoArea) {
+    /* fallback: 즉시 전환 */
+    app.innerHTML = '';
+    renderPhotoScene(app, scene, imgSrc, sceneURL);
+    return;
+  }
+
+  var xIn  = transDir === 'next' ? '100%' : '-100%';
+  var xOut = transDir === 'next' ? '-100%' : '100%';
+
+  /* photo-area 안에 두 트랙 구성 */
+  var mTrackWrap = document.createElement('div');
+  mTrackWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;z-index:1;';
+  var mOldTrack = document.createElement('div');
+  mOldTrack.style.cssText = 'position:absolute;inset:0;';
+  var mNewTrack = document.createElement('div');
+  mNewTrack.style.cssText = 'position:absolute;inset:0;transform:translateX('+xIn+');';
+
+  while (oldPhotoArea.firstChild) mOldTrack.appendChild(oldPhotoArea.firstChild);
+  while (newPhotoArea.firstChild) mNewTrack.appendChild(newPhotoArea.firstChild);
+  mTrackWrap.appendChild(mOldTrack);
+  mTrackWrap.appendChild(mNewTrack);
+  oldPhotoArea.appendChild(mTrackWrap);
+
+  /* control-area 페이드아웃 */
+  /* 컨트롤 영역은 fade 없이 교체 — photo-area 슬라이드 중 자연스럽게 처리됨 */
+
+  void mNewTrack.offsetHeight;
+  var trM = 'transform '+MOB_SLIDE_MS+'ms cubic-bezier(0.0,0.0,0.2,1)';
+  mOldTrack.style.transition = trM; mOldTrack.style.transform = 'translateX('+xOut+')';
+  mNewTrack.style.transition = trM; mNewTrack.style.transform = 'translateX(0)';
+
+  setTimeout(function(){
+    /* 슬라이드 완료 — mNewTrack 안의 요소를 그대로 재사용 (이미지 재로드 없음) */
+    app.innerHTML = '';
+
+    /* newPhotoArea 복원: mNewTrack 자식들을 다시 newPhotoArea로 이동 */
+    while (mNewTrack.firstChild) newPhotoArea.appendChild(mNewTrack.firstChild);
+    app.appendChild(newPhotoArea);
+
+    /* control-area 새로 빌드 + 타이핑 시작 */
+    var newCtrl = _buildMobileNav(scene, sceneURL);
+    app.appendChild(newCtrl);
+    var ta = newCtrl.querySelector('.scene-text');
+    if (ta) _startSceneTyping(ta, scene, sceneURL);
+  }, MOB_SLIDE_MS);
+}
+
+/* ============================================================
    L. renderFogScene()
    ============================================================ */
-function renderFogScene(app, scene, imgSrc, sceneURL) {
+function renderFogScene(app, scene, imgSrc, sceneURL, skipTyping) {
   if (isMobile) {
     var photoArea = document.createElement('div');
     photoArea.className='photo-area'; photoArea.id='mPhotoArea';
@@ -2405,9 +2699,12 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
     lqip.className='scene-img'; lqip.style.filter='blur(12px)'; lqip.style.transform='scale(1.08)';
     lqip.src=imgSrc.replace(/\.webp$/, '_lqip.webp');
     var hqImg=document.createElement('img'); hqImg.className='scene-img'; hqImg.id='fogHq'; hqImg.alt='';
+    var mFogGrad=document.createElement('div');
+    mFogGrad.style.cssText='position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.45));pointer-events:none;z-index:15;';
     photoArea.appendChild(lqip); photoArea.appendChild(hqImg);
     photoArea.appendChild(fogAtmo); photoArea.appendChild(fogAtmo2);
     photoArea.appendChild(fogTint); photoArea.appendChild(fogEl);
+    photoArea.appendChild(mFogGrad);
     app.appendChild(photoArea);
     app.appendChild(_buildMobileNav(scene, sceneURL));
     hqImg.onload=function(){
@@ -2415,8 +2712,10 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
       hqImg.classList.add('show');
       setTimeout(function(){ FogFX.bind(fogEl); FogFX.start(); },600);
       setTimeout(function(){
-        var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
+        if (!skipTyping) {
+          var ta=app.querySelector('.scene-text');
+          if(ta) _startSceneTyping(ta, scene, sceneURL);
+        }
       },400);
     };
     hqImg.src=imgSrc;
@@ -2433,8 +2732,11 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
     var fogNoiseD=document.createElement('div'); fogNoiseD.className='fog'; fogNoiseD.id='fogNoise'; fogNoiseD.setAttribute('aria-hidden','true');
     _makeFogCanvas(fogNoiseD);
     var fogTxtEl=document.createElement('div'); fogTxtEl.className='fog-text long-text'; fogTxtEl.id='fogText';
+    var dFogGrad=document.createElement('div');
+    dFogGrad.className='scene-grad-bottom';
+    dFogGrad.style.cssText='position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(to bottom,transparent,rgba(0,0,0,0.45));pointer-events:none;z-index:5;';
     /* fog 텍스트는 show-text 클래스 후 타이핑으로 등장 */
-    hero.append(bgLqip,bgHq,overlay,fogAtmoD,fogAtmo2D,fogNoiseD,fogTxtEl);
+    hero.append(bgLqip,bgHq,overlay,fogAtmoD,fogAtmo2D,fogNoiseD,dFogGrad,fogTxtEl);
     sq.appendChild(hero);
     _buildDesktopNav(sq, scene, sceneURL);
     scWrap.appendChild(sq); wrap.appendChild(scWrap); app.appendChild(wrap);
@@ -2445,10 +2747,12 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
       hero.classList.add('hq-show');
       setTimeout(function(){ hero.classList.add('lqip-hide'); },2500);
       setTimeout(function(){
-        hero.classList.add('show-text'); wrap.classList.add('nav-ready');
-        var fogT = document.getElementById('fogText');
-        if(fogT){ _typeText(fogT, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
-      },3000);
+        wrap.classList.add('nav-ready');
+        if (!skipTyping) {
+          hero.classList.add('show-text');
+          var fogT = document.getElementById('fogText');
+          if(fogT) _startSceneTyping(fogT, scene, sceneURL);
+        }      },3000);
       setTimeout(function(){ fogNoiseD.style.opacity='0'; requestAnimationFrame(function(){ void fogNoiseD.offsetHeight; fogNoiseD.style.opacity=''; fogNoiseD.classList.add('animated'); FogFX.start(); }); },3500);
     };
   }
@@ -2457,57 +2761,71 @@ function renderFogScene(app, scene, imgSrc, sceneURL) {
 /* ============================================================
    M. renderPhotoScene()
    ============================================================ */
-function renderPhotoScene(app, scene, imgSrc, sceneURL) {
+function renderPhotoScene(app, scene, imgSrc, sceneURL, skipTyping) {
   if (isMobile) {
     var photoArea=document.createElement('div'); photoArea.className='photo-area'; photoArea.id='mPhotoArea';
     var img=document.createElement('img'); img.className='scene-img'; img.alt=scene.code||'';
+    var mGrad=document.createElement('div');
+    mGrad.style.cssText='position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(to bottom,transparent,rgba(0,0,0,'+_gradAlpha(scene)+'));pointer-events:none;z-index:15;';
     photoArea.appendChild(img);
+    photoArea.appendChild(mGrad);
     app.appendChild(photoArea);
     app.appendChild(_buildMobileNav(scene, sceneURL));
-    img.onload=function(){
+
+    /* 타이핑 — 이미지 로드 무관하게 즉시 시작 */
+    if (!skipTyping) {
       setTimeout(function(){
         var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
-      },400);
-      /* ripple 효과: prague(LPL_03) / dreams(LPL_04) */
-      if (scene.id==='prague' || scene.id==='dreams') {
-        setTimeout(function(){
-          if(img._rippleStarted) return;
-          img._rippleStarted = true;
-          if(scene.id==='prague') _initRipple(img, photoArea);
-          else _initRippleTop(img, photoArea);
-        }, 300);
-      }
-    };
-    img.classList.add('show'); /* 즉시 표시 — 로드되는 대로 자연 렌더링 */
-    img.onerror=function(){
+        if(ta) _startSceneTyping(ta, scene, sceneURL);
+      }, 400);
+    }
+
+    /* ripple은 이미지 naturalWidth 확인 후 실행 */
+    var onLoad = function(){
       setTimeout(function(){
-        var ta=app.querySelector('.scene-text');
-        if(ta){ ta.classList.add('show'); _typeText(ta, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); }); }
-      },300);
+        if(img._rippleStarted) return;
+        img._rippleStarted = true;
+        _initRippleForScene(img, photoArea, scene);
+      }, 300);
     };
+    img.classList.add('show');
     img.src=imgSrc;
+    if(img.complete && img.naturalWidth > 0){
+      onLoad();
+    } else {
+      img.addEventListener('load', onLoad, {once:true});
+      img.addEventListener('error', function(){}, {once:true});
+      var poll = setInterval(function(){
+        if(img.naturalWidth > 0){ clearInterval(poll); onLoad(); }
+      }, 16);
+      img.addEventListener('load', function(){ clearInterval(poll); }, {once:true});
+    }
   } else {
     var wrap=document.createElement('div'); wrap.className='screen visible scene'; wrap.id=scene.id+'Screen';
     var scWrap=document.createElement('div'); scWrap.className='scene-wrap';
     var sq=document.createElement('div'); sq.className='square-frame'; sq.id='mainContent';
     sq.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(0);width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;background:#000;overflow:hidden;';
-    var img=document.createElement('img'); img.className='scene-img'; img.id=scene.id+'Img'; img.alt=scene.code||''; img.src=imgSrc;
+    var img=document.createElement('img'); img.className='scene-img'; img.id=scene.id+'Img'; img.alt=scene.code||'';
     img.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;';
+    img.src=imgSrc;
+    var dGrad=document.createElement('div');
+    dGrad.className='scene-grad-bottom';
+    dGrad.style.cssText='position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(to bottom,transparent,rgba(0,0,0,'+_gradAlpha(scene)+'));pointer-events:none;z-index:20;';
     var txt=document.createElement('div'); txt.className='scene-text long-text'; txt.id=scene.id+'Text';
     txt.style.zIndex='30';
-    sq.append(img,txt);
+    sq.append(img,dGrad,txt);
     _buildDesktopNav(sq, scene, sceneURL);
     scWrap.appendChild(sq); wrap.appendChild(scWrap); app.appendChild(wrap);
     document.body.classList.add('ui-text-only','ui-mode-ready');
     var began=false;
     function begin(){ if(began)return; began=true;
       wrap.classList.add('hq-show','nav-ready');
-      if (scene.id==='prague') _initRipple(img, sq);
-      else if (scene.id==='dreams') _initRippleTop(img, sq);
+      _initRippleForScene(img, sq, scene);
       setTimeout(function(){
-        wrap.classList.add('show-text');
-        _typeText(txt, curLang==='KR'?scene.textKR:scene.textEN, function(){ AutoPlay.onTypingDone(scene,sceneURL); });
+        if (!skipTyping) {
+          wrap.classList.add('show-text');
+          _startSceneTyping(txt, scene, sceneURL);
+        }
       }, 400);
     }
     if(img.complete&&img.naturalWidth>0) begin();
@@ -2520,30 +2838,57 @@ function renderPhotoScene(app, scene, imgSrc, sceneURL) {
    Q. FOG 효과
    ============================================================ */
 /* ============================================================
+   P-0. _startSceneTyping — 씬 텍스트 타이핑 공통 진입점
+   show 클래스 추가 + _typeText 호출 + AutoPlay.onTypingDone 연결.
+   fog/photo, 모바일/데스크탑, 슬라이드 완료 후 — 모두 여기서 시작.
+   ============================================================ */
+function _startSceneTyping(el, scene, sceneURL) {
+  if (!el) return;
+  el.classList.add('show');
+  _typeText(el, curLang === 'KR' ? scene.textKR : scene.textEN, function() {
+    AutoPlay.onTypingDone(scene, sceneURL);
+  });
+}
+
+/* ============================================================
    P. _typeText — 타이핑 효과 + 커서
    ============================================================ */
 function _typeText(el, text, onComplete) {
   if (!el || !text) { if(onComplete) onComplete(); return; }
   el.textContent = '';
+  /* 씬 전환 시 S._typingToken이 증가되므로, 구 토큰을 캡처해 두고
+     next() 진입 시 비교 — 불일치하면 이전 씬의 타이핑이므로 조용히 종료 */
+  var myToken = S._typingToken || 0;
+  /* flex 컨테이너(.scene-text) 안에서 커서 위치 정확히 유지하기 위해 wrapper span 사용.
+     텍스트 노드 + br + 커서 span 을 하나의 flex item(wrap)으로 묶어
+     커서가 별도 flex item이 되지 않도록 함*/
+  var wrap = document.createElement('span');
+  wrap.className = 'type-wrap';
+  el.appendChild(wrap);
   var cursor = document.createElement('span');
-  cursor.className = 'scene-cursor';
-  cursor.style.cssText = 'display:inline-block;width:1.5px;height:0.85em;background:currentColor;margin-left:3px;vertical-align:text-bottom;animation:sceneCurBlink 600ms steps(1) infinite;';
-  el.appendChild(cursor);
+  cursor.className = 'type-cursor';
+  wrap.appendChild(cursor);
   function startTyping() {
     var i = 0;
     function next() {
+      if (S._typingToken !== myToken) { cursor.remove(); return; } /* 씬 전환됨 — 중단 */
       if (i < text.length) {
-        el.insertBefore(document.createTextNode(text[i]), cursor); i++;
+        if (text[i] === '\n') {
+          wrap.insertBefore(document.createElement('br'), cursor);
+        } else {
+          wrap.insertBefore(document.createTextNode(text[i]), cursor);
+        }
+        i++;
         setTimeout(next, 90 + Math.random() * 110);
       } else {
+        /* 타이핑 완료 — 커서 유지 (깜빡임 계속). 씬 전환 시 토큰으로 자동 정리됨 */
         if (onComplete) onComplete();
       }
     }
     setTimeout(next, 150);
   }
-  /* 폰트 미로드 시에만 대기, 이미 로드됐으면 즉시 시작 */
-  if (document.fonts && document.fonts.check && !document.fonts.check('16px "Nanum Pen Script"')) {
-    document.fonts.load('16px "Nanum Pen Script"').then(startTyping).catch(startTyping);
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('1em "Nanum Pen Script"').then(startTyping).catch(startTyping);
   } else {
     startTyping();
   }
@@ -2563,157 +2908,249 @@ var _initRipple, _initRippleTop;
 /* ============================================================
    R-1. _initRipple — LPL_03 프라하 하단 물결 (feTurbulence)
    ============================================================ */
-_initRipple = function(img, sqEl) {
-  if(!img||!sqEl) return;
-  var SCREEN_RATIO = 0.40;
-  var FID = "prague-ripple-"+Math.random().toString(36).substr(2,6);
-  var NS = "http://www.w3.org/2000/svg";
-  var svg = document.createElementNS(NS,"svg");
-  svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
-  var defs = document.createElementNS(NS,"defs");
-  var filter = document.createElementNS(NS,"filter");
-  filter.setAttribute("id",FID);
-  filter.setAttribute("x","0%"); filter.setAttribute("y","0%");
-  filter.setAttribute("width","100%"); filter.setAttribute("height","100%");
-  filter.setAttribute("color-interpolation-filters","sRGB");
-  var turb = document.createElementNS(NS,"feTurbulence");
-  turb.setAttribute("type","turbulence");
-  turb.setAttribute("baseFrequency","0.012 0.035");
-  turb.setAttribute("numOctaves","3");
-  turb.setAttribute("seed","42");
-  turb.setAttribute("result","noise");
-  var disp = document.createElementNS(NS,"feDisplacementMap");
-  disp.setAttribute("in","SourceGraphic");
-  disp.setAttribute("in2","noise");
-  disp.setAttribute("scale","0");
-  disp.setAttribute("xChannelSelector","R");
-  disp.setAttribute("yChannelSelector","G");
-  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
-  document.querySelectorAll("[data-ripple-svg-prague]").forEach(function(el){el.remove();});
-  sqEl.querySelectorAll("[data-ripple-el-prague]").forEach(function(el){el.remove();});
-  svg.setAttribute("data-ripple-svg-prague","1");
-  document.body.appendChild(svg);
-  var rippleEl = document.createElement("div");
-  rippleEl.setAttribute("data-ripple-el-prague","1");
-  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.5s ease;";
-  var clone = img.cloneNode(false);
-  clone.removeAttribute("id");
-  clone.style.position = "absolute";
-  clone.style.filter = "url(#"+FID+")";
-  rippleEl.appendChild(clone);
-  sqEl.appendChild(rippleEl);
-  var syncPos = function() {
-    var sqW=sqEl.offsetWidth, sqH=sqEl.offsetHeight;
-    var iw=img.naturalWidth, ih=img.naturalHeight;
-    if(!iw||!ih) return;
-    var scale=Math.min(sqW/iw,sqH/ih);
-    var rw=iw*scale, rh=ih*scale;
-    var rx=(sqW-rw)/2, ry=(sqH-rh)/2;
-    var fadeStart = Math.round((1-SCREEN_RATIO)*100);
-    var fadeEnd = Math.min(fadeStart+8,100);
-    var mask = "linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
-    rippleEl.style.left=rx+"px"; rippleEl.style.width=rw+"px";
-    rippleEl.style.top=ry+"px"; rippleEl.style.height=rh+"px";
-    rippleEl.style.zIndex="10";
-    rippleEl.style.webkitMaskImage=mask; rippleEl.style.maskImage=mask;
-    clone.style.width=rw+"px"; clone.style.height=rh+"px";
-    clone.style.left="0px"; clone.style.top="0px";
-    clone.style.transformOrigin="center center";
-    clone.style.transform="scale(1.015)";
-  };
-  syncPos();
-  var onUpdate = function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
-  window.addEventListener("resize",onUpdate);
-  document.addEventListener("fullscreenchange",onUpdate);
-  var t=0;
-  var animate = function() {
-    turb.setAttribute("baseFrequency",
-      (0.010+Math.sin(t*0.7)*0.003).toFixed(4)+" "+
-      (0.030+Math.cos(t*0.5)*0.005).toFixed(4));
-    disp.setAttribute("scale",(4+Math.sin(t*0.4)*2.0+Math.cos(t*0.7)*1.0).toFixed(2));
-    t+=0.012;
-    requestAnimationFrame(animate);
-  };
-  setTimeout(function(){rippleEl.style.opacity="1"; animate();},300);
-};
+  _initRipple = function(img, sqEl) {
+    if(!img||!sqEl){console.warn("[ripple] invalid args");return;}
+    const RIPPLE_RATIO = 0.43; // 소스 이미지에서 물 영역 비율
+    const SCREEN_RATIO = 0.40; // 화면 대비 일렁임 높이
+    var FID="prague-ripple-"+Math.random().toString(36).substr(2,6);
 
-/* ============================================================
-   R-2. _initRippleTop — LPL_04 숨쉬는 물결 (맥동 + 미세 떨림)
-   ============================================================ */
-_initRippleTop = function(img, sqEl) {
-  if(!img||!sqEl) return;
-  var FID = "dreams-breath-"+Math.random().toString(36).substr(2,6);
-  var NS = "http://www.w3.org/2000/svg";
-  var svg = document.createElementNS(NS,"svg");
-  svg.style.cssText = "position:absolute;width:0;height:0;pointer-events:none;overflow:hidden;";
-  var defs = document.createElementNS(NS,"defs");
-  var filter = document.createElementNS(NS,"filter");
-  filter.setAttribute("id",FID);
-  filter.setAttribute("x","0%"); filter.setAttribute("y","0%");
-  filter.setAttribute("width","100%"); filter.setAttribute("height","100%");
-  filter.setAttribute("color-interpolation-filters","sRGB");
-  var turb = document.createElementNS(NS,"feTurbulence");
-  turb.setAttribute("type","turbulence");
-  turb.setAttribute("baseFrequency","0.020 0.045");
-  turb.setAttribute("numOctaves","3");
-  turb.setAttribute("seed","11");
-  turb.setAttribute("result","noise");
-  var disp = document.createElementNS(NS,"feDisplacementMap");
-  disp.setAttribute("in","SourceGraphic");
-  disp.setAttribute("in2","noise");
-  disp.setAttribute("scale","0");
-  disp.setAttribute("xChannelSelector","R");
-  disp.setAttribute("yChannelSelector","G");
-  filter.append(turb,disp); defs.appendChild(filter); svg.appendChild(defs);
-  document.querySelectorAll("[data-ripple-svg]").forEach(function(el){el.remove();});
-  sqEl.querySelectorAll("[data-ripple-el]").forEach(function(el){el.remove();});
-  svg.setAttribute("data-ripple-svg","dreams");
-  document.body.appendChild(svg);
-  var rippleEl = document.createElement("div");
-  rippleEl.setAttribute("data-ripple-el","dreams");
-  rippleEl.style.cssText = "position:absolute;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1.5s ease;transform-origin:center center;";
-  var clone = img.cloneNode(false);
-  clone.removeAttribute("id");
-  clone.style.position = "absolute";
-  clone.style.filter = "url(#"+FID+")";
-  clone.style.transformOrigin = "center center";
-  rippleEl.appendChild(clone);
-  sqEl.appendChild(rippleEl);
-  var syncPos = function() {
-    var sqW=sqEl.offsetWidth, sqH=sqEl.offsetHeight;
-    var iw=img.naturalWidth, ih=img.naturalHeight;
-    if(!iw||!ih) return;
-    var scale=Math.min(sqW/iw,sqH/ih);
-    var rw=iw*scale, rh=ih*scale;
-    var rx=(sqW-rw)/2, ry=(sqH-rh)/2;
-    var mask = "linear-gradient(to bottom, black 0%, black 45%, transparent 55%, transparent 100%)";
-    rippleEl.style.left=rx+"px"; rippleEl.style.width=rw+"px";
-    rippleEl.style.top=ry+"px"; rippleEl.style.height=rh+"px";
-    rippleEl.style.zIndex="10";
-    rippleEl.style.webkitMaskImage=mask; rippleEl.style.maskImage=mask;
-    clone.style.width=rw+"px"; clone.style.height=rh+"px";
-    clone.style.left="0px"; clone.style.top="0px";
+    // SVG 필터 생성 (feTurbulence + feDisplacementMap)
+    var NS="http://www.w3.org/2000/svg";
+    var svg=document.createElementNS(NS,"svg");
+    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";
+    svg.style.pointerEvents="none";svg.style.overflow="hidden";
+    var defs=document.createElementNS(NS,"defs");
+    var filter=document.createElementNS(NS,"filter");
+    filter.setAttribute("id",FID);
+    filter.setAttribute("x","0%");filter.setAttribute("y","0%");
+    filter.setAttribute("width","100%");filter.setAttribute("height","100%");
+    filter.setAttribute("color-interpolation-filters","sRGB");
+    var turb=document.createElementNS(NS,"feTurbulence");
+    turb.setAttribute("type","turbulence");
+    turb.setAttribute("baseFrequency","0.012 0.035");
+    turb.setAttribute("numOctaves","3");
+    turb.setAttribute("seed","42");
+    turb.setAttribute("result","noise");
+    var disp=document.createElementNS(NS,"feDisplacementMap");
+    disp.setAttribute("in","SourceGraphic");
+    disp.setAttribute("in2","noise");
+    disp.setAttribute("scale","0");
+    disp.setAttribute("xChannelSelector","R");
+    disp.setAttribute("yChannelSelector","G");
+    filter.append(turb,disp);defs.appendChild(filter);svg.appendChild(defs);
+
+    // 기존 요소 정리
+    sqEl.querySelectorAll("[data-ripple-canvas]").forEach(function(el){el.remove();});
+    document.querySelectorAll("[data-ripple-svg-prague]").forEach(function(el){el.remove();});
+    sqEl.querySelectorAll("[data-ripple-el-prague]").forEach(function(el){el.remove();});
+    svg.setAttribute("data-ripple-svg-prague","1");
+    document.body.appendChild(svg);
+
+    // 물결 레이어: 이미지 클론 + SVG 필터 적용
+    var rippleEl=document.createElement("div");
+    rippleEl.setAttribute("data-ripple-el-prague","1");
+    rippleEl.style.position="absolute";
+    rippleEl.style.pointerEvents="none";
+    rippleEl.style.overflow="hidden";
+    rippleEl.style.opacity="0";
+    rippleEl.style.transition="opacity 1.5s ease";
+    var clone=img.cloneNode(false);
+    clone.removeAttribute("id");
+    clone.style.position="absolute";
+    clone.style.filter="url(#"+FID+")";
+    rippleEl.appendChild(clone);
+    sqEl.appendChild(rippleEl);
+
+    var _coverMode=getComputedStyle(img).objectFit==="cover";
+    var syncPos=function(){
+      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!iw||!ih)return;
+
+      if(_coverMode){
+        // 모바일 cover 모드: 전체 컨테이너 채움
+        rippleEl.style.left="0px";
+        rippleEl.style.width=sqW+"px";
+        rippleEl.style.top="0px";
+        rippleEl.style.height=sqH+"px";
+        rippleEl.style.zIndex="10";
+        var fadeStart=Math.round((1-SCREEN_RATIO)*100);
+        var fadeEnd=Math.min(fadeStart+8,100);
+        rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
+        rippleEl.style.maskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
+        clone.style.width="100%";
+        clone.style.height="100%";
+        clone.style.objectFit="cover";
+        clone.style.left="0px";
+        clone.style.top="0px";
+        clone.style.transformOrigin="center center";
+        clone.style.transform="scale(1.015)";
+      } else {
+        // 데스크탑 contain 모드
+        var scale=Math.min(sqW/iw,sqH/ih);
+        var rw=iw*scale,rh=ih*scale;
+        var rx=(sqW-rw)/2,ry=(sqH-rh)/2;
+        rippleEl.style.left=rx+"px";
+        rippleEl.style.width=rw+"px";
+        rippleEl.style.top=ry+"px";
+        rippleEl.style.height=rh+"px";
+        rippleEl.style.zIndex="10";
+        var fadeStart=Math.round((1-SCREEN_RATIO)*100);
+        var fadeEnd=Math.min(fadeStart+8,100);
+        rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
+        rippleEl.style.maskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
+        clone.style.width=rw+"px";
+        clone.style.height=rh+"px";
+        clone.style.left="0px";
+        clone.style.top="0px";
+        clone.style.transformOrigin="center center";
+        clone.style.transform="scale(1.015)";
+      }
+    };
+    syncPos();
+    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
+    window.addEventListener("resize",onUpdate);
+    document.addEventListener("fullscreenchange",onUpdate);
+
+    // 애니메이션: feTurbulence 파라미터를 서서히 변경
+    var _mob=isMobile;
+    var _dScale=_mob?5:4, _dAmpA=_mob?2.5:2.0, _dAmpB=_mob?1.2:1.0, _dSpeed=_mob?0.010:0.012;
+    var t=0;
+    var animate=function(){
+      turb.setAttribute("baseFrequency",
+        (0.010+Math.sin(t*0.7)*0.003).toFixed(4)+" "+
+        (0.030+Math.cos(t*0.5)*0.005).toFixed(4)
+      );
+      disp.setAttribute("scale",(_dScale+Math.sin(t*0.4)*_dAmpA+Math.cos(t*0.7)*_dAmpB).toFixed(2));
+      t+=_dSpeed;
+      requestAnimationFrame(animate);
+    };
+    setTimeout(function(){rippleEl.style.opacity="1";animate();},300);
+  };
+
+  // ===== lpl_04 숨쉬는 물결 효과 (맥동 + 미세 떨림) =====
+
+  _initRippleTop = function(img, sqEl) {
+    if(!img||!sqEl)return;
+    var FID="dreams-breath-"+Math.random().toString(36).substr(2,6);
+    var NS="http://www.w3.org/2000/svg";
+
+    // SVG 필터: 미세한 고주파 노이즈
+    var svg=document.createElementNS(NS,"svg");
+    svg.style.position="absolute";svg.style.width="0";svg.style.height="0";
+    svg.style.pointerEvents="none";svg.style.overflow="hidden";
+    var defs=document.createElementNS(NS,"defs");
+    var filter=document.createElementNS(NS,"filter");
+    filter.setAttribute("id",FID);
+    filter.setAttribute("x","0%");filter.setAttribute("y","0%");
+    filter.setAttribute("width","100%");filter.setAttribute("height","100%");
+    filter.setAttribute("color-interpolation-filters","sRGB");
+    var turb=document.createElementNS(NS,"feTurbulence");
+    turb.setAttribute("type","turbulence");
+    turb.setAttribute("baseFrequency","0.020 0.045"); // 고주파 = 미세 떨림
+    turb.setAttribute("numOctaves","3");
+    turb.setAttribute("seed","11");
+    turb.setAttribute("result","noise");
+    var disp=document.createElementNS(NS,"feDisplacementMap");
+    disp.setAttribute("in","SourceGraphic");
+    disp.setAttribute("in2","noise");
+    disp.setAttribute("scale","0");
+    disp.setAttribute("xChannelSelector","R");
+    disp.setAttribute("yChannelSelector","G");
+    filter.append(turb,disp);defs.appendChild(filter);svg.appendChild(defs);
+
+    // 기존 요소 정리
+    document.querySelectorAll("[data-ripple-svg]").forEach(function(el){el.remove();});
+    sqEl.querySelectorAll("[data-ripple-el]").forEach(function(el){el.remove();});
+    svg.setAttribute("data-ripple-svg","dreams");
+    document.body.appendChild(svg);
+
+    // 전체 화면 레이어
+    var rippleEl=document.createElement("div");
+    rippleEl.setAttribute("data-ripple-el","dreams");
+    rippleEl.style.position="absolute";
+    rippleEl.style.pointerEvents="none";
+    rippleEl.style.overflow="hidden";
+    rippleEl.style.opacity="0";
+    rippleEl.style.transition="opacity 1.5s ease";
+    rippleEl.style.transformOrigin="center center";
+    var clone=img.cloneNode(false);
+    clone.removeAttribute("id");
+    clone.style.position="absolute";
+    clone.style.filter="url(#"+FID+")";
     clone.style.transformOrigin="center center";
+    rippleEl.appendChild(clone);
+    sqEl.appendChild(rippleEl);
+
+    var rw=0,rh=0;
+    var _coverMode2=getComputedStyle(img).objectFit==="cover";
+    var syncPos=function(){
+      var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      if(!iw||!ih)return;
+
+      if(_coverMode2){
+        rw=sqW;rh=sqH;
+        rippleEl.style.left="0px";
+        rippleEl.style.width=sqW+"px";
+        rippleEl.style.top="0px";
+        rippleEl.style.height=sqH+"px";
+        rippleEl.style.zIndex="10";
+        var maskVal="linear-gradient(to bottom, black 0%, black 45%, transparent 55%, transparent 100%)";
+        rippleEl.style.webkitMaskImage=maskVal;
+        rippleEl.style.maskImage=maskVal;
+        clone.style.width="100%";
+        clone.style.height="100%";
+        clone.style.objectFit="cover";
+        clone.style.left="0px";
+        clone.style.top="0px";
+      } else {
+        var scale=Math.min(sqW/iw,sqH/ih);
+        rw=iw*scale;rh=ih*scale;
+        var rx=(sqW-rw)/2,ry=(sqH-rh)/2;
+        rippleEl.style.left=rx+"px";
+        rippleEl.style.width=rw+"px";
+        rippleEl.style.top=ry+"px";
+        rippleEl.style.height=rh+"px";
+        rippleEl.style.zIndex="10";
+        var maskVal="linear-gradient(to bottom, black 0%, black 45%, transparent 55%, transparent 100%)";
+        rippleEl.style.webkitMaskImage=maskVal;
+        rippleEl.style.maskImage=maskVal;
+        clone.style.width=rw+"px";
+        clone.style.height=rh+"px";
+        clone.style.left="0px";
+        clone.style.top="0px";
+      }
+      clone.style.transformOrigin="center center";
+    };
+    syncPos();
+    var onUpdate=function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
+    window.addEventListener("resize",onUpdate);
+    document.addEventListener("fullscreenchange",onUpdate);
+
+    // 애니메이션: 느린 맥동(스케일) + 미세 떨림(SVG 필터)
+    var _mob2=isMobile;
+    var _dS2=_mob2?2.0:2.5, _dA2=_mob2?0.8:1.0, _dB2=_mob2?0.4:0.5;
+    var _bA=_mob2?0.003:0.004, _bB=_mob2?0.0015:0.002;
+    var _tX=_mob2?0.25:0.3, _tY=_mob2?0.15:0.2, _tSpd=_mob2?0.009:0.01;
+    var t2=0;
+    var animate2=function(){
+      turb.setAttribute("baseFrequency",
+        (0.018+Math.sin(t2*1.1)*(_mob2?0.003:0.004)).toFixed(4)+" "+
+        (0.040+Math.cos(t2*0.8)*(_mob2?0.006:0.008)).toFixed(4)
+      );
+      disp.setAttribute("scale",(_dS2+Math.sin(t2*0.6)*_dA2+Math.cos(t2*0.9)*_dB2).toFixed(2));
+
+      var breathScale=1.0+Math.sin(t2*0.15)*_bA+Math.sin(t2*0.08)*_bB;
+      var breathX=Math.sin(t2*0.12)*_tX;
+      var breathY=Math.cos(t2*0.09)*_tY;
+      clone.style.transform="scale("+(breathScale).toFixed(5)+") translate("+breathX.toFixed(2)+"px,"+breathY.toFixed(2)+"px)";
+
+      t2+=_tSpd;
+      requestAnimationFrame(animate2);
+    };
+    setTimeout(function(){rippleEl.style.opacity="1";animate2();},200);
   };
-  syncPos();
-  var onUpdate = function(){syncPos();setTimeout(syncPos,150);setTimeout(syncPos,500);};
-  window.addEventListener("resize",onUpdate);
-  document.addEventListener("fullscreenchange",onUpdate);
-  var t2=0;
-  var animate2 = function() {
-    turb.setAttribute("baseFrequency",
-      (0.018+Math.sin(t2*1.1)*0.004).toFixed(4)+" "+
-      (0.040+Math.cos(t2*0.8)*0.008).toFixed(4));
-    disp.setAttribute("scale",(2.5+Math.sin(t2*0.6)*1.0+Math.cos(t2*0.9)*0.5).toFixed(2));
-    var breathScale = 1.0+Math.sin(t2*0.15)*0.004+Math.sin(t2*0.08)*0.002;
-    var breathX = Math.sin(t2*0.12)*0.3;
-    var breathY = Math.cos(t2*0.09)*0.2;
-    clone.style.transform = "scale("+breathScale.toFixed(5)+") translate("+breathX.toFixed(2)+"px,"+breathY.toFixed(2)+"px)";
-    t2+=0.01;
-    requestAnimationFrame(animate2);
-  };
-  setTimeout(function(){rippleEl.style.opacity="1"; animate2();},200);
-};
 
 var FogFX=(function(){
   var fogEl=null, timer=null;
@@ -2854,8 +3291,15 @@ function _bindSceneInput(scene, sceneURL) {
     if(e.key==='g'||e.key==='G'){ e.preventDefault(); GuestbookManager.open(); return; }
     if(e.key==='h'||e.key==='H'){ e.preventDefault(); HelpManager.open(); return; }
     if(e.key==='p'||e.key==='P'){ e.preventDefault(); AboutManager.open(); return; }
-    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Enter'){ e.preventDefault(); if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'}); }
-    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev'}); }
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Enter'){
+      e.preventDefault();
+      if(AutoPlay.isActive() && !AutoPlay.isPaused()) AutoPlay.pauseAP();
+      if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'});
+    } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
+      e.preventDefault();
+      if(AutoPlay.isActive() && !AutoPlay.isPaused()) AutoPlay.pauseAP();
+      if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev'});
+    }
   };
 
   /* 데스크탑 터치패드 */
@@ -3311,108 +3755,715 @@ function bindCommonEvents() {
 }
 
 
-function _runIntroTransition(lineEl) {
-  S._introActive=false;
-  ensureSPAOverlays();
-  var white=$id('white-overlay');
+/* ============================================================
+   INTRO. SPA shell 인트로 렌더링
+   index.html SPA 진입 시 init() → renderIntro() 호출
+   ============================================================ */
 
-  var t0=null;
-  function glowLoop(ts){
-    if(!t0) t0=ts;
-    var elapsed=ts-t0;
-    var g=Math.sin((elapsed/1000)*Math.PI)*22;
-    lineEl.style.textShadow='0 0 '+g.toFixed(1)+'px rgba(255,255,255,0.95),0 0 '+(g*2.2).toFixed(1)+'px rgba(255,255,255,0.4)';
-    if(elapsed<1000){ requestAnimationFrame(glowLoop); }
-    else {
-      lineEl.style.textShadow='';
-      _spawnIntroParticles(function(){
-        white.style.transition='opacity 600ms ease'; white.style.opacity='1';
-        setTimeout(function(){
-          var target='/scenes/LPL_01.html';
-          fetchScene(target).then(function(scene){
-            S.currentURL=target; S.currentScene=scene;
-            history.pushState({url:target},'',target);
-            renderScene(scene,target); sceneURL_=target;
-            setTimeout(function(){ white.style.transition='opacity 900ms ease'; white.style.opacity='0'; },120);
-          }).catch(function(){ location.href=target; });
-        },600);
+function renderIntro() {
+  var app = $id('app');
+  if (!app) return;
+
+  /* 인트로 전용 keyframe CSS (1회 주입) */
+  if (!$id('intro-kf')) {
+    var kf = document.createElement('style'); kf.id = 'intro-kf';
+    kf.textContent =
+      '@keyframes introFadeBreathM{0%{opacity:0}100%{opacity:0.35}}' +
+      '@keyframes introBreatheM{0%,100%{opacity:0.35}50%{opacity:0.55}}' +
+      '@keyframes introFadeBreathD{0%{opacity:0}100%{opacity:1}}' +
+      '@keyframes introBreatheD{0%,100%{opacity:1}50%{opacity:0.85}}' +
+      '@keyframes introGlow{0%,100%{box-shadow:0 0 5px 2px rgba(255,255,255,0.06)}' +
+        '50%{box-shadow:0 0 14px 5px rgba(255,255,255,0.14)}}' +
+      '@keyframes introPulse{0%{transform:scale(1);opacity:0.55}' +
+        '70%{transform:scale(1.55);opacity:0}100%{transform:scale(1.55);opacity:0}}' +
+      '@keyframes introBlink{0%,100%{opacity:1}50%{opacity:0}}';
+    document.head.appendChild(kf);
+  }
+
+  var TARGET = '/scenes/LPL_01.html';
+  var introText = (curLang === 'EN')
+    ? 'Every moment of love opens with you'
+    : '모든 사랑의 순간은 당신으로 열립니다';
+
+  if (isMobile) _renderIntroMobile(app, introText, TARGET);
+  else          _renderIntroDesktop(app, introText, TARGET);
+}
+
+/* ──────────────────────────────────────────
+ * 타이핑 엔진 (공통)
+ * onDone(): 타이핑 자연 완료 시 호출 (커서 깜빡임 후)
+ * 반환값 extSkip(): 즉시 전체 텍스트 표시, onDone은 호출하지 않음
+ * ────────────────────────────────────────── */
+function _introTyping(lineEl, curEl, text, onDone) {
+  var words = text.split(' ');
+  var wIdx = 0, cIdx = 0, typed = '', active = true;
+  var INTERVAL = function() { return 120 + Math.random() * 160; };
+
+  var render = function() {
+    lineEl.innerHTML = '';
+    if (typed) lineEl.appendChild(document.createTextNode(typed));
+    lineEl.appendChild(curEl);
+  };
+
+  var blinkOnce = function(cb) {
+    var n = 1 + Math.floor(Math.random() * 2), cnt = 0;
+    var tick = function() {
+      curEl.style.opacity = '0';
+      setTimeout(function() {
+        curEl.style.opacity = '1';
+        if (++cnt < n) setTimeout(tick, 300); else cb();
+      }, 300);
+    };
+    curEl.style.opacity = '1';
+    setTimeout(tick, 300);
+  };
+
+  var typeChar = function() {
+    if (!active) return;
+    var w = words[wIdx];
+    typed = words.slice(0, wIdx).join(' ') + (wIdx > 0 ? ' ' : '') + w.slice(0, ++cIdx);
+    render();
+    if (cIdx < w.length) { setTimeout(typeChar, INTERVAL()); return; }
+    if (wIdx < words.length - 1) {
+      blinkOnce(function() { wIdx++; cIdx = 0; setTimeout(typeChar, 150); });
+    } else {
+      blinkOnce(function() {
+        if (!active) return;
+        curEl.style.opacity = '';
+        curEl.style.animation = 'introBlink 1.4s step-end infinite';
+        onDone();
       });
     }
+  };
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function() { if (active) setTimeout(typeChar, 400); });
+  } else {
+    setTimeout(typeChar, 800);
   }
-  requestAnimationFrame(glowLoop);
+
+  /* extSkip: 타이핑 즉시 완료 (onDone 호출 안 함 — 호출자가 처리) */
+  return function extSkip() {
+    if (!active) return;
+    active = false;
+    typed = words.join(' ');
+    render();
+    curEl.style.animation = 'none';
+    curEl.style.opacity = '0';
+    curEl.style.display = 'none';
+  };
 }
 
-function _spawnIntroParticles(done) {
-  var app=$id('app');
-  var W=app.offsetWidth||600, H=app.offsetHeight||600;
-  var cv=document.createElement('canvas'); cv.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:555;';
-  cv.width=W; cv.height=H; app.appendChild(cv);
-  var ctx=cv.getContext('2d');
-  var cx=W*0.5, cy=H*0.44;
-  var pts=Array.from({length:22},function(){ var a=Math.random()*Math.PI*2,sp=1.2+Math.random()*3.0;
-    return {x:cx+(Math.random()-0.5)*W*0.18,y:cy+(Math.random()-0.5)*H*0.08,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-0.8,r:1.5+Math.random()*2.2}; });
-  var DURATION=1300, start=null;
-  function draw(ts){
-    if(!start) start=ts; var elapsed=ts-start;
-    ctx.clearRect(0,0,W,H); var anyAlive=false;
-    pts.forEach(function(p){
-      var life=elapsed/DURATION; p.x+=p.vx; p.y+=p.vy; p.vy+=0.025;
-      var alpha=Math.max(0,1-life*1.15);
-      if(alpha>0){ anyAlive=true; ctx.save(); ctx.shadowBlur=10; ctx.shadowColor='rgba(255,255,255,0.85)';
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,'+alpha.toFixed(2)+')'; ctx.fill(); ctx.restore(); }
-    });
-    if(elapsed<DURATION&&anyAlive){ requestAnimationFrame(draw); }
-    else{ if(cv.parentNode) cv.parentNode.removeChild(cv); if(done) done(); }
-  }
-  requestAnimationFrame(draw);
+/* ──────────────────────────────────────────
+ * lang / device bar 빌더 (공통)
+ * ────────────────────────────────────────── */
+var _IBTN = 'font-family:"Nanum Pen Script",cursive;width:36px;height:36px;border-radius:999px;' +
+  'display:grid;place-items:center;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);' +
+  'color:rgba(235,235,235,0.35);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
+var _IBTN_ACT = 'opacity:0.55;border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);';
+
+function _introLangBar() {
+  var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
+  var mk = function(lang, svg) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.style.cssText = _IBTN + (curLang === lang ? _IBTN_ACT : '');
+    b.innerHTML = svg;
+    b.addEventListener('click', function() { saveLang(lang); location.reload(); });
+    return b;
+  };
+  bar.appendChild(mk('KR',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M8 6v12"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M8 12l8-6"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M8 12l8 6"/></svg>'));
+  bar.appendChild(mk('EN',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M16 6H9"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6v12"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 18h7"/></svg>'));
+  return bar;
 }
+
+function _introDeviceBar() {
+  var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
+  var mk = function(dev, svg, isActive) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.style.cssText = _IBTN + (isActive ? _IBTN_ACT : '');
+    b.innerHTML = svg;
+    b.addEventListener('click', function() {
+      try { sessionStorage.setItem('force_device', dev); } catch(e) {}
+      location.reload();
+    });
+    return b;
+  };
+  bar.appendChild(mk('PC',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.5m6-1.5v1.5M3 4.5h18v10.5a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V4.5Z"/></svg>',
+    !isMobile));
+  bar.appendChild(mk('M',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5h3m-6 3h9A1.5 1.5 0 0 1 18 6v12a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V6a1.5 1.5 0 0 1 1.5-1.5Z"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 18.75h1.5"/></svg>',
+    isMobile));
+  return bar;
+}
+
+/* ──────────────────────────────────────────
+ * 모바일 인트로 렌더링
+ * ────────────────────────────────────────── */
+function _renderIntroMobile(app, introText, TARGET) {
+  document.documentElement.style.setProperty('--vh100', window.innerHeight + 'px');
+  app.style.background = '#000';
+
+  /* SVG 상수 */
+  var LOCK_SVG   = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(200,200,200,0.75)" style="width:28px;height:28px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+  var UNLOCK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(200,200,200,0.75)" style="width:28px;height:28px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+
+  /* ── frame (photo-area와 동일 레이아웃) ── */
+  var frame = document.createElement('div');
+  frame.style.cssText = 'position:relative;width:100%;aspect-ratio:1/1;flex-shrink:0;' +
+    'background:linear-gradient(to bottom,#303030 0%,#222222 100%);display:grid;place-items:center;overflow:hidden;';
+
+  var lineEl = document.createElement('div');
+  lineEl.style.cssText = 'font-size:clamp(24px,6.2vw,42px);line-height:1.55;letter-spacing:0.2px;' +
+    'white-space:pre-wrap;word-break:keep-all;text-align:center;' +
+    'color:rgba(235,235,235,0.94);font-family:"Nanum Pen Script",cursive;' +
+    'padding:0 16px;box-sizing:border-box;';
+  var curEl = document.createElement('span');
+  curEl.style.cssText = 'display:inline-block;width:2px;height:1em;background:rgba(220,220,220,0.85);' +
+    'vertical-align:text-bottom;margin-left:2px;';
+  lineEl.appendChild(curEl);
+  frame.appendChild(lineEl);
+  app.appendChild(frame);
+
+  /* ── bottom (control-area와 동일 레이아웃) ── */
+  var bottom = document.createElement('div');
+  bottom.style.cssText = 'flex:1;width:100%;display:flex;flex-direction:column;align-items:center;' +
+    'justify-content:center;background:#3a3a3a;position:relative;' +
+    'padding:8px 24px;box-sizing:border-box;padding-bottom:max(env(safe-area-inset-bottom),8px);';
+
+  /* skip bar */
+  var skipBar = document.createElement('div');
+  skipBar.style.cssText = 'position:absolute;left:50%;top:calc(50% - 21px);transform:translate(-50%,-50%);' +
+    'opacity:0;transition:opacity 2000ms ease;pointer-events:none;z-index:1;';
+  var skipBtn = document.createElement('button'); skipBtn.type = 'button'; skipBtn.textContent = 'skip';
+  skipBtn.style.cssText = 'width:36px;height:36px;border-radius:999px;display:grid;place-items:center;' +
+    'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);' +
+    'color:rgba(235,235,235,0.70);font-family:"Nanum Pen Script",cursive;font-size:13px;' +
+    'cursor:pointer;-webkit-tap-highlight-color:transparent;';
+  skipBar.appendChild(skipBtn);
+  bottom.appendChild(skipBar);
+
+  /* lock wrap + pulse rings */
+  var lockWrap = document.createElement('div');
+  lockWrap.style.cssText = 'display:inline-grid;place-items:center;position:relative;margin-bottom:6px;';
+  lockWrap.style.visibility = 'hidden';
+
+  var ring1 = document.createElement('div');
+  ring1.style.cssText = 'position:absolute;width:68px;height:68px;border-radius:999px;' +
+    'border:1.5px solid rgba(255,255,255,0.22);opacity:0;pointer-events:none;';
+  var ring2 = document.createElement('div');
+  ring2.style.cssText = 'position:absolute;width:68px;height:68px;border-radius:999px;' +
+    'border:1px solid rgba(255,255,255,0.14);opacity:0;pointer-events:none;';
+  lockWrap.appendChild(ring1); lockWrap.appendChild(ring2);
+
+  var lockBtn = document.createElement('button'); lockBtn.type = 'button';
+  lockBtn.style.cssText = 'margin:0;width:68px;height:68px;border-radius:999px;display:grid;place-items:center;' +
+    'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);' +
+    'cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;opacity:0;pointer-events:none;';
+  lockBtn.innerHTML = LOCK_SVG;
+  lockWrap.appendChild(lockBtn);
+  bottom.appendChild(lockWrap);
+
+  /* bottom row: device-bar + lang-bar */
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;width:100%;justify-content:space-between;align-items:center;';
+  var deviceBar = _introDeviceBar();
+  deviceBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  var langBar = _introLangBar();
+  langBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  row.appendChild(deviceBar); row.appendChild(langBar);
+  bottom.appendChild(row);
+  app.appendChild(bottom);
+  /* 검정 flash 방지 — 인트로 콘텐츠 완성 후 즉시 표시 */
+  app.style.opacity = '1';
+
+  /* ── helpers ── */
+  var lockShown = false;
+  var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
+
+  var showLockFn = function() {
+    if (lockShown) return; lockShown = true;
+    /* 커서 숨김 */
+    curEl.style.animation = 'none'; curEl.style.opacity = '0';
+    /* lock 표시 */
+    lockWrap.style.visibility = '';
+    lockBtn.style.opacity = ''; lockBtn.style.pointerEvents = '';
+    lockBtn.style.animation =
+      'introFadeBreathM 2s ease-in-out 1 forwards,' +
+      'introBreatheM 2.8s ease-in-out 2s infinite,' +
+      'introGlow 2.8s ease-in-out 2s infinite';
+    ring1.style.animation = 'introPulse 2.4s ease-out infinite'; ring1.style.opacity = '1';
+    ring2.style.animation = 'introPulse 2.4s ease-out 0.8s infinite'; ring2.style.opacity = '1';
+    showIcon('lock');
+  };
+
+  /* ── 타이핑 시작 ── */
+  var extSkip = _introTyping(lineEl, curEl, introText, function onDone() {
+    skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
+    /* 3초 후 또는 인터랙션 시 lock 표시 */
+    var shown = false;
+    var doShow = function() {
+      if (shown) return; shown = true;
+      clearTimeout(autoT);
+      document.removeEventListener('mousemove', doShow);
+      document.removeEventListener('keydown', doShow);
+      document.removeEventListener('touchstart', doShow);
+      showLockFn();
+    };
+    var autoT = setTimeout(doShow, 3000);
+    document.addEventListener('mousemove', doShow);
+    document.addEventListener('keydown', doShow);
+    document.addEventListener('touchstart', doShow, {passive:true});
+    window.addEventListener('devicemotion', function(ev) {
+      var a = ev.acceleration; if (!a) return;
+      if (Math.abs(a.x||0) + Math.abs(a.y||0) + Math.abs(a.z||0) > 15) doShow();
+    }, {passive:true});
+  });
+
+  /* skip bar: 400ms 후 표시 */
+  setTimeout(function() { skipBar.style.opacity = '1'; skipBar.style.pointerEvents = 'auto'; }, 400);
+
+  /* skip 버튼 */
+  skipBtn.addEventListener('click', function() {
+    extSkip();
+    skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
+    setTimeout(showLockFn, 420);
+  });
+
+  /* ── enter (lock 클릭) — 데스크탑과 동일한 글로우→입자→흰색fade→goTo ── */
+  var doEnter = function() {
+    if (!lockShown) return;
+    showIcon('unlock');
+    /* ring 애니메이션 중단 */
+    ring1.style.animation = 'none'; ring1.style.opacity = '0';
+    ring2.style.animation = 'none'; ring2.style.opacity = '0';
+
+    /* 1. 글로우 펄스 (1000ms) — lineEl 기준 */
+    var t0 = null;
+    function glowLoop(ts) {
+      if (!t0) t0 = ts;
+      var elapsed = ts - t0;
+      var g = Math.sin((elapsed / 1000) * Math.PI) * 22;
+      lineEl.style.textShadow =
+        '0 0 ' + g.toFixed(1) + 'px rgba(255,255,255,0.95),' +
+        '0 0 ' + (g * 2.2).toFixed(1) + 'px rgba(255,255,255,0.4)';
+      if (elapsed < 1000) { requestAnimationFrame(glowLoop); return; }
+
+      lineEl.style.textShadow = '';
+      /* 2. 텍스트/lock/bar 페이드아웃 */
+      [lineEl, lockWrap, skipBar, deviceBar, langBar].forEach(function(el) {
+        el.style.transition = 'opacity 400ms ease';
+        el.style.opacity = '0'; el.style.pointerEvents = 'none';
+      });
+
+      /* 3. 입자 산개 + 흰색 fade */
+      var lineR = lineEl.getBoundingClientRect();
+      var frameR = frame.getBoundingClientRect();
+      var cx = lineR.left + lineR.width  * 0.5;
+      var cy = lineR.top  + lineR.height * 0.5;
+      var tw = lineR.width, th = lineR.height;
+      var DURATION = 2000, whiteDone = false, timers = [], rafs = {};
+
+      /* 입자 전체 제거 */
+      function cleanupParticles() {
+        Object.keys(rafs).forEach(function(k) { cancelAnimationFrame(rafs[k]); });
+        timers.forEach(function(t) { clearTimeout(t); });
+        document.querySelectorAll('[data-intro-particle]').forEach(function(el) { el.remove(); });
+      }
+
+      function startWhiteFade() {
+        if (whiteDone) return; whiteDone = true;
+        /* 컨트롤 패널 색상 — 흰색 fade와 동시에 #333으로 전환 */
+        bottom.style.transition = 'background 200ms ease';
+        bottom.style.background = '#333';
+        /* frame(정사각형)만 흰색 fade */
+        var cv = document.createElement('div'); cv.id = '_introCanvas';
+        cv.style.cssText =
+          'position:fixed;left:' + frameR.left + 'px;top:' + frameR.top + 'px;' +
+          'width:' + frameR.width + 'px;height:' + frameR.height + 'px;' +
+          'pointer-events:none;z-index:9999;background:#fff;opacity:0;transition:opacity 800ms ease;';
+        document.documentElement.appendChild(cv);
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          cv.style.opacity = '1';
+          setTimeout(function() {
+            cleanupParticles();
+            try { sessionStorage.removeItem('gl_mode'); } catch(e) {}
+            try { sessionStorage.setItem('mol_autoplay_start', '1'); } catch(e) {}
+            window.goTo(TARGET, {direct: true});
+          }, 800);
+        }); });
+      }
+
+      /* 입자 22개 — data-intro-particle 속성으로 추적 */
+      for (var i = 0; i < 22; i++) {
+        (function(idx) {
+          var sz  = 3 + Math.random() * 5;
+          var sx  = cx + (Math.random() - 0.5) * tw;
+          var sy  = cy + (Math.random() - 0.5) * th;
+          var a   = -Math.PI * 0.5 + (Math.random() - 0.5) * Math.PI * 1.2;
+          var sp  = 0.3 + Math.random() * 0.8;
+          var vx  = Math.cos(a) * sp, vy = Math.sin(a) * sp;
+          var dur = DURATION * (0.7 + Math.random() * 0.5);
+          var p   = document.createElement('div');
+          p.setAttribute('data-intro-particle', '1');
+          p.style.cssText = 'position:fixed;width:' + sz + 'px;height:' + (sz * 0.6) + 'px;' +
+            'border-radius:50%;left:' + sx + 'px;top:' + sy + 'px;' +
+            'pointer-events:none;z-index:9998;opacity:0;' +
+            'background:radial-gradient(ellipse at center,rgba(255,255,255,0.95) 10%,' +
+              'rgba(220,220,220,0.3) 50%,transparent 80%);' +
+            'box-shadow:0 0 ' + (sz * 1.2) + 'px rgba(255,255,255,0.25);';
+          document.body.appendChild(p);
+          var st = null, curX = sx, curY = sy, curVy = vy;
+          function frame2(ts) {
+            if (!st) st = ts;
+            var t = (ts - st) / dur;
+            curX += vx; curY += curVy; curVy += 0.004;
+            p.style.left = curX + 'px'; p.style.top = curY + 'px';
+            p.style.opacity = Math.max(0, Math.min(t * 4, 1) * (1 - t)).toFixed(3);
+            if (t < 1) rafs['p' + idx] = requestAnimationFrame(frame2); else p.remove();
+          }
+          timers.push(setTimeout(function() { rafs['p' + idx] = requestAnimationFrame(frame2); }, idx * 20));
+        })(i);
+      }
+      timers.push(setTimeout(startWhiteFade, DURATION * 0.3));
+      timers.push(setTimeout(function() {
+        cleanupParticles();
+        startWhiteFade();
+      }, DURATION));
+    }
+    requestAnimationFrame(glowLoop);
+  };
+  lockBtn.addEventListener('click', doEnter);
+  lockBtn.addEventListener('touchend', function(e) { e.preventDefault(); doEnter(); }, {passive:false});
+
+  /* ── 키보드 ── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'ArrowRight') return;
+    if (lockShown) {
+      doEnter();
+    } else {
+      try { sessionStorage.removeItem('gl_mode'); } catch(err) {}
+      try { sessionStorage.setItem('mol_autoplay_start', '1'); } catch(err) {}
+      window.goTo(TARGET, {direct: true});
+    }
+  });
+}
+
+/* ──────────────────────────────────────────
+ * 데스크탑 인트로 렌더링
+ * ────────────────────────────────────────── */
+function _renderIntroDesktop(app, introText, TARGET) {
+  /* SVG 상수 */
+  var LOCK_SVG   = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(200,200,200,0.75)" style="width:28px;height:28px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+  var UNLOCK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(200,200,200,0.75)" style="width:28px;height:28px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>';
+
+  /* ── 배경 래퍼 ── */
+  var bgWrap = document.createElement('div');
+  bgWrap.style.cssText = 'position:absolute;inset:0;background:#222222;display:grid;place-items:center;overflow:hidden;';
+
+  /* 정사각형 프레임 */
+  var sq = document.createElement('div');
+  sq.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(0);' +
+    'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
+    'background:linear-gradient(to bottom,#303030 0%,#222222 100%);overflow:hidden;';
+
+  /* 텍스트 */
+  var lineEl = document.createElement('div');
+  lineEl.style.cssText = 'position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);' +
+    'font-size:clamp(24px,6.2vw,42px);line-height:1.55;letter-spacing:0.2px;' +
+    'white-space:pre-wrap;word-break:keep-all;text-align:center;' +
+    'color:rgba(235,235,235,0.94);font-family:"Nanum Pen Script",cursive;width:80%;';
+  var curEl = document.createElement('span');
+  curEl.style.cssText = 'display:inline-block;width:2px;height:1em;background:rgba(220,220,220,0.85);' +
+    'vertical-align:text-bottom;margin-left:2px;';
+  lineEl.appendChild(curEl);
+  sq.appendChild(lineEl);
+
+  /* lock wrap (bottom 28%) + pulse rings */
+  var lockWrap = document.createElement('div');
+  lockWrap.style.cssText = 'position:absolute;bottom:28%;left:50%;transform:translateX(-50%);' +
+    'display:inline-grid;place-items:center;';
+  lockWrap.style.visibility = 'hidden';
+
+  var ring1 = document.createElement('div');
+  ring1.style.cssText = 'position:absolute;width:68px;height:68px;border-radius:999px;' +
+    'border:1.5px solid rgba(255,255,255,0.22);opacity:0;pointer-events:none;';
+  var ring2 = document.createElement('div');
+  ring2.style.cssText = 'position:absolute;width:68px;height:68px;border-radius:999px;' +
+    'border:1px solid rgba(255,255,255,0.14);opacity:0;pointer-events:none;';
+  lockWrap.appendChild(ring1); lockWrap.appendChild(ring2);
+
+  var lockBtn = document.createElement('button'); lockBtn.type = 'button';
+  lockBtn.style.cssText = 'margin:0;width:68px;height:68px;border-radius:999px;display:grid;place-items:center;' +
+    'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);' +
+    'cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;opacity:0;pointer-events:none;';
+  lockBtn.innerHTML = LOCK_SVG;
+  lockWrap.appendChild(lockBtn);
+  sq.appendChild(lockWrap);
+
+  /* skip bar */
+  var skipBar = document.createElement('div');
+  skipBar.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);' +
+    'bottom:calc(6% + env(safe-area-inset-bottom));opacity:0;transition:opacity 2000ms ease;pointer-events:none;';
+  var skipBtn = document.createElement('button'); skipBtn.type = 'button'; skipBtn.textContent = 'skip';
+  skipBtn.style.cssText = 'width:36px;height:36px;border-radius:999px;display:grid;place-items:center;' +
+    'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);' +
+    'color:rgba(235,235,235,0.70);font-family:"Nanum Pen Script",cursive;font-size:13px;' +
+    'cursor:pointer;-webkit-tap-highlight-color:transparent;';
+  skipBar.appendChild(skipBtn);
+  sq.appendChild(skipBar);
+
+  /* lang / device bar */
+  var langBar = _introLangBar();
+  langBar.style.cssText = 'position:absolute;right:6%;bottom:calc(6% + env(safe-area-inset-bottom));' +
+    'display:flex;gap:10px;opacity:0;transform:translateY(6px);' +
+    'transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  sq.appendChild(langBar);
+
+  var deviceBar = _introDeviceBar();
+  deviceBar.style.cssText = 'position:absolute;left:6%;bottom:calc(6% + env(safe-area-inset-bottom));' +
+    'display:flex;gap:10px;opacity:0;transform:translateY(6px);' +
+    'transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  sq.appendChild(deviceBar);
+
+  bgWrap.appendChild(sq);
+  app.appendChild(bgWrap);
+
+  /* ── helpers ── */
+  var lockShown = false;
+  var idleTimer = null;
+  var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
+  var showBars = function() {
+    langBar.style.opacity = '1'; langBar.style.transform = 'translateY(0)'; langBar.style.pointerEvents = '';
+    deviceBar.style.opacity = '1'; deviceBar.style.transform = 'translateY(0)'; deviceBar.style.pointerEvents = '';
+  };
+  var hideBars = function() {
+    langBar.style.opacity = '0'; langBar.style.pointerEvents = 'none';
+    deviceBar.style.opacity = '0'; deviceBar.style.pointerEvents = 'none';
+  };
+  var showLockFn = function() {
+    if (lockShown) return; lockShown = true;
+    curEl.style.animation = 'none'; curEl.style.opacity = '0';
+    lockWrap.style.visibility = '';
+    lockBtn.style.opacity = ''; lockBtn.style.pointerEvents = '';
+    lockBtn.style.animation =
+      'introFadeBreathD 1.2s ease-in-out 1 forwards,' +
+      'introBreatheD 2.8s ease-in-out 1.2s infinite,' +
+      'introGlow 2.8s ease-in-out 2s infinite';
+    ring1.style.animation = 'introPulse 2.4s ease-out infinite'; ring1.style.opacity = '1';
+    ring2.style.animation = 'introPulse 2.4s ease-out 0.8s infinite'; ring2.style.opacity = '1';
+    showIcon('lock');
+  };
+
+  /* ── 타이핑 시작 ── */
+  var extSkip = _introTyping(lineEl, curEl, introText, function onDone() {
+    skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
+    var shown = false;
+    var doShow = function() {
+      if (shown) return; shown = true;
+      clearTimeout(autoT);
+      document.removeEventListener('mousemove', doShow);
+      document.removeEventListener('keydown', doShow);
+      document.removeEventListener('touchstart', doShow);
+      showLockFn();
+    };
+    var autoT = setTimeout(doShow, 3000);
+    document.addEventListener('mousemove', doShow);
+    document.addEventListener('keydown', doShow);
+    document.addEventListener('touchstart', doShow, {passive:true});
+
+    /* lock 표시 후 idle: bars 표시/숨김 */
+    var onInteract = function() { showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); };
+    document.addEventListener('mousemove', onInteract);
+    document.addEventListener('keydown', onInteract);
+    document.addEventListener('touchstart', onInteract, {passive:true});
+  });
+
+  /* skip bar: 400ms 후 표시 */
+  setTimeout(function() { skipBar.style.opacity = '1'; skipBar.style.pointerEvents = 'auto'; }, 400);
+
+  /* skip 버튼 */
+  skipBtn.addEventListener('click', function() {
+    extSkip();
+    skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
+    setTimeout(showLockFn, 420);
+    showBars();
+  });
+
+  /* hover 중 bars 표시 (lock 전) */
+  var onHover = function() { showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); };
+  document.addEventListener('mousemove', onHover);
+  document.addEventListener('keydown', onHover);
+
+  /* hover: lock ↔ unlock */
+  lockBtn.addEventListener('mouseenter', function() { if (lockShown) showIcon('unlock'); });
+  lockBtn.addEventListener('mouseleave', function() { if (lockShown) showIcon('lock'); });
+
+  /* ── enter — 데스크탑: 글로우 → 입자 → 흰색 fade → goTo ── */
+  var doEnter = function() {
+    if (!lockShown) return;
+    showIcon('unlock');
+    var t0 = null;
+    function glowLoop(ts) {
+      if (!t0) t0 = ts;
+      var elapsed = ts - t0;
+      var g = Math.sin((elapsed / 1000) * Math.PI) * 22;
+      lineEl.style.textShadow =
+        '0 0 ' + g.toFixed(1) + 'px rgba(255,255,255,0.95),' +
+        '0 0 ' + (g * 2.2).toFixed(1) + 'px rgba(255,255,255,0.4)';
+      if (elapsed < 1000) { requestAnimationFrame(glowLoop); return; }
+
+      lineEl.style.textShadow = '';
+      [lineEl, lockWrap, langBar, deviceBar, skipBar].forEach(function(el) {
+        el.style.transition = 'opacity 400ms ease';
+        el.style.opacity = '0'; el.style.pointerEvents = 'none';
+      });
+
+      /* 입자 산개 + 흰색 fade */
+      var lineR   = lineEl.getBoundingClientRect();
+      var sqR     = sq.getBoundingClientRect();
+      var cx = lineR.left + lineR.width  * 0.5;
+      var cy = lineR.top  + lineR.height * 0.5;
+      var tw = lineR.width, th = lineR.height;
+      var DURATION = 3000, whiteDone = false, timers = [], rafs = {};
+
+      function startWhiteFade() {
+        if (whiteDone) return; whiteDone = true;
+        /* gallery.js _applyScene()이 인식하는 id(_introCanvas) 사용 — div 방식 */
+        var cv = document.createElement('div'); cv.id = '_introCanvas';
+        cv.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);' +
+          'width:' + sqR.width + 'px;height:' + sqR.height + 'px;' +
+          'pointer-events:none;z-index:9999;background:#fff;opacity:0;transition:opacity 2000ms ease;';
+        document.documentElement.appendChild(cv);
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          cv.style.opacity = '1';
+          setTimeout(function() {
+            try { sessionStorage.removeItem('gl_mode'); } catch(e) {}
+            try { sessionStorage.setItem('mol_autoplay_start', '1'); } catch(e) {}
+            window.goTo(TARGET, {direct: true});
+          }, 2000);
+        }); });
+      }
+
+      /* 입자 22개 */
+      for (var i = 0; i < 22; i++) {
+        (function(idx) {
+          var sz  = 3 + Math.random() * 5;
+          var sx  = cx + (Math.random() - 0.5) * tw;
+          var sy  = cy + (Math.random() - 0.5) * th;
+          var a   = -Math.PI * 0.5 + (Math.random() - 0.5) * Math.PI * 1.2;
+          var sp  = 0.3 + Math.random() * 0.8;
+          var vx  = Math.cos(a) * sp, vy = Math.sin(a) * sp;
+          var dur = DURATION * (0.7 + Math.random() * 0.5);
+          var p   = document.createElement('div');
+          p.style.cssText = 'position:fixed;width:' + sz + 'px;height:' + (sz * 0.6) + 'px;' +
+            'border-radius:50%;left:' + sx + 'px;top:' + sy + 'px;' +
+            'pointer-events:none;z-index:9998;opacity:0;' +
+            'background:radial-gradient(ellipse at center,rgba(255,255,255,0.95) 10%,' +
+              'rgba(220,220,220,0.3) 50%,transparent 80%);' +
+            'box-shadow:0 0 ' + (sz * 1.2) + 'px rgba(255,255,255,0.25);';
+          document.body.appendChild(p);
+          var st = null, curX = sx, curY = sy, curVy = vy;
+          function frame(ts) {
+            if (!st) st = ts;
+            var t = (ts - st) / dur;
+            curX += vx; curY += curVy; curVy += 0.004;
+            p.style.left = curX + 'px'; p.style.top = curY + 'px';
+            p.style.opacity = Math.max(0, Math.min(t * 4, 1) * (1 - t)).toFixed(3);
+            if (t < 1) rafs['p' + idx] = requestAnimationFrame(frame); else p.remove();
+          }
+          timers.push(setTimeout(function() { rafs['p' + idx] = requestAnimationFrame(frame); }, idx * 20));
+        })(i);
+      }
+      timers.push(setTimeout(startWhiteFade, DURATION * 0.3));
+      timers.push(setTimeout(function() {
+        Object.keys(rafs).forEach(function(k) { cancelAnimationFrame(rafs[k]); });
+        startWhiteFade();
+      }, DURATION));
+    }
+    requestAnimationFrame(glowLoop);
+  };
+  lockBtn.addEventListener('click', doEnter);
+
+  /* ── 키보드 ── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'ArrowRight') return;
+    if (lockShown) {
+      doEnter();
+    } else {
+      try { sessionStorage.removeItem('gl_mode'); } catch(err) {}
+      try { sessionStorage.setItem('mol_autoplay_start', '1'); } catch(err) {}
+      window.goTo(TARGET, {direct: true});
+    }
+  });
+}
+
 
 /* ============================================================
    Z. INIT
    ============================================================ */
-function init() {
-  injectCSS();
 
-  /* DOM 삽입 */
+/* 갤러리 DOM을 최초 1회 생성 — idempotent
+   씬 직접 접근 시: init()에서 호출
+   index.html SPA 진입 시: _applyScene()에서 최초 goTo() 때 호출 */
+var _appReady = false;
+function _ensureAppReady() {
+  if (_appReady) return;
+  _appReady = true;
+  injectCSS();
   if (isMobile) {
-    var bo=document.createElement('div'); bo.id='blackout'; document.body.appendChild(bo);
-    var appEl=document.createElement('div'); appEl.id='app'; document.body.appendChild(appEl);
+    var bo = document.createElement('div'); bo.id = 'blackout'; document.body.appendChild(bo);
+    var appEl = document.createElement('div'); appEl.id = 'app'; document.body.appendChild(appEl);
+    appEl.style.background = '#000'; appEl.style.opacity = '0';
     document.body.insertAdjacentHTML('beforeend', buildOverlayHTML());
   } else {
-    /* 데스크탑: 기존 #app 제거 후 overlays + 새 #app 삽입 */
     var existingApp = document.getElementById('app');
     if (existingApp) existingApp.parentNode.removeChild(existingApp);
     document.body.insertAdjacentHTML('afterbegin', buildOverlayHTML());
   }
-
   ensureSPAOverlays();
+  bindCommonEvents();
+  if (!window.THIS_SCENE) {
+    /* index.html 컨텍스트 — #app 생성 완료 후 인트로 DOM/CSS 제거 */
+    var introApp = document.getElementById('introApp');
+    if (introApp) introApp.parentNode.removeChild(introApp);
+    document.querySelectorAll('[data-intro-style]').forEach(function(el){ el.parentNode.removeChild(el); });
+    document.body.removeAttribute('style');
+    document.body.style.background = '#000';
+    document.documentElement.style.background = '#000';
+  }
+}
 
-  /* 스타일 */
-  document.body.style.background='#000';
-  document.documentElement.style.background='#000';
-
+function init() {
   if (window.THIS_SCENE) {
+    /* 씬 HTML 직접 접근 */
+    _ensureAppReady();
     var url = location.pathname || location.href;
     S.currentURL   = url;
     S.currentScene = window.THIS_SCENE;
     sceneURL_       = url;
-    bindCommonEvents();
+    S._transDirection = 'none';
     renderScene(window.THIS_SCENE, url);
-
-    /* from=index 전환: 흰색 div 페이드아웃 */
-    var fromTmp = document.getElementById('_fromIndexTmp');
-    if (fromTmp) {
-      setTimeout(function() {
-        fromTmp.style.transition = 'opacity 900ms ease';
-        fromTmp.style.opacity = '0';
-        setTimeout(function() {
-          if (fromTmp.parentNode) fromTmp.parentNode.removeChild(fromTmp);
-        }, 950);
-      }, 200);
-    }
   } else {
-    /* index.html이 직접 처리 — gallery.js는 아무것도 안 함 */
-    bindCommonEvents();
+    /* index.html SPA 진입 — 갤러리 DOM 생성 후 인트로 렌더링 */
+    _ensureAppReady();
+    renderIntro();
   }
 }
 
