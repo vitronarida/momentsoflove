@@ -25,15 +25,8 @@
 </head>
 <body class="ui-text-only ui-mode-ready">
   <script>
-  // INTRO→LPL01 전환: 검정 flash 방지 — 첫 페인트 전에 정사각형 흰색 div 동기 생성
-  if(location.search.includes('from=index')){
-    var _t=document.createElement('div');
-    _t.id='_fromIndexTmp';
-    _t.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100vmin;height:100vmin;background:#fff;z-index:50000;pointer-events:none;';
-    document.body.appendChild(_t);
-  }
   window.THIS_SCENE = {
-    id: "fog",
+    id: "LPL_01",
     type: "fog",
     imgSrc: "../assets/LPL_01.webp",
     code: "LPL#01",
@@ -46,6 +39,6 @@
     totalPages: 32
   };
   </script>
-  <script src="../gallery.js?v=30"></script>
+  <script>document.write('<script src="../gallery.js?v='+Date.now()+'"><\/script>');</script>
 </body>
 </html>
