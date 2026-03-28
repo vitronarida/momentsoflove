@@ -3843,6 +3843,15 @@ function renderIntro() {
     ? 'Every moment of love opens with you'
     : '모든 사랑의 순간은 당신으로 열립니다';
 
+  /* 인트로 시작과 동시에 LPL_01 씬 데이터 + 이미지 preload */
+  fetchScene(TARGET).then(function(scene) {
+    if (scene && scene.imgSrc && !_preloadedImgs[TARGET]) {
+      var img = new Image();
+      img.src = resolveURL(TARGET, scene.imgSrc);
+      _preloadedImgs[TARGET] = img;
+    }
+  }).catch(function(){});
+
   if (isMobile) _renderIntroMobile(app, introText, TARGET);
   else          _renderIntroDesktop(app, introText, TARGET);
 }
