@@ -1680,18 +1680,48 @@ function fetchScene(url) {
 }
 
 /* 다음 씬 백그라운드 프리로드 — 씬 로드 1초 후 next/prev 미리 캐싱 */
+var _preloadedImgs = {}; /* 이미지 preload 캐시 (GC 방지용) */
+
 function _preloadAdjacentScenes(scene, sceneURL) {
   if (!scene) return;
   var urls = [];
   if (scene.nextURL) urls.push(resolveURL(sceneURL, scene.nextURL));
   if (scene.prevURL) urls.push(resolveURL(sceneURL, scene.prevURL));
   urls.forEach(function(u) {
-    if (!u || _sceneCache[u.split('?')[0]]) return;
+    if (!u) return;
+    var key = u.split('?')[0];
     setTimeout(function() {
-      fetch(u)
-        .then(function(r){ return r.ok ? r.text() : null; })
-        .then(function(html){ if (html) _sceneCache[u.split('?')[0]] = extractScene(html); })
-        .catch(function(){});
+      /* 1. 씬 데이터 캐싱 */
+      if (!_sceneCache[key]) {
+        fetch(u)
+          .then(function(r){ return r.ok ? r.text() : null; })
+          .then(function(html){
+            if (!html) return;
+            var adjacentScene = extractScene(html);
+            _sceneCache[key] = adjacentScene;
+            /* 2. 씬 데이터 확보 후 이미지 preload */
+            if (adjacentScene && adjacentScene.imgSrc && !_preloadedImgs[key]) {
+              var imgSrc = resolveURL(u, adjacentScene.imgSrc);
+              if (imgSrc) {
+                var img = new Image();
+                img.src = imgSrc;
+                _preloadedImgs[key] = img; /* GC 방지 */
+              }
+            }
+          })
+          .catch(function(){});
+      } else {
+        /* 데이터는 이미 있으나 이미지 미로드 시 */
+        var cachedScene = _sceneCache[key];
+        if (cachedScene && cachedScene.imgSrc && !_preloadedImgs[key]) {
+          var imgSrc = resolveURL(u, cachedScene.imgSrc);
+          if (imgSrc) {
+            var img = new Image();
+            img.src = imgSrc;
+            _preloadedImgs[key] = img;
+          }
+        }
+      }
     }, 1000);
   });
 }
