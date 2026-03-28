@@ -2418,6 +2418,7 @@ function _updateTOCCurrent(scene) {
    ============================================================ */
 var AutoPlay = (function(){
   var _active   = false;
+  var _paused   = false;
   var _timer    = null;   /* 3초 씬 이동 타이머 */
   var LAST_SCENE_ID = 'LEL_01';
   var DELAY_MS      = 3000;
