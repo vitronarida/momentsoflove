@@ -2636,51 +2636,60 @@ function _mobileSlide(app, scene, imgSrc, sceneURL, transDir) {
   document.body.removeChild(mTmpDiv);
 
   if (!oldPhotoArea || !newPhotoArea) {
-    /* fallback: 즉시 전환 */
     app.innerHTML = '';
     renderPhotoScene(app, scene, imgSrc, sceneURL);
     return;
   }
 
-  var xIn  = transDir === 'next' ? '100%' : '-100%';
-  var xOut = transDir === 'next' ? '-100%' : '100%';
+  /* 새 이미지 로드 완료 후 슬라이드 시작 (최대 400ms 대기 후 진행) */
+  var newImg = newPhotoArea.querySelector('.scene-img');
+  function startSlide() {
+    var xIn  = transDir === 'next' ? '100%' : '-100%';
+    var xOut = transDir === 'next' ? '-100%' : '100%';
 
-  /* photo-area 안에 두 트랙 구성 */
-  var mTrackWrap = document.createElement('div');
-  mTrackWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;z-index:1;';
-  var mOldTrack = document.createElement('div');
-  mOldTrack.style.cssText = 'position:absolute;inset:0;';
-  var mNewTrack = document.createElement('div');
-  mNewTrack.style.cssText = 'position:absolute;inset:0;transform:translateX('+xIn+');';
+    var mTrackWrap = document.createElement('div');
+    mTrackWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;z-index:1;';
+    var mOldTrack = document.createElement('div');
+    mOldTrack.style.cssText = 'position:absolute;inset:0;';
+    var mNewTrack = document.createElement('div');
+    mNewTrack.style.cssText = 'position:absolute;inset:0;transform:translateX('+xIn+');';
 
-  while (oldPhotoArea.firstChild) mOldTrack.appendChild(oldPhotoArea.firstChild);
-  while (newPhotoArea.firstChild) mNewTrack.appendChild(newPhotoArea.firstChild);
-  mTrackWrap.appendChild(mOldTrack);
-  mTrackWrap.appendChild(mNewTrack);
-  oldPhotoArea.appendChild(mTrackWrap);
+    while (oldPhotoArea.firstChild) mOldTrack.appendChild(oldPhotoArea.firstChild);
+    while (newPhotoArea.firstChild) mNewTrack.appendChild(newPhotoArea.firstChild);
+    mTrackWrap.appendChild(mOldTrack);
+    mTrackWrap.appendChild(mNewTrack);
+    oldPhotoArea.appendChild(mTrackWrap);
 
-  /* control-area 페이드아웃 */
-  /* 컨트롤 영역은 fade 없이 교체 — photo-area 슬라이드 중 자연스럽게 처리됨 */
+    void mNewTrack.offsetHeight;
+    var trM = 'transform '+MOB_SLIDE_MS+'ms cubic-bezier(0.0,0.0,0.2,1)';
+    mOldTrack.style.transition = trM; mOldTrack.style.transform = 'translateX('+xOut+')';
+    mNewTrack.style.transition = trM; mNewTrack.style.transform = 'translateX(0)';
 
-  void mNewTrack.offsetHeight;
-  var trM = 'transform '+MOB_SLIDE_MS+'ms cubic-bezier(0.0,0.0,0.2,1)';
-  mOldTrack.style.transition = trM; mOldTrack.style.transform = 'translateX('+xOut+')';
-  mNewTrack.style.transition = trM; mNewTrack.style.transform = 'translateX(0)';
+    setTimeout(function(){
+      app.innerHTML = '';
+      while (mNewTrack.firstChild) newPhotoArea.appendChild(mNewTrack.firstChild);
+      app.appendChild(newPhotoArea);
+      var newCtrl = _buildMobileNav(scene, sceneURL);
+      app.appendChild(newCtrl);
+      var ta = newCtrl.querySelector('.scene-text');
+      if (ta) _startSceneTyping(ta, scene, sceneURL);
+    }, MOB_SLIDE_MS);
+  }
 
-  setTimeout(function(){
-    /* 슬라이드 완료 — mNewTrack 안의 요소를 그대로 재사용 (이미지 재로드 없음) */
-    app.innerHTML = '';
-
-    /* newPhotoArea 복원: mNewTrack 자식들을 다시 newPhotoArea로 이동 */
-    while (mNewTrack.firstChild) newPhotoArea.appendChild(mNewTrack.firstChild);
-    app.appendChild(newPhotoArea);
-
-    /* control-area 새로 빌드 + 타이핑 시작 */
-    var newCtrl = _buildMobileNav(scene, sceneURL);
-    app.appendChild(newCtrl);
-    var ta = newCtrl.querySelector('.scene-text');
-    if (ta) _startSceneTyping(ta, scene, sceneURL);
-  }, MOB_SLIDE_MS);
+  if (newImg && (!newImg.complete || !newImg.naturalWidth)) {
+    var slideStarted = false;
+    var timer = setTimeout(function() {
+      if (!slideStarted) { slideStarted = true; startSlide(); }
+    }, 400);
+    newImg.addEventListener('load', function() {
+      if (!slideStarted) { slideStarted = true; clearTimeout(timer); startSlide(); }
+    }, {once: true});
+    newImg.addEventListener('error', function() {
+      if (!slideStarted) { slideStarted = true; clearTimeout(timer); startSlide(); }
+    }, {once: true});
+  } else {
+    startSlide();
+  }
 }
 
 /* ============================================================
