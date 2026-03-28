@@ -2425,10 +2425,25 @@ var AutoPlay = (function(){
   var _scene    = null;
   var _sceneURL = null;
 
+  /* --- Wake Lock --- */
+  var _wakeLock = null;
+  function _acquireWakeLock() {
+    if (!navigator.wakeLock) return;
+    navigator.wakeLock.request('screen').then(function(lock) {
+      _wakeLock = lock;
+      _wakeLock.addEventListener('release', function() { _wakeLock = null; });
+    }).catch(function(){});
+  }
+  function _releaseWakeLock() {
+    if (_wakeLock) { _wakeLock.release().catch(function(){}); _wakeLock = null; }
+  }
+  /* 화면 복귀 시(visibility change) 오토플레이 중이면 재획득 */
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && _active && !_paused) _acquireWakeLock();
+  });
+
   /* --- 내부 유틸 --- */
   function _clearAll(){ clearTimeout(_timer); }
-
-  var _paused = false;
 
   function _pauseAP(){
     if(!_active || _paused) return;
@@ -2539,6 +2554,7 @@ var AutoPlay = (function(){
   /* TOC 플레이 버튼 — 현재 씬에서 바로 시작 */
   function start(scene, sceneURL){
     _active = true; _paused = false;
+    _acquireWakeLock();
     _updateTocBtn(true);
     _updateNavBar();
     onTypingDone(scene, sceneURL);
@@ -2547,6 +2563,7 @@ var AutoPlay = (function(){
   /* 인트로 플레이 버튼 — 새 페이지 로드 후 타이핑 완료 시 onTypingDone 으로 이어받음 */
   function activate(){
     _active = true; _paused = false;
+    _acquireWakeLock();
     _updateTocBtn(true);
     _updateNavBar();
   }
@@ -2554,6 +2571,7 @@ var AutoPlay = (function(){
   function stop(){
     _active = false; _paused = false;
     _clearAll();
+    _releaseWakeLock();
     _updateTocBtn(false);
     _updateNavBar();
   }
