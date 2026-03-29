@@ -2330,6 +2330,40 @@ function transOverlay(opacity, duration, cb) {
 /* ============================================================
    AUTO. AutoPlay — 자동 감상 모드 (데스크탑 전용)
    ============================================================ */
+/* ============================================================
+   CursorHide — 오토플레이/인트로 lock 시 마우스 커서 자동 숨김
+   ============================================================ */
+var CursorHide = (function(){
+  var _timer = null;
+  var _active = false;
+  var HIDE_MS = 2000;
+
+  function _onMove() {
+    document.body.style.cursor = '';
+    clearTimeout(_timer);
+    if (_active) {
+      _timer = setTimeout(function(){ document.body.style.cursor = 'none'; }, HIDE_MS);
+    }
+  }
+
+  function start() {
+    if (_active) return;
+    _active = true;
+    document.addEventListener('mousemove', _onMove);
+    _timer = setTimeout(function(){ document.body.style.cursor = 'none'; }, HIDE_MS);
+  }
+
+  function stop() {
+    _active = false;
+    document.removeEventListener('mousemove', _onMove);
+    clearTimeout(_timer);
+    _timer = null;
+    document.body.style.cursor = '';
+  }
+
+  return { start: start, stop: stop };
+})();
+
 var AutoPlay = (function(){
   var _active   = false;
   var _paused   = false;
@@ -2339,6 +2373,19 @@ var AutoPlay = (function(){
   var LPL_DELAY_MS  = 6000; /* LPL 씬: 애니메이션 감상을 위해 2배 대기 */
   var _scene    = null;
   var _sceneURL = null;
+
+  /* --- 커서 숨김 --- */
+  var _cursorTimer = null;
+  var CURSOR_HIDE_MS = 2000;
+  function _onMouseMove() {
+    document.body.style.cursor = '';
+    clearTimeout(_cursorTimer);
+    if (_active) {
+      _cursorTimer = setTimeout(function(){ document.body.style.cursor = 'none'; }, CURSOR_HIDE_MS);
+    }
+  }
+  function _startCursorHide() { if (!isMobile) CursorHide.start(); }
+  function _stopCursorHide()  { CursorHide.stop();  }
 
   /* --- Wake Lock --- */
   var _wakeLock = null;
@@ -2437,6 +2484,7 @@ var AutoPlay = (function(){
   function start(scene, sceneURL){
     _active = true; _paused = false;
     _acquireWakeLock();
+    _startCursorHide();
     _updateTocBtn(true);
     _updateNavBar();
     onTypingDone(scene, sceneURL);
@@ -2446,6 +2494,7 @@ var AutoPlay = (function(){
   function activate(){
     _active = true; _paused = false;
     _acquireWakeLock();
+    _startCursorHide();
     _updateTocBtn(true);
     _updateNavBar();
   }
@@ -2454,6 +2503,7 @@ var AutoPlay = (function(){
     _active = false; _paused = false;
     _clearAll();
     _releaseWakeLock();
+    _stopCursorHide();
     _updateTocBtn(false);
     _updateNavBar();
   }
@@ -2554,9 +2604,11 @@ function renderPhotoLayer(container, scene, imgSrc, onReady) {
 
   container.appendChild(img);
 
+  /* 일시적 주석 처리 — 추후 사용 예정
   if (scene.id === 'LPL_01') {
     _buildFogElements(container, scene, img);
   }
+  */
 
   container.appendChild(grad);
 
@@ -2697,6 +2749,7 @@ function _initRippleForScene(img, container, scene) {
     rippleEl.style.position="absolute";
     rippleEl.style.pointerEvents="none";
     rippleEl.style.overflow="hidden";
+    rippleEl.style.clipPath="inset(0)";
     rippleEl.style.opacity="0";
     rippleEl.style.transition="opacity 1.5s ease";
     var clone=img.cloneNode(false);
@@ -2710,7 +2763,7 @@ function _initRippleForScene(img, container, scene) {
     var syncPos=function(){
       var sqW=sqEl.offsetWidth,sqH=sqEl.offsetHeight;
       var iw=img.naturalWidth,ih=img.naturalHeight;
-      if(!iw||!ih)return;
+      if(!iw||!ih||!sqW||!sqH)return false;
 
       if(_coverMode){
         // 모바일 cover 모드: 전체 컨테이너 채움
@@ -2730,6 +2783,7 @@ function _initRippleForScene(img, container, scene) {
         clone.style.top="0px";
         clone.style.transformOrigin="center center";
         clone.style.transform="scale(1.015)";
+        return true;
       } else {
         // 데스크탑 contain 모드
         var scale=Math.min(sqW/iw,sqH/ih);
@@ -2742,14 +2796,22 @@ function _initRippleForScene(img, container, scene) {
         rippleEl.style.zIndex="10";
         var fadeStart=Math.round((1-SCREEN_RATIO)*100);
         var fadeEnd=Math.min(fadeStart+8,100);
-        rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
-        rippleEl.style.maskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
         clone.style.width=rw+"px";
         clone.style.height=rh+"px";
         clone.style.left="0px";
         clone.style.top="0px";
         clone.style.transformOrigin="center center";
-        clone.style.transform="scale(1.015)";
+        clone.style.transform="";
+        /* 상하 + 좌우 가장자리 fade — displacement 경계 아티팩트 제거 */
+        var edgeFade = "2%";
+        var combinedMask =
+          "linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)," +
+          "linear-gradient(to right,  transparent "+edgeFade+", black 6%, black 94%, transparent calc(100% - "+edgeFade+"))";
+        rippleEl.style.webkitMaskImage = combinedMask;
+        rippleEl.style.maskImage       = combinedMask;
+        rippleEl.style.webkitMaskComposite = "destination-in";
+        rippleEl.style.maskComposite       = "intersect";
+        return true;
       }
     };
     syncPos();
@@ -2770,7 +2832,18 @@ function _initRippleForScene(img, container, scene) {
       t+=_dSpeed;
       requestAnimationFrame(animate);
     };
-    setTimeout(function(){rippleEl.style.opacity="1";animate();},300);
+    setTimeout(function(){
+      /* syncPos 성공(크기 확정) 후 opacity:1 — 실패 시 재시도 */
+      function tryShow(attempts) {
+        if (syncPos()) {
+          rippleEl.style.opacity = "1";
+          animate();
+        } else if (attempts > 0) {
+          setTimeout(function(){ tryShow(attempts - 1); }, 100);
+        }
+      }
+      tryShow(10);
+    }, 300);
   };
 
   // ===== lpl_04 숨쉬는 물결 효과 (맥동 + 미세 떨림) =====
@@ -2816,6 +2889,7 @@ function _initRippleForScene(img, container, scene) {
     rippleEl.style.position="absolute";
     rippleEl.style.pointerEvents="none";
     rippleEl.style.overflow="hidden";
+    rippleEl.style.clipPath="inset(0)";
     rippleEl.style.opacity="0";
     rippleEl.style.transition="opacity 1.5s ease";
     rippleEl.style.transformOrigin="center center";
@@ -3126,7 +3200,8 @@ function _renderScene(scene, sceneURL, transDir) {
   var controlContainer = isMobile ? shell.controlArea : shell.controlLayer;
 
   /* 3. photo-layer 채우기 + 타이핑/ripple 조율 */
-  var isFog = (scene.id === 'LPL_01');
+  /* 일시적 주석 처리 — 추후 사용 예정: var isFog = (scene.id === 'LPL_01'); */
+  var isFog = false;
   var transitionDone = false, rippleInited = false;
   var imgEl = null;
 
@@ -4693,6 +4768,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
     ring1.style.animation = 'introPulse 2.4s ease-out infinite'; ring1.style.opacity = '1';
     ring2.style.animation = 'introPulse 2.4s ease-out 0.8s infinite'; ring2.style.opacity = '1';
     showIcon('lock');
+    CursorHide.start();
   };
 
   /* ── 타이핑 시작 ── */
