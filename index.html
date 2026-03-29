@@ -27,8 +27,32 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" as="style">
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 
-  <script src="/gallery.js?v=32" defer></script>
+  <script src="/gallery.js?v=33" defer></script>
+
+  <!-- JS 로드 전 화면 커버 — gallery.js 실행 시 _ensureAppReady()가 introApp 제거 -->
+  <style data-intro-style>
+    #introApp {
+      position: fixed; inset: 0; background: #333;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    #introFrame {
+      width: min(100vw, var(--vh100, 100vh));
+      aspect-ratio: 1/1;
+      background: linear-gradient(to bottom, #303030 0%, #222222 100%);
+      flex-shrink: 0;
+    }
+    #introBottom { display: none; }
+    @media (max-aspect-ratio: 1/1) {
+      #introApp { justify-content: flex-start; }
+      #introFrame { width: 100%; }
+      #introBottom { display: block; flex: 1; width: 100%; background: #333; }
+    }
+  </style>
 </head>
 <body style="background:#000;margin:0;padding:0;">
+  <div id="introApp">
+    <div id="introFrame"></div>
+    <div id="introBottom"></div>
+  </div>
 </body>
 </html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOL 씬 전환 설정</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #1a1a1a; color: #ccc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+header {
+  background: #111; border-bottom: 1px solid #333;
+  padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+header h1 { font-size: 13px; color: #fff; }
+.header-btns { display: flex; gap: 8px; }
+button { padding: 5px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: Arial, sans-serif; }
+.btn-export { background: #d4af37; color: #111; font-weight: bold; }
+.btn-reset  { background: #333; color: #aaa; }
+button:hover { opacity: 0.85; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* Scene list */
+.scene-list {
+  width: 196px; flex-shrink: 0; background: #161616;
+  border-right: 1px solid #2a2a2a; overflow-y: auto; padding: 6px 0;
+}
+.section-head { padding: 8px 12px 3px; font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+.scene-item {
+  padding: 6px 12px; cursor: pointer; font-size: 11px; color: #777;
+  border-left: 3px solid transparent; display: flex; align-items: center; justify-content: space-between;
+}
+.scene-item:hover { background: #1e1e1e; color: #bbb; }
+.scene-item.selected { background: #1e1e1e; color: #fff; border-left-color: #d4af37; }
+.scene-item.loaded   { border-left-color: #2a6496; color: #7aadce; }
+.scene-item.selected.loaded { border-left-color: #d4af37; color: #fff; }
+.scene-item .code { font-size: 9px; color: #3a3a3a; flex-shrink: 0; margin-left: 4px; }
+.scene-item.modified .code::after { content: ' ●'; color: #d4af37; }
+
+/* Settings panel */
+.settings-panel {
+  width: 260px; flex-shrink: 0; padding: 16px 14px;
+  overflow-y: auto; border-right: 1px solid #2a2a2a;
+}
+.settings-panel h2 { font-size: 13px; color: #fff; margin-bottom: 2px; }
+.scene-sub { font-size: 10px; color: #444; margin-bottom: 14px; }
+.platform-block { margin-bottom: 16px; }
+.platform-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #222; }
+
+/* Radio grid */
+.radio-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 10px; }
+.radio-option { position: relative; }
+.radio-option input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-option label {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 7px 2px; border: 1px solid #252525; border-radius: 4px;
+  cursor: pointer; font-size: 9px; color: #555; text-align: center; background: #1a1a1a;
+}
+.radio-option input:checked + label { border-color: #d4af37; color: #d4af37; background: #1e1a0a; }
+.radio-option label:hover { border-color: #444; color: #999; }
+.radio-option .icon { font-size: 12px; line-height: 1; }
+
+.dur-row { display: flex; align-items: center; gap: 8px; }
+.dur-row label { font-size: 10px; color: #555; width: 58px; flex-shrink: 0; }
+input[type=number] { background: #1e1e1e; border: 1px solid #2a2a2a; color: #bbb; padding: 4px 8px; border-radius: 3px; font-size: 11px; width: 76px; }
+.dur-unit { font-size: 10px; color: #444; }
+
+.btn-preview {
+  width: 100%; margin-top: 14px; padding: 8px; background: #2a6496; color: #fff;
+  font-weight: bold; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;
+}
+.btn-reload {
+  width: 100%; margin-top: 6px; padding: 7px; background: #2a2a2a; color: #888;
+  font-size: 11px; border: none; border-radius: 4px; cursor: pointer;
+}
+.btn-preview:hover, .btn-reload:hover { opacity: 0.85; }
+
+.hint { font-size: 10px; color: #3a3a3a; margin-top: 14px; line-height: 1.6; }
+.hint strong { color: #555; }
+
+/* Preview pane */
+.preview-pane { flex: 1; min-width: 0; background: #0d0d0d; display: flex; flex-direction: column; }
+.preview-header {
+  padding: 8px 14px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+  font-size: 11px; color: #444; display: flex; align-items: center; gap: 6px;
+}
+.preview-header .arrow { color: #d4af37; }
+.preview-iframe-wrap {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 10px; overflow: hidden;
+}
+iframe {
+  display: block; height: 100%; width: auto; aspect-ratio: 1/1;
+  max-height: calc(100vh - 74px);
+  border: 1px solid #2a2a2a; border-radius: 2px; background: #000;
+}
+.empty-state { display: flex; align-items: center; justify-content: center; height: 100%; color: #333; font-size: 12px; flex-direction: column; gap: 8px; }
+.empty-state .sub { font-size: 10px; color: #2a2a2a; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 100; }
+.modal-overlay.on { display: flex; }
+.modal { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 20px; width: 560px; max-height: 80vh; display: flex; flex-direction: column; }
+.modal h3 { font-size: 13px; color: #fff; margin-bottom: 3px; }
+.modal p { font-size: 10px; color: #555; margin-bottom: 12px; }
+textarea { flex: 1; background: #111; border: 1px solid #2a2a2a; color: #9cdcfe; padding: 10px; border-radius: 3px; font-size: 11px; font-family: monospace; resize: none; min-height: 260px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 10px; }
+.btn-copy { background: #d4af37; color: #111; font-weight: bold; }
+.btn-close-modal { background: #2a2a2a; color: #aaa; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MOL — 씬 전환 설정</h1>
+  <div class="header-btns">
+    <button class="btn-reset" onclick="resetAll()">전체 초기화</button>
+    <button class="btn-export" onclick="openExport()">JSON 내보내기</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="scene-list" id="sceneList"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <div class="empty-state">씬을 선택하세요</div>
+  </div>
+  <div class="preview-pane">
+    <div class="preview-header" id="previewHeader">
+      <span id="previewLabel">미리보기</span>
+    </div>
+    <div class="preview-iframe-wrap" id="iframeWrap">
+      <div class="empty-state">
+        <div>← 씬을 클릭하면 미리보기가 시작됩니다</div>
+        <div class="sub">첫 번째 클릭: 씬 로드 / 다음 클릭: 전환 재생</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <h3>JSON 내보내기</h3>
+    <p>아래 코드를 gallery.js의 SCENES_ALL 각 씬에 붙여넣으세요.</p>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-btns">
+      <button class="btn-copy" onclick="copyExport()">클립보드 복사</button>
+      <button class="btn-close-modal" onclick="closeExport()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SCENES = [
+  {section:'LPL',id:'LPL_01',code:'LPL#01',kr:'안개가 휘감은 세상에'},
+  {section:'LPL',id:'LPL_02',code:'LPL#02',kr:'당신의 온기가 스며들면'},
+  {section:'LPL',id:'LPL_03',code:'LPL#03',kr:'세상은 본연의 모습을'},
+  {section:'LPL',id:'LPL_04',code:'LPL#04',kr:'그 품안에서 꿈이 일렁입니다'},
+  {section:'LDR',id:'LDR_00',code:'LDR#00',kr:'사랑의 꿈은'},
+  {section:'LDR',id:'LDR_11',code:'LDR#11',kr:'이끌림을 따라'},
+  {section:'LDR',id:'LDR_21',code:'LDR#21',kr:'설렘에 실려'},
+  {section:'LDR',id:'LDR_31',code:'LDR#31',kr:'그리움과 함께 넓어지며'},
+  {section:'LDR',id:'LDR_41',code:'LDR#41',kr:'애틋함으로 깊어져'},
+  {section:'LDR',id:'LDR_51',code:'LDR#51',kr:'행복의 바다에 이르고'},
+  {section:'LSN',id:'LSN_01',code:'LSN#01',kr:'사랑의 노래가 되어'},
+  {section:'LSN',id:'LSN_02',code:'LSN#02',kr:'당신만을 바라봅니다'},
+  {section:'LSN',id:'LSN_03',code:'LSN#03',kr:'어제, 오늘 그리고 내일'},
+  {section:'LSN',id:'LSN_04',code:'LSN#04',kr:'하루의 모든 순간'},
+  {section:'LSN',id:'LSN_05',code:'LSN#05',kr:'잠 못 이루는 밤'},
+  {section:'LSN',id:'LSN_06',code:'LSN#06',kr:'꿈속에서도'},
+  {section:'LSN',id:'LSN_07',code:'LSN#07',kr:'내가 머물고 싶은 공간'},
+  {section:'LSN',id:'LSN_08',code:'LSN#08',kr:'끝없이 샘솟는 기쁨'},
+  {section:'LSN',id:'LSN_09',code:'LSN#09',kr:'마음을 울리는 노래 속에도'},
+  {section:'LSN',id:'LSN_10',code:'LSN#10',kr:'언제나 당신이 있습니다'},
+  {section:'LSN',id:'LSN_11',code:'LSN#11',kr:'당신의'},
+  {section:'LSN',id:'LSN_12',code:'LSN#12',kr:'해맑은 미소와 따스한 온기에'},
+  {section:'LSN',id:'LSN_13',code:'LSN#13',kr:'모든 순간이 낙원이 되고'},
+  {section:'LSN',id:'LSN_14',code:'LSN#14',kr:'온 세상이 사랑으로 물들면'},
+  {section:'LSN',id:'LSN_15',code:'LSN#15',kr:'나는 당신의 사랑안에서'},
+  {section:'LSN',id:'LSN_16',code:'LSN#16',kr:'새로이 태어납니다'},
+  /* LEL_01 제외 — 다음 씬 없음 */
+];
+
+/* 전환 타입 — 데모에 있는 것 모두 포함 */
+var TYPES = [
+  {value:'slide',      icon:'▶▶', label:'스태킹',    desc:'새 씬이 위로 덮임 (현재 기본)'},
+  {value:'push',       icon:'⇄',  label:'푸시',      desc:'양쪽 동시 슬라이드 (ease-out)'},
+  {value:'pushLinear', icon:'→',  label:'리니어',    desc:'양쪽 동시 슬라이드 (linear)'},
+  {value:'parallax',   icon:'⟹',  label:'패럴랙스',  desc:'구씬 느리게, 신씬 빠르게'},
+  {value:'skew',       icon:'⟋',  label:'스큐',      desc:'기울어지며 슬라이드'},
+  {value:'mask',       icon:'▦',  label:'마스크',    desc:'클립패스로 드러남'},
+  {value:'scale',      icon:'◎',  label:'스케일',    desc:'작게 → 커지며 진입'},
+  {value:'fade',       icon:'◐',  label:'페이드',    desc:'투명도로 교체'},
+  {value:'fadeBlack',  icon:'◼',  label:'블랙',      desc:'검정화면 거쳐 전환'},
+  {value:'none',       icon:'✕',  label:'즉시',      desc:'전환 없이 바로 교체'},
+];
+
+var DEFAULT_DUR = {slide:2000, push:2000, pushLinear:2000, parallax:2000, skew:2000, mask:2000, scale:2000, fade:2000, fadeBlack:2000, none:0};
+
+function defaultType(id, platform) {
+  if (id.startsWith('LSN')) return 'fadeBlack';
+  return platform === 'desktop' ? 'slide' : 'fade';
+}
+function defaultDur(type) { return DEFAULT_DUR[type] !== undefined ? DEFAULT_DUR[type] : 1000; }
+
+var STORAGE_KEY = 'mol_transition_config';
+var config = {};
+function loadConfig() { try { config = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); } catch(e){ config={}; } }
+function saveConfig() { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); }
+function resetAll() {
+  if (!confirm('전체 설정을 초기화할까요?')) return;
+  config = {}; saveConfig(); renderList(); document.getElementById('settingsPanel').innerHTML = '<div class="empty-state">씬을 선택하세요</div>';
+}
+
+/* ── 상태 ── */
+var currentId  = null;  /* 설정 패널에 표시 중인 씬 */
+var loadedId   = null;  /* iframe에 현재 로드된 씬 */
+var iframeReady = false;
+
+/* ── 씬 목록 ── */
+function renderList() {
+  var el = document.getElementById('sceneList');
+  var lastSec = '';
+  var NAMES = {LPL:'LPL (Prologue)',LDR:'LDR (Love Dream)',LSN:'LSN (Love Song)',LEL:'LEL (Epilogue)'};
+  var html = '';
+  SCENES.forEach(function(s) {
+    if (s.section !== lastSec) {
+      html += '<div class="section-head">' + (NAMES[s.section]||s.section) + '</div>';
+      lastSec = s.section;
+    }
+    var cls = 'scene-item';
+    if (config[s.id]) cls += ' modified';
+    if (s.id === currentId) cls += ' selected';
+    if (s.id === loadedId)  cls += ' loaded';
+    html += '<div class="' + cls + '" onclick="selectScene(\'' + s.id + '\')">'
+          + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + s.kr + '</span>'
+          + '<span class="code">' + s.code + '</span>'
+          + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function getVal(id, platform, key) {
+  var c = config[id] && config[id][platform];
+  if (c && c[key] !== undefined) return c[key];
+  if (key === 'type') return defaultType(id, platform);
+  if (key === 'duration') return defaultDur(defaultType(id, platform));
+  return '';
+}
+
+function buildRadioGroup(id, platform, currentType) {
+  var name = 'rt_' + platform + '_' + id;
+  var html = '<div class="radio-grid">';
+  TYPES.forEach(function(t) {
+    var inputId = name + '_' + t.value;
+    html += '<div class="radio-option" title="' + t.desc + '">'
+          + '<input type="radio" name="' + name + '" id="' + inputId + '" value="' + t.value + '"'
+          + (t.value === currentType ? ' checked' : '')
+          + ' onchange="onTypeChange(\'' + platform + '\',this.value)">'
+          + '<label for="' + inputId + '"><span class="icon">' + t.icon + '</span>' + t.label + '</label>'
+          + '</div>';
+  });
+  return html + '</div>';
+}
+
+function renderSettings(id) {
+  var scene = SCENES.find(function(s){ return s.id === id; });
+  if (!scene) return;
+  var dType = getVal(id,'desktop','type'), dDur = getVal(id,'desktop','duration');
+  var mType = getVal(id,'mobile','type'),  mDur = getVal(id,'mobile','duration');
+
+  document.getElementById('settingsPanel').innerHTML =
+    '<h2>' + scene.kr + '</h2><div class="scene-sub">' + scene.code + ' · ' + scene.id + '</div>'
+    + '<div class="platform-block"><div class="platform-label">🖥 Desktop</div>'
+    + buildRadioGroup(id,'desktop',dType)
+    + '<div class="dur-row"><label>Duration</label>'
+    + '<input type="number" id="d_dur" value="' + dDur + '" min="0" step="100" onchange="onDurChange(\'desktop\')">'
+    + '<span class="dur-unit">ms</span></div></div>'
+    + '<div class="platform-block"><div class="platform-label">📱 Mobile</div>'
+    + buildRadioGroup(id,'mobile',mType)
+    + '<div class="dur-row"><label>Duration</label>'
+    + '<input type="number" id="m_dur" value="' + mDur + '" min="0" step="50" onchange="onDurChange(\'mobile\')">'
+    + '<span class="dur-unit">ms</span></div></div>'
+    + '<div class="hint"><strong>사용법</strong><br>① 씬 클릭 → 해당 씬 로드<br>② ▶ 버튼 → 다음 씬으로 전환 재생</div>'
+    + '<button class="btn-preview" onclick="playPreview()">▶ 미리보기 (이 씬 → 다음 씬)</button>'
+    + '<button class="btn-reload" onclick="loadScene(currentId)">↺ 리로드</button>';
+}
+
+function onTypeChange(platform, type) {
+  if (!currentId) return;
+  var el = document.getElementById(platform[0] + '_dur');
+  /* 이미 입력된 duration이 있으면 유지, 없으면 기본값 */
+  var existingDur = el ? parseInt(el.value) : NaN;
+  var dur = (!isNaN(existingDur) && existingDur > 0) ? existingDur : defaultDur(type);
+  if (el) el.value = dur;
+  setConfig(currentId, platform, 'type', type);
+  setConfig(currentId, platform, 'duration', dur);
+}
+function onDurChange(platform) {
+  if (!currentId) return;
+  var dur = parseInt(document.getElementById(platform[0] + '_dur').value) || 0;
+  setConfig(currentId, platform, 'duration', dur);
+}
+function setConfig(id, platform, key, value) {
+  if (!config[id]) config[id] = {};
+  if (!config[id][platform]) config[id][platform] = {};
+  config[id][platform][key] = value;
+  saveConfig(); renderList();
+}
+
+/* ── 씬 선택 + 직접 로드 ── */
+function selectScene(id) {
+  currentId = id;
+  renderSettings(id);
+  renderList();
+  loadScene(id);
+}
+
+function loadScene(id) {
+  var wrap  = document.getElementById('iframeWrap');
+  var label = document.getElementById('previewLabel');
+
+  var frame = document.getElementById('previewFrame');
+  if (!frame) {
+    wrap.innerHTML = '';
+    frame = document.createElement('iframe');
+    frame.id = 'previewFrame'; frame.title = '씬 미리보기';
+    wrap.appendChild(frame);
+  }
+
+  label.textContent = '로딩 중...';
+  iframeReady = false;
+  frame.onload = function() {
+    /* iframe 로드 완료 후 config를 contentWindow에 직접 주입 */
+    try {
+      frame.contentWindow._MOL_PREVIEW_CONFIG = config;
+    } catch(e){}
+    iframeReady = true;
+    loadedId = id;
+    label.innerHTML = '<span>' + id + '</span>';
+    renderList();
+  };
+  frame.src = '/scenes/' + id + '.html';
+}
+
+function playPreview() {
+  if (!loadedId) { alert('먼저 씬을 클릭해서 로드하세요.'); return; }
+
+  var idx = SCENES.findIndex(function(s){ return s.id === loadedId; });
+  var next = SCENES[idx + 1];
+  if (!next) { alert('다음 씬이 없습니다.'); return; }
+
+  var label = document.getElementById('previewLabel');
+  var frame = document.getElementById('previewFrame');
+  if (!frame) return;
+
+  label.textContent = '로딩 중...';
+  iframeReady = false;
+
+  /* ① 출발씬 리로드 → ② config 주입 → ③ 전환 */
+  frame.onload = function() {
+    frame.onload = null;
+    try {
+      frame.contentWindow._MOL_PREVIEW_CONFIG = {
+        desktop: { type: getVal(loadedId,'desktop','type'), duration: getVal(loadedId,'desktop','duration') },
+        mobile:  { type: getVal(loadedId,'mobile','type'),  duration: getVal(loadedId,'mobile','duration')  }
+      };
+    } catch(e){}
+
+    iframeReady = true;
+    label.innerHTML = '<span>' + SCENES[idx].code + '</span> <span class="arrow">→</span> <span>' + next.code + '</span>';
+
+    try {
+      frame.contentWindow.goTo('/scenes/' + next.id + '.html', {direction:'next'});
+      var dur = (getVal(loadedId, 'desktop', 'duration') || 2000) + 300;
+      setTimeout(function(){
+        iframeReady = true;
+        label.innerHTML = '<span>' + next.id + '</span> <span style="color:#555;font-size:9px">— 전환 완료</span>';
+        renderList();
+      }, dur);
+    } catch(e) { loadScene(next.id); }
+  };
+
+  frame.src = '/scenes/' + loadedId + '.html';
+}
+
+/* ── JSON 내보내기 ── */
+function openExport() {
+  var lines = [];
+  SCENES.forEach(function(s) {
+    var c = config[s.id]; if (!c) return;
+    var dt = (c.desktop&&c.desktop.type)                    || defaultType(s.id,'desktop');
+    var dd = (c.desktop&&c.desktop.duration!==undefined)    ? c.desktop.duration : defaultDur(dt);
+    var mt = (c.mobile &&c.mobile.type)                     || defaultType(s.id,'mobile');
+    var md = (c.mobile &&c.mobile.duration!==undefined)     ? c.mobile.duration  : defaultDur(mt);
+    if (dt===defaultType(s.id,'desktop')&&dd===defaultDur(defaultType(s.id,'desktop'))
+      &&mt===defaultType(s.id,'mobile') &&md===defaultDur(defaultType(s.id,'mobile'))) return;
+    lines.push('// '+s.code+' '+s.kr);
+    lines.push("transition: {");
+    lines.push("  desktop: { type: '"+dt+"', duration: "+dd+" },");
+    lines.push("  mobile:  { type: '"+mt+"', duration: "+md+" }");
+    lines.push('},'); lines.push('');
+  });
+  document.getElementById('exportText').value = lines.length
+    ? '// SCENES_ALL 각 씬 객체 안에 붙여넣으세요.\n\n' + lines.join('\n')
+    : '// 변경된 설정이 없습니다.';
+  document.getElementById('exportModal').classList.add('on');
+}
+function copyExport() {
+  document.getElementById('exportText').select();
+  document.execCommand('copy');
+  var btn = document.querySelector('.btn-copy');
+  btn.textContent = '복사됨 ✓';
+  setTimeout(function(){ btn.textContent = '클립보드 복사'; }, 1500);
+}
+function closeExport() { document.getElementById('exportModal').classList.remove('on'); }
+document.getElementById('exportModal').addEventListener('click', function(e){ if(e.target===this) closeExport(); });
+
+loadConfig(); renderList(); selectScene('LPL_01');
+
+</script>
+</body>
+</html>
