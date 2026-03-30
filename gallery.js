@@ -3377,10 +3377,14 @@ var TransitionManager = {
       clip.appendChild(oldPhotoArea);
       clip.appendChild(newPhotoArea);
 
-      /* app: clip + 기존 control-area 유지 */
+      /* app: clip + 새 control-area 즉시 표시 (#92 — 구 씬 텍스트 잔존 방지)
+         newCtrlArea 배경 inline 명시: CSS 클래스 적용 전 순간 #000 노출 방지
+         updateNavBar 먼저 실행: DOM 붙이기 전 아이콘 세팅 (#89 모바일) */
+      if (AutoPlay.isActive()) AutoPlay.updateNavBar();
+      newCtrlArea.style.background = '#333';
       app.innerHTML = '';
       app.appendChild(clip);
-      if (oldCtrlArea) app.appendChild(oldCtrlArea);
+      app.appendChild(newCtrlArea);
 
       void newPhotoArea.offsetHeight;
       newPhotoArea.style.transition = 'transform ' + SLIDE_MS + 'ms cubic-bezier(0.0,0.0,0.2,1)';
