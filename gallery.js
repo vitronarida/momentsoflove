@@ -3359,8 +3359,9 @@ var TransitionManager = {
 
       if (!oldPhotoArea) { TransitionManager._none(app, newShell, onDone); return; }
 
-      /* 구 씬 ripple canvas 제거 — 전환 중 겹침 방지 */
-      oldPhotoArea.querySelectorAll('canvas,[data-ripple]').forEach(function(el){ el.remove(); });
+      /* 구 씬 ripple/canvas 요소 제거 — 전환 중 겹침 방지 */
+      oldPhotoArea.querySelectorAll('canvas,[data-ripple-canvas],[data-ripple-el],[data-ripple-el-prague]').forEach(function(el){ el.remove(); });
+      document.querySelectorAll('[data-ripple-svg],[data-ripple-svg-prague]').forEach(function(el){ el.remove(); });
 
       /* clip 래퍼: photo-area 크기와 동일, overflow:hidden으로 클리핑
          control-area는 래퍼 밖에 그대로 유지 — 검정 화면 없음 */
