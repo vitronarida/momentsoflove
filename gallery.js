@@ -1633,6 +1633,7 @@ function setLang(l) {
 var NavigationManager = (function() {
   var _navigating       = false;
   var _wasPaused        = false;
+  var _stanzaInProgress = false;
   var _currentURL       = null;
   var _currentScene     = null;
   var _currentSceneURL  = '';
@@ -1724,8 +1725,9 @@ function _goTo(url, opts) {
   _wasPaused = AutoPlay.isActive() && AutoPlay.isPaused();
   AutoPlay.onSceneChange();
 
-  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우 */
-  if (direction === 'next' && !opts.direct && _currentScene && _currentScene.stanzaTransition) {
+  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우
+     #95 — 산개 진행 중(_stanzaInProgress)에는 일반 전환으로 처리 */
+  if (direction === 'next' && !opts.direct && _currentScene && _currentScene.stanzaTransition && !_stanzaInProgress) {
     _stanzaTransition(url);
     return;
   }
@@ -1773,6 +1775,8 @@ function _stanzaTransition(destURL) {
   var app    = $id('app');
   var textEl = app && (app.querySelector('.scene-text') || app.querySelector('.long-text'));
 
+  _stanzaInProgress = true; /* #95 — 산개 진행 중 표시 */
+
   if (!textEl) { _stanzaGoToDest(destURL); return; }
 
   /* t=1000: 텍스트 산화 + 입자 산개 */
@@ -1781,12 +1785,15 @@ function _stanzaTransition(destURL) {
     textEl.classList.remove('typing');
     textEl.style.transition = 'opacity 900ms ease,filter 900ms ease';
     textEl.style.filter = 'blur(3px)'; textEl.style.opacity = '0';
+    /* #95 — 산개 시작 시점에 _navigating 해제: 이후 nav 버튼 즉시 반응 */
+    _navigating = false;
     _stanzaSpawnParticles(app, textEl, function() { _stanzaGoToDest(destURL); });
   }, 1000);
 }
 
 function _stanzaGoToDest(destURL) {
   /* 스탄자 전환: Fade to Black (정사각형 기준, 모바일은 photo-area 기준) */
+  var _startURL = _currentURL; /* #95 fix — 산개 중 nav 이동 감지용 */
   var app = $id('app');
   var sq = app && (app.querySelector('.square-frame') || app.querySelector('.photo-area'));
   var overlay = document.createElement('div');
@@ -1797,10 +1804,18 @@ function _stanzaGoToDest(destURL) {
     overlay.style.opacity = '1';
     setTimeout(function(){
       /* 2000ms fadeIn + 2000ms 정지 후 씬 교체 */
+      /* #95 fix — 산개 중 nav 이동 발생 시 취소 */
+      if (_currentURL !== _startURL) {
+        _navigating = false; _stanzaInProgress = false;
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        return;
+      }
       fetchScene(destURL).then(function(destScene) {
+        if (_currentURL !== _startURL) { _navigating = false; _stanzaInProgress = false; return; }
         ensureSPAOverlays();
         _applyScene(destURL, destScene, 'none');
         _navigating = false;
+        _stanzaInProgress = false; /* #95 — 산개 완료 */
         /* app.innerHTML='' 로 overlay 소멸 → 새 컨테이너에 재부착 후 fadeOut */
         var newApp = $id('app');
         var newSq = newApp && (newApp.querySelector('.square-frame') || newApp.querySelector('.photo-area'));
@@ -1814,13 +1829,15 @@ function _stanzaGoToDest(destURL) {
             setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 4000);
           }); });
         }
-      }).catch(function(){ _navigating=false; console.warn('[MOL] stanza fetchScene 실패:', destURL); });
+      }).catch(function(){ _navigating=false; _stanzaInProgress=false; console.warn('[MOL] stanza fetchScene 실패:', destURL); });
     }, 4000);
   }); });
 }
 
 function _stanzaSpawnParticles(app, textEl, done) {
   var sq = app.querySelector('.square-frame') || app;
+  /* square-frame이 없을 때 app 기준 — overflow:hidden으로 정사각형 밖 노출 방지 */
+  if (sq === app) sq.style.overflow = 'hidden';
 
   /* 기준: square-frame */
   var sqR = sq.getBoundingClientRect();
@@ -3042,6 +3059,12 @@ function _buildMobileNav(scene, sceneURL, container) {
     };
   }
   leftBtn.addEventListener('click', leftBtn._navHandler);
+  leftBtn.addEventListener('touchend', function(e){
+    e.preventDefault(); e.stopPropagation();
+    /* 모바일 터치: 오토모드 유지하며 이동 */
+    if(scene.pageNum === 1 && !scene.prevURL){ AboutManager.open(); return; }
+    if(scene.prevURL) window.goTo(resolveURL(sceneURL, scene.prevURL), {direction:'prev'});
+  }, {passive:false});
 
   var menuBtn=document.createElement('div'); menuBtn.className='nav-btn';
   menuBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>';
@@ -3059,6 +3082,11 @@ function _buildMobileNav(scene, sceneURL, container) {
     if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'});
   };
   rightBtn.addEventListener('click', rightBtn._navHandler);
+  rightBtn.addEventListener('touchend', function(e){
+    e.preventDefault(); e.stopPropagation();
+    /* 모바일 터치: 오토모드 유지하며 이동 */
+    if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
+  }, {passive:false});
 
   navBar.append(leftBtn, menuBtn, listBtn, rightBtn);
   ctrl.appendChild(navBar);
@@ -3164,7 +3192,8 @@ function _renderScene(scene, sceneURL, transDir) {
   var isLSN  = scene.id && scene.id.indexOf('LSN') === 0;
 
   /* body class 초기화 → 재설정 */
-  document.body.classList.remove('ui-text-only', 'ui-mode-ready', 'ui-hide-all');
+  /* #93 — ui-text-only는 remove 금지: remove→add 사이 nav-btn 순간 노출 방지 */
+  document.body.classList.remove('ui-mode-ready', 'ui-hide-all');
   document.body.classList.add('ui-text-only', 'ui-mode-ready');
 
   /* 전환 타입 + duration 결정
@@ -3218,7 +3247,8 @@ function _renderScene(scene, sceneURL, transDir) {
   renderPhotoLayer(photoContainer, scene, imgSrc, function(img) {
     imgEl = img;
     initRippleIfReady();
-    if (isFog && transitionDone) startTyping();
+    /* #84 — 전환 완료 후 이미지가 늦게 로드된 경우 여기서 타이핑 시작 */
+    if (transitionDone) startTypingWhenReady();
   });
 
   /* 4. control-layer 채우기 */
@@ -3235,17 +3265,43 @@ function _renderScene(scene, sceneURL, transDir) {
     TypingEngine.startSceneTyping(ta, scene, sceneURL);
   }
 
+  /* #84 — 이미지 페이드인 완료 후 타이핑 시작
+     모바일: 페이드인 없음 → 바로 시작
+     데스크탑: scene-img opacity transitionend 대기 (--scene-hq-fade: 2500ms)
+               fallback으로 2600ms 후 강제 시작
+     DOM 체크 + 토큰 체크로 씬 전환 후 이전 씬 타이핑 완전 차단
+     typingStarted 플래그로 onTransitionDone/onReady 중복 호출 방지 */
+  var typingStarted = false;
+  function startTypingWhenReady() {
+    if (typingStarted) return;
+    typingStarted = true;
+    if (isMobile || !imgEl) { startTyping(); return; }
+    var _myToken = TypingEngine.getToken();
+    var _done = false;
+    function _guardedStart() {
+      if (_done) return; _done = true;
+      if (TypingEngine.getToken() !== _myToken) return;
+      if (!document.body.contains(controlContainer)) return;
+      startTyping();
+    }
+    var _fallback = setTimeout(_guardedStart, 2600);
+    imgEl.addEventListener('transitionend', function handler(e) {
+      if (e.propertyName !== 'opacity') return;
+      clearTimeout(_fallback);
+      imgEl.removeEventListener('transitionend', handler);
+      _guardedStart();
+    });
+  }
+
   /* 6. 전환 완료 콜백 */
   var typingDelay = (transType === 'slide') ? Math.min(400, transDuration * 0.13 | 0) : 0;
   function onTransitionDone() {
     transitionDone = true;
     initRippleIfReady();
-    /* #89 — updateNavBar 먼저 실행(오토모드 아이콘 세팅) 후 nav-ready 추가
-       순서 보장으로 <,> 버튼 잠깐 노출 방지 */
     if (AutoPlay.isActive()) AutoPlay.updateNavBar();
     if (!isMobile && shell.screen) shell.screen.classList.add('nav-ready');
     setTimeout(function() {
-      if (!isFog || imgEl) startTyping();
+      if (imgEl) startTypingWhenReady();
     }, typingDelay);
   }
 
@@ -3379,12 +3435,12 @@ var TransitionManager = {
 
       /* app: clip + 새 control-area 즉시 표시 (#92 — 구 씬 텍스트 잔존 방지)
          newCtrlArea 배경 inline 명시: CSS 클래스 적용 전 순간 #000 노출 방지
-         updateNavBar 먼저 실행: DOM 붙이기 전 아이콘 세팅 (#89 모바일) */
-      if (AutoPlay.isActive()) AutoPlay.updateNavBar();
+         #93 — updateNavBar는 append 후 호출: DOM에 붙기 전 호출 시 효과 없음 */
       newCtrlArea.style.background = '#333';
       app.innerHTML = '';
       app.appendChild(clip);
       app.appendChild(newCtrlArea);
+      if (AutoPlay.isActive()) AutoPlay.updateNavBar();
 
       void newPhotoArea.offsetHeight;
       newPhotoArea.style.transition = 'transform ' + SLIDE_MS + 'ms cubic-bezier(0.0,0.0,0.2,1)';
@@ -3749,7 +3805,8 @@ var TypingEngine = (function() {
           i++;
           setTimeout(next, 90 + Math.random() * 110);
         } else {
-          /* 타이핑 완료 — 커서 유지 (깜빡임 계속). 씬 전환 시 토큰으로 자동 정리됨 */
+          /* 타이핑 완료 — 씬 전환됐으면 콜백 차단 */
+          if (_token !== myToken) { cursor.remove(); return; }
           if (onComplete) onComplete();
         }
       }
@@ -3769,6 +3826,8 @@ var TypingEngine = (function() {
     _token++;
   }
 
+  function getToken() { return _token; }
+
   /* 씬 텍스트 타이핑 공통 진입점
      show 클래스 추가 + 타이핑 시작 + AutoPlay.onTypingDone 연결
      fog/photo, 모바일/데스크탑, 슬라이드 완료 후 — 모두 여기서 시작 */
@@ -3776,6 +3835,8 @@ var TypingEngine = (function() {
     if (!el) return;
     el.classList.add('show');
     _typeText(el, curLang === 'KR' ? scene.textKR : scene.textEN, function() {
+      /* 씬 전환 후 이전 씬 콜백 차단 */
+      if (NavigationManager.currentSceneURL() !== sceneURL) return;
       /* fog씬(LPL_01) + 수동모드일 때만 타이핑 완료 후 fog 시작 */
       if (scene.id === 'LPL_01' && !AutoPlay.isActive()) FogFX.start();
       /* 오토모드: 타이핑 완료 시점에 next 이미지 즉시 프리로드 */
@@ -3791,7 +3852,7 @@ var TypingEngine = (function() {
     });
   }
 
-  return { cancel: cancel, startSceneTyping: startSceneTyping };
+  return { cancel: cancel, startSceneTyping: startSceneTyping, getToken: getToken };
 })();
 
 /* ============================================================
@@ -3843,6 +3904,7 @@ var InputManager = (function() {
   /* 씬 전환 시 호출 — onkeydown / onwheel 씬 참조 갱신 */
   function _bindScene(scene, sceneURL) {
     document.onkeydown = function(e) {
+      if (e.repeat) return; /* 키 반복 이벤트 무시 */
       if (_isOverlayOpen()) {
         if(e.key==='Escape') { _closeTopOverlay(); e.preventDefault(); }
         return;
@@ -3853,11 +3915,11 @@ var InputManager = (function() {
       if(e.key==='p'||e.key==='P'){ e.preventDefault(); AboutManager.open(); return; }
       if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Enter'){
         e.preventDefault();
-        if(AutoPlay.isActive() && !AutoPlay.isPaused()) AutoPlay.pauseAP();
+        if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
         if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'});
       } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
         e.preventDefault();
-        if(AutoPlay.isActive() && !AutoPlay.isPaused()) AutoPlay.pauseAP();
+        if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
         if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev'});
       }
     };
