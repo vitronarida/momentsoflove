@@ -22,7 +22,8 @@ let gbDB = null;
 const loadGBFirebase = () => new Promise((resolve) => {
   if (gbFirebaseReady) { resolve(); return; }
   // gallery.js(하트 코드)가 이미 Firebase를 로드했으면 재사용
-  if (typeof firebase !== "undefined" && firebase.apps && firebase.apps.length) {
+  if (typeof firebase !== "undefined" && firebase.apps && firebase.apps.length &&
+      typeof firebase.firestore === "function" && typeof firebase.auth === "function") {
     gbAuth = firebase.auth();
     gbDB = firebase.firestore();
     gbFirebaseReady = true;

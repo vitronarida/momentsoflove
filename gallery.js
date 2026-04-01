@@ -1726,10 +1726,15 @@ function _goTo(url, opts) {
   AutoPlay.onSceneChange();
 
   /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우
-     #95 — 산개 진행 중(_stanzaInProgress)에는 일반 전환으로 처리 */
-  if (direction === 'next' && !opts.direct && _currentScene && _currentScene.stanzaTransition && !_stanzaInProgress) {
+     #95 — 산개 진행 중(_stanzaInProgress)에는 일반 전환으로 처리
+     forceNav:true — 키보드 입력 시 산개 즉시 중단하고 일반 전환 */
+  if (direction === 'next' && !opts.direct && !opts.forceNav && _currentScene && _currentScene.stanzaTransition && !_stanzaInProgress) {
     _stanzaTransition(url);
     return;
+  }
+  /* forceNav 시 산개 진행 중이면 즉시 정리 */
+  if (opts.forceNav && _stanzaInProgress) {
+    _stanzaInProgress = false;
   }
 
   /* Case C: 즉시 전환 */
@@ -2468,12 +2473,28 @@ var AutoPlay = (function(){
         if (b.side === 'left') {
           b.el.innerHTML = _svg(b.sz, _paused ? _P_PLAY : _P_PAUSE);
           b.el.style.color = _paused ? 'rgba(212,175,55,0.9)' : '';
+          b.el.setAttribute('data-tip', _paused ? (curLang==='KR'?'재생':'Resume') : (curLang==='KR'?'일시정지':'Pause'));
         } else {
           b.el.innerHTML = _svg(b.sz, _P_STOP);
           b.el.style.color = 'rgba(212,175,55,0.7)';
+          b.el.setAttribute('data-tip', curLang==='KR'?'정지':'Stop');
         }
       } else {
-        b.el.innerHTML = _svg(b.sz, b.side === 'left' ? _P_LARR : _P_RARR);
+        /* 오토모드 해제 시 원래 data-tip 복원 */
+        if (b.side === 'left') {
+          /* nav-left(데스크탑)는 data-original-tip 저장값 또는 기본값 복원 */
+          var origTip = b.el.getAttribute('data-original-tip');
+          if (origTip) b.el.setAttribute('data-tip', origTip);
+          /* 아이콘: data-original-tip이 About이면 i 아이콘, 아니면 ← */
+          var isAbout = origTip === '작가의 말' || origTip === 'About';
+          b.el.innerHTML = _svg(b.sz, isAbout
+            ? '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>'
+            : _P_LARR);
+        } else {
+          var origTipR = b.el.getAttribute('data-original-tip');
+          if (origTipR) b.el.setAttribute('data-tip', origTipR);
+          b.el.innerHTML = _svg(b.sz, _P_RARR);
+        }
         b.el.style.color = '';
       }
     });
@@ -3061,9 +3082,7 @@ function _buildMobileNav(scene, sceneURL, container) {
   leftBtn.addEventListener('click', leftBtn._navHandler);
   leftBtn.addEventListener('touchend', function(e){
     e.preventDefault(); e.stopPropagation();
-    /* 모바일 터치: 오토모드 유지하며 이동 */
-    if(scene.pageNum === 1 && !scene.prevURL){ AboutManager.open(); return; }
-    if(scene.prevURL) window.goTo(resolveURL(sceneURL, scene.prevURL), {direction:'prev'});
+    leftBtn._navHandler();
   }, {passive:false});
 
   var menuBtn=document.createElement('div'); menuBtn.className='nav-btn';
@@ -3084,8 +3103,7 @@ function _buildMobileNav(scene, sceneURL, container) {
   rightBtn.addEventListener('click', rightBtn._navHandler);
   rightBtn.addEventListener('touchend', function(e){
     e.preventDefault(); e.stopPropagation();
-    /* 모바일 터치: 오토모드 유지하며 이동 */
-    if(scene.nextURL) window.goTo(resolveURL(sceneURL, scene.nextURL), {direction:'next'});
+    rightBtn._navHandler();
   }, {passive:false});
 
   navBar.append(leftBtn, menuBtn, listBtn, rightBtn);
@@ -3132,9 +3150,14 @@ function _buildDesktopNav(sq, scene, sceneURL) {
     if (!url && dir==='left' && scene.pageNum===1) {
       btn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>';
       btn.setAttribute('data-tip', curLang==='KR'?'작가의 말':'About');
-      btn.addEventListener('click', AboutManager.open);
-      btn.addEventListener('touchend', function(e){ e.preventDefault(); AboutManager.open(); }, {passive:false});
-      btn.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); AboutManager.open(); } });
+      btn.setAttribute('data-original-tip', curLang==='KR'?'작가의 말':'About');
+      btn._navHandler = function() {
+        if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
+        AboutManager.open();
+      };
+      btn.addEventListener('click', btn._navHandler);
+      btn.addEventListener('touchend', function(e){ e.preventDefault(); btn._navHandler(); }, {passive:false});
+      btn.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); btn._navHandler(); } });
     } else if (!url) {
       btn.classList.add('disabled');
       btn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z"/></svg>';
@@ -3143,6 +3166,7 @@ function _buildDesktopNav(sq, scene, sceneURL) {
         ?'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>'
         :'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>';
       btn.setAttribute('data-tip', curLang==='KR'?(dir==='left'?'이전':'다음'):(dir==='left'?'Previous':'Next'));
+      btn.setAttribute('data-original-tip', curLang==='KR'?(dir==='left'?'이전':'다음'):(dir==='left'?'Previous':'Next'));
       btn._navHandler = function(){
         if(AutoPlay.isActive()){
           if(dir==='left'){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); }
@@ -3913,14 +3937,18 @@ var InputManager = (function() {
       if(e.key==='g'||e.key==='G'){ e.preventDefault(); GuestbookManager.open(); return; }
       if(e.key==='h'||e.key==='H'){ e.preventDefault(); HelpManager.open(); return; }
       if(e.key==='p'||e.key==='P'){ e.preventDefault(); AboutManager.open(); return; }
+      /* 오토모드 전용 키보드 처리 */
+      if(AutoPlay.isActive()){
+        if(e.key===' '){ e.preventDefault(); AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
+        if(e.key==='Escape'){ e.preventDefault(); AutoPlay.stop(); return; }
+        if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Enter'||e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); return; }
+      }
       if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='Enter'){
         e.preventDefault();
-        if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
-        if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'});
+        if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next',forceNav:true});
       } else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){
         e.preventDefault();
-        if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
-        if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev'});
+        if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev',forceNav:true});
       }
     };
 
@@ -4480,9 +4508,9 @@ function _introTyping(lineEl, curEl, text, onDone) {
  * lang / device bar 빌더 (공통)
  * ────────────────────────────────────────── */
 var _IBTN = 'font-family:"Nanum Pen Script",cursive;width:36px;height:36px;border-radius:999px;' +
-  'display:grid;place-items:center;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);' +
+  'display:grid;place-items:center;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);' +
   'color:rgba(235,235,235,0.35);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
-var _IBTN_ACT = 'opacity:0.55;border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);';
+var _IBTN_ACT = 'opacity:1;border-color:rgba(255,255,255,0.40);background:rgba(255,255,255,0.10);';
 
 function _introLangBar() {
   var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
@@ -4760,6 +4788,8 @@ function _renderIntroMobile(app, introText, TARGET) {
       document.removeEventListener('keydown', _mobIntroOnInteract);
       _mobIntroOnInteract = null;
     }
+    /* 인트로 keydown 리스너 제거 — 씬 진입 후 이중 goTo 방지 */
+    document.removeEventListener('keydown', _introKeyHandler);
     clearTimeout(idleTimer);
     hideBars();
     showIcon('unlock');
@@ -4866,16 +4896,18 @@ function _renderIntroMobile(app, introText, TARGET) {
   lockBtn.addEventListener('touchend', function(e) { e.preventDefault(); doEnter(); }, {passive:false});
 
   /* ── 키보드 ── */
-  document.addEventListener('keydown', function(e) {
+  var _introKeyHandler = function(e) {
     if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'ArrowRight') return;
     if (lockShown) {
       doEnter();
     } else {
+      document.removeEventListener('keydown', _introKeyHandler);
       try { sessionStorage.removeItem('gl_mode'); } catch(err) {}
       try { if (sessionStorage.getItem('intro_mode') !== 'MANUAL') sessionStorage.setItem('mol_autoplay_start', '1'); } catch(err) {}
       window.goTo(TARGET, {direct: true});
     }
-  });
+  };
+  document.addEventListener('keydown', _introKeyHandler);
 }
 
 /* ──────────────────────────────────────────
@@ -5036,6 +5068,8 @@ function _renderIntroDesktop(app, introText, TARGET) {
   /* ── enter — 데스크탑: 글로우 → 입자 → 흰색 fade → goTo ── */
   var doEnter = function() {
     if (!lockShown) return;
+    /* 인트로 keydown 리스너 제거 — 씬 진입 후 이중 goTo 방지 */
+    document.removeEventListener('keydown', _introKeyHandlerDesktop);
     showIcon('unlock');
     var t0 = null;
     function glowLoop(ts) {
@@ -5120,16 +5154,18 @@ function _renderIntroDesktop(app, introText, TARGET) {
   lockBtn.addEventListener('click', doEnter);
 
   /* ── 키보드 ── */
-  document.addEventListener('keydown', function(e) {
+  var _introKeyHandlerDesktop = function(e) {
     if (e.key !== 'Enter' && e.key !== 'Escape' && e.key !== 'ArrowRight') return;
     if (lockShown) {
       doEnter();
     } else {
+      document.removeEventListener('keydown', _introKeyHandlerDesktop);
       try { sessionStorage.removeItem('gl_mode'); } catch(err) {}
       try { if (sessionStorage.getItem('intro_mode') !== 'MANUAL') sessionStorage.setItem('mol_autoplay_start', '1'); } catch(err) {}
       window.goTo(TARGET, {direct: true});
     }
-  });
+  };
+  document.addEventListener('keydown', _introKeyHandlerDesktop);
 }
 
 
