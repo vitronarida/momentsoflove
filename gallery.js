@@ -241,11 +241,11 @@ html, body {
 .toc-title { font-size: 26px; color: rgba(235,235,235,0.96); margin: 0; font-family: "Nanum Pen Script", cursive; }
 .lang-toggle { display: flex; gap: 8px; }
 .lang-btn {
-  width: 40px; height: 30px;
+  width: 34px; height: 34px;
   border-radius: 999px;
   display: grid; place-items: center;
   font-family: "Nanum Pen Script", cursive;
-  font-size: 16px;
+  font-size: 15px;
   color: #e6e6e6;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
@@ -254,6 +254,17 @@ html, body {
   transition: opacity 150ms ease;
 }
 .lang-btn.active { opacity: 1; border-color: rgba(255,255,255,0.20); }
+.toc-mode-btn {
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer; opacity: 0.65;
+  color: rgba(235,235,235,0.9);
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 150ms ease;
+}
 .toc-close {
   width: 36px; height: 36px;
   border-radius: 999px;
@@ -968,6 +979,11 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease, transform 180ms ease; }
   .langBtn:hover{ opacity:1; transform: translateY(-1px); }
   .langBtn.active{ opacity:1; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.16); }
+  .toc-mode-btn{ width:44px; height:34px; border-radius:999px; display:grid; place-items:center;
+  font-family:"Nanum Pen Script", cursive; font-size:18px; color:#e6e6e6;
+  background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease; }
+  .toc-mode-btn:hover{ opacity:1; }
 
   .menu-section{ margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.06); padding-left: 20px; }
   .menu-section:first-of-type{ margin-top: 2px; padding-top: 0; border-top: none; }
@@ -1764,6 +1780,8 @@ function _applyScene(url, scene, transDir) {
   /* S.prevScene 제거 */;
   _currentScene = scene;
   _currentSceneURL = url;
+  /* 인트로 입자 잔상 제거 — safety net */
+  document.querySelectorAll('[data-intro-particle]').forEach(function(el) { el.remove(); });
   history.pushState({ url:url }, '', url);
   SceneRenderer.renderScene(scene, url, transDir);
   /* 다음/이전 씬 백그라운드 프리로드 */
@@ -2085,8 +2103,8 @@ function buildOverlayHTML() {
   var t = LANG_TEXTS[curLang];
   var sc = NavigationManager.currentScene() || {};
   var langToggle = isMobile
-    ? ('<div class="lang-toggle"><div class="lang-btn'+(curLang==='KR'?' active':'')+'" data-lang="KR">KR</div>'
-      +'<div class="lang-btn'+(curLang==='EN'?' active':'')+'" data-lang="EN">EN</div></div>')
+    ? ('<div class="lang-toggle"><div class="lang-btn'+(curLang==='EN'?' active':'')+'" data-lang="EN">E</div>'
+      +'<div class="lang-btn'+(curLang==='KR'?' active':'')+'" data-lang="KR">K</div></div>')
     : ('<div class="langToggle"><div class="langBtn'+(curLang==='EN'?' active':'')+'" data-lang="EN" tabindex="0">EN</div>'
       +'<div class="langBtn'+(curLang==='KR'?' active':'')+'" data-lang="KR" tabindex="0">KR</div></div>');
 
@@ -2126,18 +2144,24 @@ function buildOverlayHTML() {
       +'</div></div>'
       +'<div class="menu-section"><div class="mob-copyright" style="padding-left:12px;">© Vitro Narida.<br>All rights reserved.</div></div>'
       +'<div class="menu-section"><h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">'+t.menuH_GB+'</h3></div>'
-      +'<div class="menu-section"><div style="display:flex;gap:8px;align-items:center;padding-left:8px;">'
-      +langToggle
-      +'<div id="tocAutoPlayBtn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.5;margin-left:4px;" tabindex="0">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
-      +'</div>'
-      +'<div id="tocInfoBtn" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0.5;margin-left:4px;">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
-      +'</div></div></div>'
       +'</div>'
       +'<div class="mob-unified-right">'
       +'<div class="mob-right-header"><h3 class="mob-col-title">'+t.indexTitle+'</h3><div style="display:flex;align-items:center;gap:6px;"><div class="mob-expand-btn" id="mobExpandBtn"><svg viewBox="0 0 24 24"><path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25-5.25v4.5m0-4.5h-4.5m4.5 0L15 9m-11.25 11.25v-4.5m0 4.5h4.5m-4.5 0L9 15m11.25 5.25v-4.5m0 4.5h-4.5m4.5 0L15 15"/></svg></div><div class="toc-close" id="tocClose">✕</div></div></div>'
       +'<div class="mob-thumb-grid" id="mobThumbGrid"></div>'
+      +'</div>'
+      +'</div>'
+      +'<div style="position:absolute;bottom:14px;left:16px;display:flex;flex-direction:column;gap:6px;">'
+      +'<div id="tocInfoBtn" style="width:34px;height:34px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer;opacity:0.65;color:rgba(235,235,235,0.9);">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;align-items:center;">'
+      +langToggle
+      +'<div id="tocAutoPlayBtn" class="toc-mode-btn" tabindex="0">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
+      +'</div>'
+      +'<div id="tocStopBtn" class="toc-mode-btn" tabindex="0" style="opacity:0.25;pointer-events:none;cursor:default;">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>'
+      +'</div>'
       +'</div>'
       +'</div>'
       +'</div></div>'
@@ -2241,14 +2265,20 @@ function buildOverlayHTML() {
       +'<div class="menu-section"><div class="menu-copyright" id="copyrightLine">© Vitro Narida.<br>All rights reserved.</div></div>'
       +'<div class="menu-section"><h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">'+t.menuH_GB+'</h3></div>'
       +'</div>'
-      +'<div class="unified-bottom-bar">'
-      +langToggle
-      +'<div id="tocAutoPlayBtn" class="toc-info-btn" tabindex="0" title="'+(curLang==='KR'?'자동 감상':'Auto Play')+'">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
-      +'</div>'
-      +'<div class="toc-info-btn" id="tocInfoBtn" tabindex="0">'
+      +'<div class="unified-bottom-bar" style="flex-direction:column;align-items:flex-start;gap:6px;">'
+      +'<div class="toc-info-btn" id="tocInfoBtn" tabindex="0" style="position:static;">'
       +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
-      +'</div></div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;align-items:center;">'
+      +langToggle
+      +'<div id="tocAutoPlayBtn" class="toc-mode-btn" tabindex="0" title="'+(curLang==='KR'?'자동 감상':'Auto Play')+'">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
+      +'</div>'
+      +'<div id="tocStopBtn" class="toc-mode-btn" tabindex="0" title="'+(curLang==='KR'?'수동 모드':'Manual')+'" style="opacity:0.25;pointer-events:none;cursor:default;">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>'
+      +'</div>'
+      +'</div>'
+      +'</div></div>'
       +'<div class="unified-right">'
       +'<div class="unified-right-header"><h2 class="index-title" id="thumbTitle">'+t.indexTitle+'</h2>'
       +'<div class="thumb-expand-btn" id="thumbExpandBtn" tabindex="0">'
@@ -2554,12 +2584,23 @@ var AutoPlay = (function(){
   function isPaused(){ return _paused; }
 
   function _updateTocBtn(on){
-    var btn = document.getElementById('tocAutoPlayBtn');
-    if(!btn) return;
-    btn.style.color = on ? 'rgba(212,175,55,0.9)' : '';
-    btn.setAttribute('title', on
-      ? (curLang==='KR'?'자동 모드 켜짐':'Auto On')
-      : (curLang==='KR'?'자동 감상':'Auto Play'));
+    var playBtn = document.getElementById('tocAutoPlayBtn');
+    var stopBtn = document.getElementById('tocStopBtn');
+    if (playBtn) {
+      playBtn.style.opacity = on ? '0.25' : '0.5';
+      playBtn.style.pointerEvents = on ? 'none' : 'auto';
+      playBtn.style.cursor = on ? 'default' : 'pointer';
+      playBtn.style.color = '';
+      playBtn.setAttribute('title', curLang==='KR'?'자동 감상':'Auto Play');
+    }
+    if (stopBtn) {
+      stopBtn.style.opacity = on ? '0.5' : '0.25';
+      stopBtn.style.pointerEvents = on ? 'auto' : 'none';
+      stopBtn.style.cursor = on ? 'pointer' : 'default';
+      stopBtn.setAttribute('title', on
+        ? (curLang==='KR'?'수동 모드로 전환':'Switch to Manual')
+        : (curLang==='KR'?'수동 모드':'Manual'));
+    }
   }
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
@@ -3837,7 +3878,7 @@ var TypingEngine = (function() {
       setTimeout(next, 150);
     }
     if (document.fonts && document.fonts.load) {
-      document.fonts.load('1em "Nanum Pen Script"').then(startTyping).catch(startTyping);
+      document.fonts.load('1em "Nanum Pen Script"', '가나다라마바사아자차카타파하').then(startTyping).catch(startTyping);
     } else {
       startTyping();
     }
@@ -4298,6 +4339,11 @@ function bindCommonEvents() {
     setTimeout(function(){ AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
   });
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $id('tocAutoPlayBtn').click(); } });
+  $id('tocStopBtn') && $id('tocStopBtn').addEventListener('click',function(){
+    TOCManager.close();
+    setTimeout(function(){ AutoPlay.stop(); }, 440);
+  });
+  $id('tocStopBtn') && $id('tocStopBtn').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $id('tocStopBtn').click(); } });
   $id('menuH_ABOUT')  && $id('menuH_ABOUT').addEventListener('click',function(e){e.stopPropagation();AboutManager.open();});
   $id('menuH_ABOUT')  && $id('menuH_ABOUT').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();AboutManager.open();}});
   $id('menuH_GB')     && $id('menuH_GB').addEventListener('click',function(e){e.stopPropagation();GuestbookManager.open();});
@@ -5095,8 +5141,15 @@ function _renderIntroDesktop(app, introText, TARGET) {
       var tw = lineR.width, th = lineR.height;
       var DURATION = 3000, whiteDone = false, timers = [], rafs = {};
 
+      function cleanupParticles() {
+        Object.keys(rafs).forEach(function(k) { cancelAnimationFrame(rafs[k]); });
+        timers.forEach(function(t) { clearTimeout(t); });
+        document.querySelectorAll('[data-intro-particle]').forEach(function(el) { el.remove(); });
+      }
+
       function startWhiteFade() {
         if (whiteDone) return; whiteDone = true;
+        cleanupParticles();
         /* gallery.js _applyScene()이 인식하는 id(_introCanvas) 사용 — div 방식 */
         var cv = document.createElement('div'); cv.id = '_introCanvas';
         cv.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);' +
@@ -5130,6 +5183,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
             'background:radial-gradient(ellipse at center,rgba(255,255,255,0.95) 10%,' +
               'rgba(220,220,220,0.3) 50%,transparent 80%);' +
             'box-shadow:0 0 ' + (sz * 1.2) + 'px rgba(255,255,255,0.25);';
+          p.setAttribute('data-intro-particle', '1');
           document.body.appendChild(p);
           var st = null, curX = sx, curY = sy, curVy = vy;
           function frame(ts) {
