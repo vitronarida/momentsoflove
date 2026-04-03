@@ -265,6 +265,31 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   transition: opacity 150ms ease;
 }
+/* 모바일 TOC 하단 A-slim 스위치 */
+.mob-sw-track {
+  width: 41px; height: 26px; border-radius: 999px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  position: relative; cursor: pointer; user-select: none; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 5px;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 250ms;
+}
+.mob-sw-track.on { border-color: rgba(212,175,55,0.35); }
+.mob-sw-side {
+  font-size: 10px; font-family: sans-serif; color: rgba(235,235,235,0.30);
+  line-height: 1; z-index: 1; pointer-events: none; transition: opacity 200ms;
+}
+.mob-sw-track:not(.on) .mob-sw-left  { opacity: 0; }
+.mob-sw-track.on       .mob-sw-right { opacity: 0; }
+.mob-sw-knob {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(212,175,55,0.90);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-family: sans-serif; color: #1a1a1a; font-weight: bold;
+  transition: left 250ms; pointer-events: none;
+}
+.mob-sw-track.on .mob-sw-knob { left: 18px; }
 .toc-close {
   width: 36px; height: 36px;
   border-radius: 999px;
@@ -2150,18 +2175,19 @@ function buildOverlayHTML() {
       +'<div class="mob-thumb-grid" id="mobThumbGrid"></div>'
       +'</div>'
       +'</div>'
-      +'<div style="position:absolute;bottom:14px;left:16px;display:flex;flex-direction:column;gap:6px;">'
-      +'<div id="tocInfoBtn" style="width:34px;height:34px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer;opacity:0.65;color:rgba(235,235,235,0.9);">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:17px;height:17px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
+      +'<div style="position:absolute;bottom:14px;left:16px;display:flex;gap:8px;align-items:center;">'
+      +'<div id="tocLangSwitch" class="mob-sw-track'+(curLang==="KR"?' on':'')+'" tabindex="0">'
+      +'<span class="mob-sw-side mob-sw-left">E</span>'
+      +'<div class="mob-sw-knob">'+(curLang==="KR"?'K':'E')+'</div>'
+      +'<span class="mob-sw-side mob-sw-right">K</span>'
       +'</div>'
-      +'<div style="display:flex;gap:6px;align-items:center;">'
-      +langToggle
-      +'<div id="tocAutoPlayBtn" class="toc-mode-btn" tabindex="0">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
+      +'<div id="tocModeSwitch" class="mob-sw-track'+(AutoPlay.isActive()?'':' on')+'" tabindex="0">'
+      +'<span class="mob-sw-side mob-sw-left">▶</span>'
+      +'<div class="mob-sw-knob">'+(AutoPlay.isActive()?'▶':'■')+'</div>'
+      +'<span class="mob-sw-side mob-sw-right">■</span>'
       +'</div>'
-      +'<div id="tocStopBtn" class="toc-mode-btn" tabindex="0" style="opacity:0.25;pointer-events:none;cursor:default;">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:15px;height:15px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>'
-      +'</div>'
+      +'<div id="tocInfoBtn" style="width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:rgba(235,235,235,0.55);flex-shrink:0;">'
+      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
       +'</div>'
       +'</div>'
       +'</div></div>'
@@ -4030,9 +4056,20 @@ var TOCManager = {
     if (!isMobile) { _buildThumbGrid(); scrollToCurrent($id('thumbGrid'),'.thumb-current'); }
     else { _buildMobThumbGrid(); scrollToCurrent($id('mobThumbGrid'),'.thumb-current'); }
     SceneRenderer.updateTOCCurrent(NavigationManager.currentScene()||{});
+    /* 모바일 모드 스위치 상태 갱신 (DOM 조작만, AutoPlay 함수 호출 없음) */
+    if (isMobile) {
+      var sw = $id('tocModeSwitch');
+      if (sw) {
+        var knob = sw.querySelector('.mob-sw-knob');
+        var isActive = AutoPlay.isActive();
+        isActive ? sw.classList.remove('on') : sw.classList.add('on');
+        if (knob) knob.textContent = isActive ? '▶' : '■';
+      }
+    }
   },
   close: function() {
     var ov=$id('tocOverlay'); if(!ov) return;
+    if (ov.contains(document.activeElement)) document.activeElement.blur();
     ov.classList.remove('on'); ov.setAttribute('aria-hidden','true');
     setTimeout(function(){ ov.style.display=''; }, 420);
     document.querySelector('.unified-panel') && document.querySelector('.unified-panel').classList.remove('expanded');
@@ -4333,6 +4370,36 @@ function bindCommonEvents() {
   onClose('poemBackdrop','poemClose',PoemManager);
 
   $id('tocInfoBtn')   && $id('tocInfoBtn').addEventListener('click',HelpManager.open.bind(HelpManager));
+
+  /* 모바일 TOC 언어 스위치 */
+  $id('tocLangSwitch') && $id('tocLangSwitch').addEventListener('click', function() {
+    setLang(curLang === 'EN' ? 'KR' : 'EN');
+  });
+  $id('tocLangSwitch') && $id('tocLangSwitch').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+  });
+
+  /* 모바일 TOC 모드 스위치 */
+  $id('tocModeSwitch') && $id('tocModeSwitch').addEventListener('click', function() {
+    var sw = this;
+    var knob = sw.querySelector('.mob-sw-knob');
+    if (AutoPlay.isActive()) {
+      /* 오토 중(▶ 활성) → 클릭 시 수동으로 전환 */
+      sw.classList.add('on');
+      if (knob) knob.textContent = '■';
+      TOCManager.close();
+      setTimeout(function() { AutoPlay.stop(); }, 440);
+    } else {
+      /* 수동(■ 활성) → 클릭 시 오토 시작 */
+      sw.classList.remove('on');
+      if (knob) knob.textContent = '▶';
+      TOCManager.close();
+      setTimeout(function() { AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
+    }
+  });
+  $id('tocModeSwitch') && $id('tocModeSwitch').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
+  });
   $id('mobExpandBtn') && $id('mobExpandBtn').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); TOCManager.close(); setTimeout(function(){ ThumbnailManager.open(); }, 200); });
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('click',function(){
     TOCManager.close();
@@ -4806,8 +4873,11 @@ function _renderIntroMobile(app, introText, TARGET) {
       if (Math.abs(a.x||0) + Math.abs(a.y||0) + Math.abs(a.z||0) > 15) doShow();
     }, {passive:true});
 
-    /* lock 표시 후 터치 시 bars 표시 → 5초 idle 후 숨김 */
-    var onInteract = function() { showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); };
+    /* lock 표시 후 터치 시 bars 표시 → 5초 idle 후 숨김 (자물쇠 터치는 제외) */
+    var onInteract = function(e) {
+      if (e && e.target && lockWrap.contains(e.target)) return;
+      showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
+    };
     document.addEventListener('touchstart', onInteract, {passive:true});
     document.addEventListener('keydown', onInteract);
     /* doEnter 진입 시 onInteract 제거용 참조 저장 */
@@ -4822,7 +4892,6 @@ function _renderIntroMobile(app, introText, TARGET) {
     extSkip();
     skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
     setTimeout(showLockFn, 420);
-    showBars();
   });
 
   /* ── enter (lock 클릭) — 데스크탑과 동일한 글로우→입자→흰색fade→goTo ── */
