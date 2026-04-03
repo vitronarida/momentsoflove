@@ -3903,8 +3903,8 @@ var TypingEngine = (function() {
       }
       setTimeout(next, 150);
     }
-    if (document.fonts && document.fonts.load) {
-      document.fonts.load('1em "Nanum Pen Script"', '가나다라마바사아자차카타파하').then(startTyping).catch(startTyping);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(startTyping);
     } else {
       startTyping();
     }
