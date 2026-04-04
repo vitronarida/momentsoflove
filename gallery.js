@@ -1006,14 +1006,15 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .langBtn{ width:44px; height:34px; border-radius:999px; display:grid; place-items:center;
   font-family:"Nanum Pen Script", cursive; font-size:18px; color:#e6e6e6;
   background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease, transform 180ms ease; }
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease, transform 180ms ease; position:relative; }
   .langBtn:hover{ opacity:1; transform: translateY(-1px); }
   .langBtn.active{ opacity:1; background: rgba(255,255,255,0.035); border-color: rgba(255,255,255,0.16); }
   .toc-mode-btn{ width:44px; height:34px; border-radius:999px; display:grid; place-items:center;
   font-family:"Nanum Pen Script", cursive; font-size:18px; color:#e6e6e6;
   background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none;
-  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease; }
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease; position:relative; }
   .toc-mode-btn:hover{ opacity:1; }
+  .langBtn[data-tip]::after, .toc-mode-btn[data-tip]::after, .toc-info-btn[data-tip]::after{ bottom: calc(100% + 8px); left:50%; transform: translateX(-50%) translateY(6px); font-size:14px; }
 
   /* mob-sw knob 스위치 — 데스크탑 CSS_DESKTOP 전용 주입 */
   .mob-sw-track{ width:45px; height:30px; border-radius:999px;
@@ -1063,7 +1064,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   /* 인포 버튼 (왼쪽 하단) */
   .toc-info-btn{ position:absolute; bottom: 14px; left: 14px; right: auto; width: 36px; height: 36px;
   border-radius: 999px; display:grid; place-items:center; color: rgba(200,200,200,0.6);
-  background: transparent; border: 1px solid rgba(255,255,255,0.05);
+  background: transparent; border: 1px solid rgba(255,255,255,0.22);
   cursor:pointer; user-select:none; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   transition: color 200ms ease, border-color 200ms ease, background 200ms ease; z-index:10; }
   .toc-info-btn:hover{ color: rgba(235,235,235,0.92); border-color: rgba(255,255,255,0.30); background: rgba(255,255,255,0.035); }
@@ -1129,7 +1130,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .unified-panel .toc-close{ top:12px; right:12px; }
   .unified-panel .toc-info-btn{ bottom:12px; left:14px; right:auto; }
 #thumbOverlay .toc-header{ background: rgba(30,28,26,0.92); margin: -14px -12px 8px; padding: 14px 12px 8px; border-radius: 20px 20px 0 0; }
-  .unified-bottom-bar{ position:absolute; bottom:12px; left:14px; display:flex; align-items:center; gap:6px; }
+  .unified-bottom-bar{ position:absolute; bottom:12px; left:14px; display:flex; align-items:center; gap:12px; }
   .unified-bottom-bar .toc-info-btn{ position:static; }
   .contact-icons{ display:flex; flex-direction:column; gap:8px; margin-top:2px; padding-left:12px; }
   .contact-icon{ display:flex; align-items:center; gap:5px; color:rgba(220,220,220,0.55); transition:color 180ms ease; text-decoration:none; overflow:hidden; }
@@ -2154,8 +2155,8 @@ function buildOverlayHTML() {
   var langToggle = isMobile
     ? ('<div class="lang-toggle"><div class="lang-btn'+(curLang==='EN'?' active':'')+'" data-lang="EN">E</div>'
       +'<div class="lang-btn'+(curLang==='KR'?' active':'')+'" data-lang="KR">K</div></div>')
-    : ('<div class="langToggle"><div class="langBtn'+(curLang==='EN'?' active':'')+'" data-lang="EN" tabindex="0">EN</div>'
-      +'<div class="langBtn'+(curLang==='KR'?' active':'')+'" data-lang="KR" tabindex="0">KR</div></div>');
+    : ('<div class="langToggle"><div class="langBtn'+(curLang==='EN'?' active':'')+'" data-lang="EN" tabindex="0" data-tip="ENGLISH">EN</div>'
+      +'<div class="langBtn'+(curLang==='KR'?' active':'')+'" data-lang="KR" tabindex="0" data-tip="한국어">KR</div></div>');
 
   var tocSection = sc.tocSection || '';
   function tci(sec,id,label){ return '<li class="toc-item'+(tocSection===sec?' toc-current':'')+'" id="'+id+'"><span class="toc-bullet">●</span><span class="toc-text">'+label+'</span></li>'; }
@@ -2315,18 +2316,9 @@ function buildOverlayHTML() {
       +'<div class="menu-section"><div class="menu-copyright" id="copyrightLine">© Vitro Narida.<br>All rights reserved.</div></div>'
       +'<div class="menu-section"><h3 class="menu-h menu-h-link" id="menuH_GB" tabindex="0">'+t.menuH_GB+'</h3></div>'
       +'</div>'
-      +'<div class="unified-bottom-bar" style="flex-direction:column;align-items:flex-start;gap:6px;">'
-      +'<div class="toc-info-btn" id="tocInfoBtn" tabindex="0" style="position:static;">'
+      +'<div id="tocDesktopBar" class="unified-bottom-bar" style="flex-direction:row;align-items:center;gap:12px;">'
+      +'<div class="toc-info-btn" id="tocInfoBtn" tabindex="0" style="position:relative;left:0;top:auto;bottom:auto;" data-tip="사용법">'
       +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
-      +'</div>'
-      +'<div style="display:flex;gap:6px;align-items:center;">'
-      +langToggle
-      +'<div id="tocAutoPlayBtn" class="toc-mode-btn" tabindex="0" title="'+(curLang==='KR'?'자동 감상':'Auto Play')+'">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>'
-      +'</div>'
-      +'<div id="tocStopBtn" class="toc-mode-btn" tabindex="0" title="'+(curLang==='KR'?'수동 모드':'Manual')+'" style="opacity:0.25;pointer-events:none;cursor:default;">'
-      +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>'
-      +'</div>'
       +'</div>'
       +'</div></div>'
       +'<div class="unified-right">'
@@ -2651,6 +2643,10 @@ var AutoPlay = (function(){
         ? (curLang==='KR'?'수동 모드로 전환':'Switch to Manual')
         : (curLang==='KR'?'수동 모드':'Manual'));
     }
+    /* 데스크탑 TOC knob 스위치 동기화 */
+    var dtms = document.getElementById('tocDesktopBar');
+    dtms = dtms && dtms.querySelector('.intro-sw');
+    if (dtms && dtms._tocSync) dtms._tocSync(on);
   }
 
   return { start:start, activate:activate, stop:stop, isActive:isActive,
@@ -4102,6 +4098,10 @@ var TOCManager = {
         isActive ? sw.classList.remove('on') : sw.classList.add('on');
         if (knob) knob.innerHTML = isActive ? '<div class="mob-sw-tri"></div>' : '<div class="mob-sw-sq"></div>';
       }
+    } else {
+      /* 데스크탑 TOC 모드 스위치 상태 동기화 */
+      var dtms = $id('tocDesktopBar') && $id('tocDesktopBar').querySelector('.intro-sw');
+      if (dtms && dtms._tocSync) dtms._tocSync(AutoPlay.isActive());
     }
   },
   close: function() {
@@ -4409,6 +4409,16 @@ function bindCommonEvents() {
   onClose('poemBackdrop','poemClose',PoemManager);
 
   $id('tocInfoBtn')   && $id('tocInfoBtn').addEventListener('click',HelpManager.open.bind(HelpManager));
+
+  /* 데스크탑 TOC knob 스위치 삽입 */
+  if (!isMobile) {
+    var bar = $id('tocDesktopBar');
+    var infoBtn = $id('tocInfoBtn');
+    if (bar && infoBtn) {
+      bar.insertBefore(_buildTocLangSwitch(), infoBtn);
+      bar.insertBefore(_buildTocModeSwitch(), infoBtn);
+    }
+  }
 
   /* 모바일 TOC 언어 스위치 */
   $id('tocLangSwitch') && $id('tocLangSwitch').addEventListener('click', function() {
@@ -4719,7 +4729,7 @@ function _introLangBar() {
   var track = document.createElement('div');
   track.className = 'intro-sw';
   track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF); /* 기본 스타일 초기 설정 — applyState는 변경분만 개별 속성으로 업데이트 */
-  track.setAttribute('data-tip', isOn ? '한국어' : 'ENG');
+  track.setAttribute('data-tip', isOn ? '한국어' : 'ENGLISH');
   /* 사이드 레이블: textContent 직접 설정으로 세로 중앙정렬 보장 */
   var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.textContent = 'E';
   var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.textContent = 'K';
@@ -4741,7 +4751,7 @@ function _introLangBar() {
       track.style.background = 'rgba(255,255,255,0.02)';
       track.style.borderColor = 'rgba(255,255,255,0.22)';
       track.style.opacity = '';
-      track.setAttribute('data-tip', 'ENG');
+      track.setAttribute('data-tip', 'ENGLISH');
     }
     knob.style.left = on ? '22px' : '4px';
     if (animate) {
@@ -4940,6 +4950,162 @@ function _introModeBar() {
     isOn = !isOn;
     applyState(isOn, false, true);
     try { sessionStorage.setItem('intro_mode', isOn ? 'MANUAL' : 'AUTO'); } catch(e) {}
+  });
+  return track;
+}
+
+/* ──────────────────────────────────────────
+ * 데스크탑 TOC 하단 knob 스위치
+ * 외형: _introModeBar/_introLangBar와 동일
+ * 기능: AutoPlay.start/stop / setLang()
+ * ────────────────────────────────────────── */
+function _buildTocModeSwitch() {
+  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
+    'display:flex;align-items:center;justify-content:space-between;' +
+    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
+    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
+  var _SW_OFF = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
+  var _SW_ON  = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
+  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
+    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
+  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
+    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
+    'display:flex;align-items:center;justify-content:center;';
+
+  var makeTriEl  = function() { var el = document.createElement('div'); el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:6px 0 6px 9.75px;'; return el; };
+  var makeSqEl   = function() { var el = document.createElement('div'); el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;'; return el; };
+  var makeTriSide = function() { var el = document.createElement('div'); el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;border-color:transparent transparent transparent rgba(235,235,235,0.30);border-width:6px 0 6px 9.75px;'; return el; };
+  var makeSqSide  = function() { var el = document.createElement('div'); el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.30);border-radius:1px;flex-shrink:0;'; return el; };
+
+  /* off=AUTO(▶), on=MANUAL(■) */
+  var isOn = !AutoPlay.isActive();
+
+  var track = document.createElement('div');
+  track.className = 'intro-sw';
+  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF);
+  track.setAttribute('data-tip', isOn ? '수동' : '자동');
+  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.appendChild(makeTriSide());
+  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.appendChild(makeSqSide());
+  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
+
+  var applyState = function(on, hover, animate) {
+    if (hover) {
+      track.style.background = 'rgba(255,255,255,0.04)';
+      track.style.borderColor = 'rgba(255,255,255,0.12)';
+      track.style.opacity = '0.35';
+    } else if (on) {
+      track.style.background = 'rgba(255,255,255,0.10)';
+      track.style.borderColor = 'rgba(255,255,255,0.40)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '수동');
+    } else {
+      track.style.background = 'rgba(255,255,255,0.02)';
+      track.style.borderColor = 'rgba(255,255,255,0.22)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '자동');
+    }
+    knob.style.left = on ? '22px' : '4px';
+    if (animate) {
+      knob.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'left') return;
+        knob.removeEventListener('transitionend', handler);
+        knob.innerHTML = ''; knob.appendChild(on ? makeSqEl() : makeTriEl());
+        leftSpan.style.opacity = on ? '1' : '0';
+        rightSpan.style.opacity = on ? '0' : '1';
+      });
+    } else {
+      knob.innerHTML = ''; knob.appendChild(on ? makeSqEl() : makeTriEl());
+      leftSpan.style.opacity = on ? '1' : '0';
+      rightSpan.style.opacity = on ? '0' : '1';
+    }
+  };
+  applyState(isOn, false);
+
+  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
+  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
+  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
+  track.addEventListener('click', function() {
+    isOn = !isOn;
+    applyState(isOn, false, true);
+    TOCManager.close();
+    if (isOn) {
+      setTimeout(function() { AutoPlay.stop(); }, 440);
+    } else {
+      setTimeout(function() { AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
+    }
+  });
+  /* TOC 열릴 때 AutoPlay 상태 동기화용 */
+  track._tocSync = function(isAutoPlaying) { isOn = !isAutoPlaying; applyState(isOn, false); };
+  return track;
+}
+
+function _buildTocLangSwitch() {
+  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
+    'display:flex;align-items:center;justify-content:space-between;' +
+    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
+    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
+  var _SW_OFF = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
+  var _SW_ON  = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
+  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
+    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
+  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
+    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
+    'display:flex;align-items:center;justify-content:center;';
+  var _LANG_LABEL_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.80);font-weight:700;';
+  var makeEnEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'E'; return el; };
+  var makeKrEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'K'; return el; };
+
+  /* off=EN, on=KR */
+  var isOn = (curLang === 'KR');
+
+  var track = document.createElement('div');
+  track.className = 'intro-sw';
+  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF);
+  track.setAttribute('data-tip', isOn ? '한국어' : 'ENGLISH');
+  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.textContent = 'E';
+  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.textContent = 'K';
+  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
+
+  var applyState = function(on, hover, animate) {
+    if (hover) {
+      track.style.background = 'rgba(255,255,255,0.04)';
+      track.style.borderColor = 'rgba(255,255,255,0.12)';
+      track.style.opacity = '0.35';
+    } else if (on) {
+      track.style.background = 'rgba(255,255,255,0.10)';
+      track.style.borderColor = 'rgba(255,255,255,0.40)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '한국어');
+    } else {
+      track.style.background = 'rgba(255,255,255,0.02)';
+      track.style.borderColor = 'rgba(255,255,255,0.22)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', 'ENGLISH');
+    }
+    knob.style.left = on ? '22px' : '4px';
+    if (animate) {
+      knob.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'left') return;
+        knob.removeEventListener('transitionend', handler);
+        knob.innerHTML = ''; knob.appendChild(on ? makeKrEl() : makeEnEl());
+        leftSpan.style.opacity  = on ? '1' : '0';
+        rightSpan.style.opacity = on ? '0' : '1';
+      });
+    } else {
+      knob.innerHTML = ''; knob.appendChild(on ? makeKrEl() : makeEnEl());
+      leftSpan.style.opacity  = on ? '1' : '0';
+      rightSpan.style.opacity = on ? '0' : '1';
+    }
+  };
+  applyState(isOn, false);
+
+  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
+  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
+  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
+  track.addEventListener('click', function() {
+    isOn = !isOn;
+    applyState(isOn, false, true);
+    setLang(isOn ? 'KR' : 'EN');
   });
   return track;
 }
