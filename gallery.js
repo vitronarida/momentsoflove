@@ -2068,7 +2068,9 @@ function _stanzaSpawnParticles(app, textEl, done) {
       _currentSceneURL = url;
     },
     /* popstate에서 navigating 플래그 해제 */
-    resetNavigation: function() { _navigating = false; }
+    resetNavigation: function() { _navigating = false; },
+    /* nav bar 버튼 중복 입력 방지용 */
+    isNavigating:    function() { return _navigating; }
   };
 })();
 
@@ -3170,6 +3172,7 @@ function _buildMobileNav(scene, sceneURL, container) {
     leftBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>';
     leftBtn._navHandler=function(){
       if(AutoPlay.isActive()){ AutoPlay.isPaused() ? AutoPlay.resumeAP() : AutoPlay.pauseAP(); return; }
+      if(NavigationManager.isNavigating()) return;
       if(scene.prevURL) window.goTo(resolveURL(sceneURL,scene.prevURL),{direction:'prev'});
     };
   }
@@ -3192,6 +3195,7 @@ function _buildMobileNav(scene, sceneURL, container) {
   rightBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>';
   rightBtn._navHandler=function(){
     if(AutoPlay.isActive()){ AutoPlay.stop(); return; }
+    if(NavigationManager.isNavigating()) return;
     if(scene.nextURL) window.goTo(resolveURL(sceneURL,scene.nextURL),{direction:'next'});
   };
   rightBtn.addEventListener('click', rightBtn._navHandler);
