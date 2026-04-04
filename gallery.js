@@ -266,30 +266,34 @@ html, body {
   transition: opacity 150ms ease;
 }
 /* 모바일 TOC 하단 A-slim 스위치 */
+/* mob-sw: 모바일 TOC 45×30 */
 .mob-sw-track {
-  width: 41px; height: 26px; border-radius: 999px;
+  width: 45px; height: 30px; border-radius: 999px;
   background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
   position: relative; cursor: pointer; user-select: none; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between; padding: 0 5px;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 6px;
   -webkit-tap-highlight-color: transparent;
   transition: border-color 250ms;
 }
 .mob-sw-track.on { border-color: rgba(212,175,55,0.35); }
 .mob-sw-side {
-  font-size: 10px; font-family: sans-serif; color: rgba(235,235,235,0.30);
+  font-size: 11px; font-family: sans-serif; color: rgba(235,235,235,0.30);
   line-height: 1; z-index: 1; pointer-events: none; transition: opacity 200ms;
 }
 .mob-sw-track:not(.on) .mob-sw-left  { opacity: 0; }
 .mob-sw-track.on       .mob-sw-right { opacity: 0; }
 .mob-sw-knob {
-  position: absolute; top: 3px; left: 3px;
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute; top: 4px; left: 4px;
+  width: 20px; height: 20px; border-radius: 50%;
   background: rgba(212,175,55,0.90);
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-family: sans-serif; color: #1a1a1a; font-weight: bold;
   transition: left 250ms; pointer-events: none;
 }
-.mob-sw-track.on .mob-sw-knob { left: 18px; }
+.mob-sw-track.on .mob-sw-knob { left: 21px; }
+/* CSS 아이콘 — ■ 대체 (모바일 TOC knob) */
+.mob-sw-sq { width: 7px; height: 7px; background: #1a1a1a; border-radius: 1px; flex-shrink: 0; }
+/* CSS 아이콘 — ▶ 대체 (모바일 TOC knob) */
+.mob-sw-tri { width: 0; height: 0; border-style: solid; border-color: transparent transparent transparent #1a1a1a; border-width: 4.5px 0 4.5px 7px; margin-left: 1px; flex-shrink: 0; }
 .toc-close {
   width: 36px; height: 36px;
   border-radius: 999px;
@@ -1009,6 +1013,25 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.05); cursor:pointer; user-select:none;
   -webkit-tap-highlight-color: transparent; touch-action: manipulation; opacity:0.75; transition: opacity 180ms ease; }
   .toc-mode-btn:hover{ opacity:1; }
+
+  /* mob-sw knob 스위치 — 데스크탑 CSS_DESKTOP 전용 주입 */
+  .mob-sw-track{ width:45px; height:30px; border-radius:999px;
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+    position:relative; cursor:pointer; user-select:none; flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between; padding:0 6px;
+    -webkit-tap-highlight-color:transparent; transition:border-color 250ms; }
+  .mob-sw-track:hover{ border-color:rgba(255,255,255,0.22); }
+  .mob-sw-track.on{ border-color:rgba(212,175,55,0.35); }
+  .mob-sw-side{ font-size:11px; font-family:sans-serif; color:rgba(235,235,235,0.30);
+    line-height:1; z-index:1; pointer-events:none; transition:opacity 200ms; }
+  .mob-sw-track:not(.on) .mob-sw-left{ opacity:0; }
+  .mob-sw-track.on .mob-sw-right{ opacity:0; }
+  .mob-sw-knob{ position:absolute; top:4px; left:4px; width:20px; height:20px; border-radius:50%;
+    background:rgba(212,175,55,0.90); display:flex; align-items:center; justify-content:center;
+    transition:left 250ms; pointer-events:none; }
+  .mob-sw-track.on .mob-sw-knob{ left:21px; }
+  .mob-sw-sq{ width:7px; height:7px; background:#1a1a1a; border-radius:1px; flex-shrink:0; }
+  .mob-sw-tri{ width:0; height:0; border-style:solid; border-color:transparent transparent transparent #1a1a1a; border-width:4.5px 0 4.5px 7px; margin-left:1px; flex-shrink:0; }
 
   .menu-section{ margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.06); padding-left: 20px; }
   .menu-section:first-of-type{ margin-top: 2px; padding-top: 0; border-top: none; }
@@ -1780,12 +1803,12 @@ function _goTo(url, opts) {
 
   /* Case C: 즉시 전환 */
   fetchScene(url).then(function(scene) {
-    _applyScene(url, scene, transDir);
-    _navigating = false;
+    /* #96 — _navigating 해제를 전환 애니메이션 완료 후로 늦춤 (onTransitionDone 콜백) */
+    _applyScene(url, scene, transDir, function() { _navigating = false; });
   }).catch(function(){ _navigating=false; console.warn('[MOL] fetchScene 실패:', url); });
 };
 
-function _applyScene(url, scene, transDir) {
+function _applyScene(url, scene, transDir, onNavDone) {
   _ensureAppReady(); /* index.html SPA 최초 진입 시 갤러리 DOM 생성 */
   /* 데스크탑 인트로 canvas fade-out */
   var introCv = document.getElementById('_introCanvas');
@@ -1808,7 +1831,7 @@ function _applyScene(url, scene, transDir) {
   /* 인트로 입자 잔상 제거 — safety net */
   document.querySelectorAll('[data-intro-particle]').forEach(function(el) { el.remove(); });
   history.pushState({ url:url }, '', url);
-  SceneRenderer.renderScene(scene, url, transDir);
+  SceneRenderer.renderScene(scene, url, transDir, onNavDone);
   /* 다음/이전 씬 백그라운드 프리로드 */
   _preloadAdjacentScenes(scene, url);
   /* 오토플레이 중 pause 상태 복원 */
@@ -2183,7 +2206,7 @@ function buildOverlayHTML() {
       +'</div>'
       +'<div id="tocModeSwitch" class="mob-sw-track'+(AutoPlay.isActive()?'':' on')+'" tabindex="0">'
       +'<span class="mob-sw-side mob-sw-left">▶</span>'
-      +'<div class="mob-sw-knob">'+(AutoPlay.isActive()?'▶':'■')+'</div>'
+      +'<div class="mob-sw-knob">'+(AutoPlay.isActive()?'<div class="mob-sw-tri"></div>':'<div class="mob-sw-sq"></div>')+'</div>'
       +'<span class="mob-sw-side mob-sw-right">■</span>'
       +'</div>'
       +'<div id="tocInfoBtn" style="width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:rgba(235,235,235,0.55);flex-shrink:0;">'
@@ -2875,15 +2898,22 @@ function _initRippleForScene(img, container, scene) {
         rippleEl.style.zIndex="10";
         var fadeStart=Math.round((1-SCREEN_RATIO)*100);
         var fadeEnd=Math.min(fadeStart+8,100);
-        rippleEl.style.webkitMaskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
-        rippleEl.style.maskImage="linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)";
+        /* 상하 + 좌우 가장자리 fade — displacement 경계 아티팩트 제거 (데스크탑과 동일) */
+        var edgeFade = "2%";
+        var combinedMask =
+          "linear-gradient(to bottom, transparent "+fadeStart+"%, black "+fadeEnd+"%, black 92%, transparent 100%)," +
+          "linear-gradient(to right,  transparent "+edgeFade+", black 6%, black 94%, transparent calc(100% - "+edgeFade+"))";
+        rippleEl.style.webkitMaskImage = combinedMask;
+        rippleEl.style.maskImage       = combinedMask;
+        rippleEl.style.webkitMaskComposite = "destination-in";
+        rippleEl.style.maskComposite       = "intersect";
         clone.style.width="100%";
         clone.style.height="100%";
         clone.style.objectFit="cover";
         clone.style.left="0px";
         clone.style.top="0px";
         clone.style.transformOrigin="center center";
-        clone.style.transform="scale(1.015)";
+        clone.style.transform="";
         return true;
       } else {
         // 데스크탑 contain 모드
@@ -3260,7 +3290,7 @@ function _updateTOCCurrent(scene) {
   });
 }
 
-function _renderScene(scene, sceneURL, transDir) {
+function _renderScene(scene, sceneURL, transDir, onNavDone) {
   /* 1. 시작부 정리 */
   if (_fogRAF) { cancelAnimationFrame(_fogRAF); _fogRAF = null; }
   FogFX.stop();
@@ -3388,6 +3418,8 @@ function _renderScene(scene, sceneURL, transDir) {
   var typingDelay = (transType === 'slide') ? Math.min(400, transDuration * 0.13 | 0) : 0;
   function onTransitionDone() {
     transitionDone = true;
+    /* #96 — 전환 애니메이션 완료 시점에 _navigating 해제 */
+    if (onNavDone) onNavDone();
     initRippleIfReady();
     if (AutoPlay.isActive()) AutoPlay.updateNavBar();
     if (!isMobile && shell.screen) shell.screen.classList.add('nav-ready');
@@ -3586,6 +3618,10 @@ var TransitionManager = {
     oldTrack.style.cssText = 'position:absolute;inset:0;z-index:1;overflow:hidden;';
     var newTrack = document.createElement('div');
     newTrack.style.cssText = 'position:absolute;inset:0;z-index:2;transform:translateX(' + xIn + ');overflow:hidden;';
+
+    /* 구 ripple 요소 정리 — 슬라이드 중 RAF 루프 부하 방지 (모바일과 동일) */
+    oldPhotoLyr.querySelectorAll('canvas,[data-ripple-canvas],[data-ripple-el],[data-ripple-el-prague]').forEach(function(el){ el.remove(); });
+    document.querySelectorAll('[data-ripple-svg],[data-ripple-svg-prague]').forEach(function(el){ el.remove(); });
 
     /* 구 photo-layer 내용 → oldTrack */
     while (oldPhotoLyr.firstChild) { oldTrack.appendChild(oldPhotoLyr.firstChild); }
@@ -4063,7 +4099,7 @@ var TOCManager = {
         var knob = sw.querySelector('.mob-sw-knob');
         var isActive = AutoPlay.isActive();
         isActive ? sw.classList.remove('on') : sw.classList.add('on');
-        if (knob) knob.textContent = isActive ? '▶' : '■';
+        if (knob) knob.innerHTML = isActive ? '<div class="mob-sw-tri"></div>' : '<div class="mob-sw-sq"></div>';
       }
     }
   },
@@ -4073,6 +4109,8 @@ var TOCManager = {
     ov.classList.remove('on'); ov.setAttribute('aria-hidden','true');
     setTimeout(function(){ ov.style.display=''; }, 420);
     document.querySelector('.unified-panel') && document.querySelector('.unified-panel').classList.remove('expanded');
+    /* #104/#105 — TOC 닫을 때 오토모드 pause 상태 복원 */
+    if (AutoPlay.isActive() && AutoPlay.isPaused()) AutoPlay.resumeAP();
   }
 };
 
@@ -4337,7 +4375,7 @@ function _renderThumbGrid(grid, hearts) {
         heart.classList.remove('pop'); void heart.offsetHeight; heart.classList.add('pop');
         _toggleHeartInDB(sc.code,!isLiked);
       });
-      card.addEventListener('click',function(){ window.goTo('/scenes/'+sc.file+'.html', {direct:true}); });
+      card.addEventListener('click',function(){ if(AutoPlay.isActive()&&AutoPlay.isPaused()) AutoPlay.resumeAP(); window.goTo('/scenes/'+sc.file+'.html', {direct:true}); });
       card.append(img,codeEl,heart);
     } else {
       card.className='thumb-card thumb-locked';
@@ -4386,13 +4424,13 @@ function bindCommonEvents() {
     if (AutoPlay.isActive()) {
       /* 오토 중(▶ 활성) → 클릭 시 수동으로 전환 */
       sw.classList.add('on');
-      if (knob) knob.textContent = '■';
+      if (knob) knob.innerHTML = '<div class="mob-sw-sq"></div>';
       TOCManager.close();
       setTimeout(function() { AutoPlay.stop(); }, 440);
     } else {
       /* 수동(■ 활성) → 클릭 시 오토 시작 */
       sw.classList.remove('on');
-      if (knob) knob.textContent = '▶';
+      if (knob) knob.innerHTML = '<div class="mob-sw-tri"></div>';
       TOCManager.close();
       setTimeout(function() { AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
     }
@@ -4401,14 +4439,13 @@ function bindCommonEvents() {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
   });
   $id('mobExpandBtn') && $id('mobExpandBtn').addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); TOCManager.close(); setTimeout(function(){ ThumbnailManager.open(); }, 200); });
+  /* 데스크탑 TOC 모드 버튼 */
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('click',function(){
-    TOCManager.close();
-    setTimeout(function(){ AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
+    TOCManager.close(); setTimeout(function(){ AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); },440);
   });
   $id('tocAutoPlayBtn') && $id('tocAutoPlayBtn').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $id('tocAutoPlayBtn').click(); } });
   $id('tocStopBtn') && $id('tocStopBtn').addEventListener('click',function(){
-    TOCManager.close();
-    setTimeout(function(){ AutoPlay.stop(); }, 440);
+    TOCManager.close(); setTimeout(function(){ AutoPlay.stop(); },440);
   });
   $id('tocStopBtn') && $id('tocStopBtn').addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $id('tocStopBtn').click(); } });
   $id('menuH_ABOUT')  && $id('menuH_ABOUT').addEventListener('click',function(e){e.stopPropagation();AboutManager.open();});
@@ -4681,9 +4718,9 @@ function _introDeviceBar() {
 }
 */
 
-/* #85 — 오토/매뉴얼 모드 선택 버튼 바
-   AUTO  : video-camera 아이콘 → sessionStorage intro_mode='AUTO'
-   MANUAL: camera 아이콘        → sessionStorage intro_mode='MANUAL'
+/* #85 — 오토/매뉴얼 모드 선택 스위치
+   AUTO  : ▶ (knob 왼쪽) → sessionStorage intro_mode='AUTO'
+   MANUAL: ■ (knob 오른쪽) → sessionStorage intro_mode='MANUAL'
    자물쇠/엔터 진입 시 intro_mode 값으로 AutoPlay 여부 결정 */
 function _introModeBar() {
   var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
@@ -4834,6 +4871,17 @@ function _renderIntroMobile(app, introText, TARGET) {
     langBar.style.opacity = '0'; langBar.style.pointerEvents = 'none';
     modeBar.style.opacity = '0'; modeBar.style.pointerEvents = 'none';
   };
+  /* onDone/skip 양쪽에서 호출 — 이중 등록 방지 가드 포함 */
+  var setupBarInteraction = function() {
+    if (_mobIntroOnInteract) return;
+    var onInteract = function(e) {
+      if (e && e.target && lockWrap.contains(e.target)) return;
+      showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
+    };
+    document.addEventListener('touchstart', onInteract, {passive:true});
+    document.addEventListener('keydown', onInteract);
+    _mobIntroOnInteract = onInteract;
+  };
 
   var showLockFn = function() {
     if (lockShown) return; lockShown = true;
@@ -4874,14 +4922,7 @@ function _renderIntroMobile(app, introText, TARGET) {
     }, {passive:true});
 
     /* lock 표시 후 터치 시 bars 표시 → 5초 idle 후 숨김 (자물쇠 터치는 제외) */
-    var onInteract = function(e) {
-      if (e && e.target && lockWrap.contains(e.target)) return;
-      showBars(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
-    };
-    document.addEventListener('touchstart', onInteract, {passive:true});
-    document.addEventListener('keydown', onInteract);
-    /* doEnter 진입 시 onInteract 제거용 참조 저장 */
-    _mobIntroOnInteract = onInteract;
+    setupBarInteraction();
   });
 
   /* skip bar: 400ms 후 표시 */
@@ -4892,6 +4933,7 @@ function _renderIntroMobile(app, introText, TARGET) {
     extSkip();
     skipBar.style.opacity = '0'; skipBar.style.pointerEvents = 'none';
     setTimeout(showLockFn, 420);
+    setupBarInteraction();
   });
 
   /* ── enter (lock 클릭) — 데스크탑과 동일한 글로우→입자→흰색fade→goTo ── */
@@ -4924,15 +4966,17 @@ function _renderIntroMobile(app, introText, TARGET) {
       if (elapsed < 1000) { requestAnimationFrame(glowLoop); return; }
 
       lineEl.style.textShadow = '';
-      /* 2. 텍스트/lock/bar 페이드아웃 */
+      /* 2. 텍스트/lock/bar 즉시 숨김 (transition 없이 — 씬 전환 전 잔상 방지) */
+      /* 좌표 계산 — removeChild 전에 (제거 후 getBoundingClientRect는 0 반환) */
+      var lineR = lineEl.getBoundingClientRect();
+      var frameR = frame.getBoundingClientRect();
+
+      /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
       [lineEl, lockWrap, skipBar, modeBar, langBar].forEach(function(el) {
-        el.style.transition = 'opacity 400ms ease';
-        el.style.opacity = '0'; el.style.pointerEvents = 'none';
+        if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
       /* 3. 입자 산개 + 흰색 fade */
-      var lineR = lineEl.getBoundingClientRect();
-      var frameR = frame.getBoundingClientRect();
       var cx = lineR.left + lineR.width  * 0.5;
       var cy = lineR.top  + lineR.height * 0.5;
       var tw = lineR.width, th = lineR.height;
@@ -5091,17 +5135,26 @@ function _renderIntroDesktop(app, introText, TARGET) {
   skipBar.appendChild(skipBtn);
   sq.appendChild(skipBar);
 
-  /* lang / device bar */
+  /* lang 스위치 (K 왼쪽 / E 오른쪽) */
   var langBar = _introLangBar();
-  langBar.style.cssText = 'position:absolute;right:6%;bottom:calc(6% + env(safe-area-inset-bottom));' +
-    'display:flex;gap:10px;opacity:0;transform:translateY(6px);' +
-    'transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  langBar.style.position = 'absolute';
+  langBar.style.right = '6%';
+  langBar.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
+  langBar.style.opacity = '0';
+  langBar.style.transform = 'translateY(6px)';
+  langBar.style.transition = 'opacity 2000ms ease,transform 2000ms ease';
+  langBar.style.pointerEvents = 'none';
   sq.appendChild(langBar);
 
+  /* mode 스위치 (▶ 왼쪽 / ■ 오른쪽) — cssText 금지, 개별 property로만 설정 */
   var modeBar = _introModeBar();
-  modeBar.style.cssText = 'position:absolute;left:6%;bottom:calc(6% + env(safe-area-inset-bottom));' +
-    'display:flex;gap:10px;opacity:0;transform:translateY(6px);' +
-    'transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
+  modeBar.style.position = 'absolute';
+  modeBar.style.left = '6%';
+  modeBar.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
+  modeBar.style.opacity = '0';
+  modeBar.style.transform = 'translateY(6px)';
+  modeBar.style.transition = 'opacity 2000ms ease,transform 2000ms ease';
+  modeBar.style.pointerEvents = 'none';
   sq.appendChild(modeBar);
 
   bgWrap.appendChild(sq);
@@ -5112,6 +5165,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
   /* ── helpers ── */
   var lockShown = false;
   var idleTimer = null;
+  var _deskIntroOnInteract = null;
   var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
   var showBars = function() {
     langBar.style.opacity = '1'; langBar.style.transform = 'translateY(0)'; langBar.style.pointerEvents = '';
@@ -5158,6 +5212,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
     document.addEventListener('mousemove', onInteract);
     document.addEventListener('keydown', onInteract);
     document.addEventListener('touchstart', onInteract, {passive:true});
+    _deskIntroOnInteract = onInteract;
   });
 
   /* skip bar: 400ms 후 표시 */
@@ -5185,6 +5240,14 @@ function _renderIntroDesktop(app, introText, TARGET) {
     if (!lockShown) return;
     /* 인트로 keydown 리스너 제거 — 씬 진입 후 이중 goTo 방지 */
     document.removeEventListener('keydown', _introKeyHandlerDesktop);
+    /* onInteract 리스너 제거 — doEnter 중 bars 재표시 방지 */
+    if (_deskIntroOnInteract) {
+      document.removeEventListener('mousemove', _deskIntroOnInteract);
+      document.removeEventListener('keydown', _deskIntroOnInteract);
+      document.removeEventListener('touchstart', _deskIntroOnInteract);
+      _deskIntroOnInteract = null;
+    }
+    clearTimeout(idleTimer);
     showIcon('unlock');
     var t0 = null;
     function glowLoop(ts) {
@@ -5197,14 +5260,15 @@ function _renderIntroDesktop(app, introText, TARGET) {
       if (elapsed < 1000) { requestAnimationFrame(glowLoop); return; }
 
       lineEl.style.textShadow = '';
+      /* 좌표 계산 — removeChild 전에 (제거 후 getBoundingClientRect는 0 반환) */
+      var lineR = lineEl.getBoundingClientRect();
+      var sqR   = sq.getBoundingClientRect();
+      /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
       [lineEl, lockWrap, langBar, modeBar, skipBar].forEach(function(el) {
-        el.style.transition = 'opacity 400ms ease';
-        el.style.opacity = '0'; el.style.pointerEvents = 'none';
+        if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
       /* 입자 산개 + 흰색 fade */
-      var lineR   = lineEl.getBoundingClientRect();
-      var sqR     = sq.getBoundingClientRect();
       var cx = lineR.left + lineR.width  * 0.5;
       var cy = lineR.top  + lineR.height * 0.5;
       var tw = lineR.width, th = lineR.height;
@@ -5221,8 +5285,8 @@ function _renderIntroDesktop(app, introText, TARGET) {
         cleanupParticles();
         /* gallery.js _applyScene()이 인식하는 id(_introCanvas) 사용 — div 방식 */
         var cv = document.createElement('div'); cv.id = '_introCanvas';
-        cv.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);' +
-          'width:' + sqR.width + 'px;height:' + sqR.height + 'px;' +
+        cv.style.cssText = 'position:fixed;left:' + sqR.left + 'px;top:' + sqR.top + 'px;' +
+          'width:' + Math.ceil(sqR.width) + 'px;height:' + Math.ceil(sqR.height) + 'px;' +
           'pointer-events:none;z-index:9999;background:#fff;opacity:0;transition:opacity 2000ms ease;';
         document.documentElement.appendChild(cv);
         requestAnimationFrame(function() { requestAnimationFrame(function() {
