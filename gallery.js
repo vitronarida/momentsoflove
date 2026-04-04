@@ -851,6 +851,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .nav-menu[data-tip]::after, .nav-scenelist[data-tip]::after{ 
   top: calc(100% + 10px); left:50%; transform: translateX(-50%) translateY(-6px); }
   .intro-bar-btn[data-tip]::after{ bottom: calc(100% + 10px); left:50%; transform: translateX(-50%) translateY(6px); }
+  .intro-sw[data-tip]::after{ bottom: calc(100% + 10px); left:50%; transform: translateX(-50%) translateY(6px); font-size:14px; }
   [data-tip]:hover::after, [data-tip]:focus-visible::after{ opacity:1; transform: translateX(-50%) translateY(0); }
 
   /* UI 모드 */
@@ -4662,7 +4663,8 @@ var _IBTN = 'font-family:"Nanum Pen Script",cursive;width:36px;height:36px;borde
   'color:rgba(235,235,235,0.35);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
 var _IBTN_ACT = 'opacity:1;border-color:rgba(255,255,255,0.40);background:rgba(255,255,255,0.10);';
 
-function _introLangBar() {
+/* 구버전 _introLangBar — 버튼 방식 (스위치 전환 전 보관)
+function _introLangBar_btn() {
   var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
   var mk = function(lang, svg, tip) {
     var isAct = curLang === lang;
@@ -4691,6 +4693,88 @@ function _introLangBar() {
     'English'));
   return bar;
 }
+*/
+
+/* 언어 선택 스위치 (EN ←→ KR) — 52×34, knob rgba(255,255,255,0.18) */
+function _introLangBar() {
+  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
+    'display:flex;align-items:center;justify-content:space-between;' +
+    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
+    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
+  var _SW_OFF   = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
+  var _SW_ON    = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
+  var _SW_HOVER = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);opacity:0.35;';
+  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
+    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
+  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
+    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
+    'display:flex;align-items:center;justify-content:center;';
+
+  /* knob 안 레이블 — 진하게 / 사이드 레이블은 leftSpan/rightSpan에 textContent 직접 설정 (중앙정렬 보장) */
+  var _LANG_LABEL_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.80);font-weight:700;';
+  var makeEnEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'E'; return el; };
+  var makeKrEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'K'; return el; };
+
+  var isOn = (curLang === 'KR'); /* off=EN, on=KR */
+  var track = document.createElement('div');
+  track.className = 'intro-sw';
+  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF); /* 기본 스타일 초기 설정 — applyState는 변경분만 개별 속성으로 업데이트 */
+  track.setAttribute('data-tip', isOn ? '한국어' : 'ENG');
+  /* 사이드 레이블: textContent 직접 설정으로 세로 중앙정렬 보장 */
+  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.textContent = 'E';
+  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.textContent = 'K';
+  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
+
+  /* applyState: cssText 전체 재설정 금지 — 외부 position/right/bottom 등 유지를 위해 개별 속성만 변경
+     animate=true 시 knob 이동 완료(transitionend) 후 아이콘·사이드레이블 교체 — 클릭 시에만 사용 */
+  var applyState = function(on, hover, animate) {
+    if (hover) {
+      track.style.background = 'rgba(255,255,255,0.04)';
+      track.style.borderColor = 'rgba(255,255,255,0.12)';
+      track.style.opacity = '0.35';
+    } else if (on) {
+      track.style.background = 'rgba(255,255,255,0.10)';
+      track.style.borderColor = 'rgba(255,255,255,0.40)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '한국어');
+    } else {
+      track.style.background = 'rgba(255,255,255,0.02)';
+      track.style.borderColor = 'rgba(255,255,255,0.22)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', 'ENG');
+    }
+    knob.style.left = on ? '22px' : '4px';
+    if (animate) {
+      knob.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'left') return;
+        knob.removeEventListener('transitionend', handler);
+        knob.innerHTML = '';
+        knob.appendChild(on ? makeKrEl() : makeEnEl());
+        /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
+        leftSpan.style.opacity  = on ? '1' : '0';
+        rightSpan.style.opacity = on ? '0' : '1';
+      });
+    } else {
+      knob.innerHTML = '';
+      knob.appendChild(on ? makeKrEl() : makeEnEl());
+      /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
+      leftSpan.style.opacity  = on ? '1' : '0';
+      rightSpan.style.opacity = on ? '0' : '1';
+    }
+  };
+  applyState(isOn, false);
+
+  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
+  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
+  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
+  track.addEventListener('click', function() {
+    isOn = !isOn;
+    applyState(isOn, false, true);
+    saveLang(isOn ? 'KR' : 'EN');
+    location.reload();
+  });
+  return track;
+}
 
 /* #85 — 디바이스 버튼 주석 처리 (오토/매뉴얼 버튼으로 교체)
 function _introDeviceBar() {
@@ -4718,18 +4802,13 @@ function _introDeviceBar() {
 }
 */
 
-/* #85 — 오토/매뉴얼 모드 선택 스위치
-   AUTO  : ▶ (knob 왼쪽) → sessionStorage intro_mode='AUTO'
-   MANUAL: ■ (knob 오른쪽) → sessionStorage intro_mode='MANUAL'
-   자물쇠/엔터 진입 시 intro_mode 값으로 AutoPlay 여부 결정 */
-function _introModeBar() {
+/* 구버전 _introModeBar — 버튼 방식 (스위치 전환 전 보관)
+function _introModeBar_btn() {
   var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
-  var savedMode = 'AUTO'; /* 기본값 AUTO */
+  var savedMode = 'AUTO';
   try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
-
   var _IBTN_HOVER = 'opacity:0.35;border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);';
   var buttons = [];
-
   var mk = function(mode, svg, tip) {
     var b = document.createElement('button'); b.type = 'button';
     b.dataset.mode = mode;
@@ -4753,25 +4832,116 @@ function _introModeBar() {
     if (savedMode === mode) b.dataset.active = '1';
     return b;
   };
-
-  /* AUTO — video-camera */
-  var btnAuto = mk('AUTO',
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>',
-    curLang === 'KR' ? '자동 감상' : 'Auto Play');
-
-  /* MANUAL — camera */
-  var btnManual = mk('MANUAL',
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/>' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>',
-    curLang === 'KR' ? '직접 감상' : 'Manual');
-
-  buttons.push(btnAuto, btnManual);
-  bar.appendChild(btnAuto);
-  bar.appendChild(btnManual);
-
+  buttons.push(mk('AUTO', '', curLang === 'KR' ? '자동 감상' : 'Auto Play'));
+  buttons.push(mk('MANUAL', '', curLang === 'KR' ? '직접 감상' : 'Manual'));
+  buttons.forEach(function(b) { bar.appendChild(b); });
   return bar;
+}
+*/
+
+/* 모드 선택 스위치 (AUTO ←→ MANUAL) — 52×34, knob rgba(255,255,255,0.18)
+   AUTO  : ▶ CSS아이콘 (knob 왼쪽)
+   MANUAL: ■ CSS아이콘 (knob 오른쪽) */
+function _introModeBar() {
+  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
+    'display:flex;align-items:center;justify-content:space-between;' +
+    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
+    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
+  var _SW_OFF   = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
+  var _SW_ON    = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
+  var _SW_HOVER = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);opacity:0.35;';
+  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
+    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
+  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
+    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
+    'display:flex;align-items:center;justify-content:center;';
+
+  /* CSS 아이콘 빌더 */
+  var makeTriEl = function() { /* ▶ — 150% */
+    var el = document.createElement('div');
+    el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
+      'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:6px 0 6px 9.75px;';
+    return el;
+  };
+  var makeSqEl = function() { /* ■ — 150% */
+    var el = document.createElement('div');
+    el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;';
+    return el;
+  };
+  var makeTriSide = function() { /* 사이드용 ▶ — knob과 동일 크기(높이 12px) */
+    var el = document.createElement('div');
+    el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
+      'border-color:transparent transparent transparent rgba(235,235,235,0.30);border-width:6px 0 6px 9.75px;';
+    return el;
+  };
+  var makeSqSide = function() { /* 사이드용 ■ — knob과 동일 크기(9px) */
+    var el = document.createElement('div');
+    el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.30);border-radius:1px;flex-shrink:0;';
+    return el;
+  };
+
+  var savedMode = 'AUTO';
+  try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
+  var isOn = (savedMode === 'MANUAL'); /* off=AUTO, on=MANUAL */
+
+  var track = document.createElement('div');
+  track.className = 'intro-sw';
+  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF); /* 기본 스타일 초기 설정 — applyState는 변경분만 개별 속성으로 업데이트 */
+  track.setAttribute('data-tip', isOn ? '수동' : '자동');
+  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS;
+  leftSpan.appendChild(makeTriSide());
+  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS;
+  rightSpan.appendChild(makeSqSide());
+  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
+
+  /* applyState: cssText 전체 재설정 금지 — 외부 position/left/bottom 등 유지를 위해 개별 속성만 변경
+     animate=true 시 knob 이동 완료(transitionend) 후 아이콘·사이드레이블 교체 — 클릭 시에만 사용 */
+  var applyState = function(on, hover, animate) {
+    if (hover) {
+      track.style.background = 'rgba(255,255,255,0.04)';
+      track.style.borderColor = 'rgba(255,255,255,0.12)';
+      track.style.opacity = '0.35';
+    } else if (on) {
+      track.style.background = 'rgba(255,255,255,0.10)';
+      track.style.borderColor = 'rgba(255,255,255,0.40)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '수동');
+    } else {
+      track.style.background = 'rgba(255,255,255,0.02)';
+      track.style.borderColor = 'rgba(255,255,255,0.22)';
+      track.style.opacity = '';
+      track.setAttribute('data-tip', '자동');
+    }
+    knob.style.left = on ? '22px' : '4px';
+    if (animate) {
+      knob.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName !== 'left') return;
+        knob.removeEventListener('transitionend', handler);
+        knob.innerHTML = '';
+        knob.appendChild(on ? makeSqEl() : makeTriEl());
+        /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
+        leftSpan.style.opacity = on ? '1' : '0';
+        rightSpan.style.opacity = on ? '0' : '1';
+      });
+    } else {
+      knob.innerHTML = '';
+      knob.appendChild(on ? makeSqEl() : makeTriEl());
+      /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
+      leftSpan.style.opacity = on ? '1' : '0';
+      rightSpan.style.opacity = on ? '0' : '1';
+    }
+  };
+  applyState(isOn, false);
+
+  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
+  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
+  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
+  track.addEventListener('click', function() {
+    isOn = !isOn;
+    applyState(isOn, false, true);
+    try { sessionStorage.setItem('intro_mode', isOn ? 'MANUAL' : 'AUTO'); } catch(e) {}
+  });
+  return track;
 }
 
 /* ──────────────────────────────────────────
