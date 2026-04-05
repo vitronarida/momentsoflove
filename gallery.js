@@ -1791,11 +1791,18 @@ function _goTo(url, opts) {
   _wasPaused = AutoPlay.isActive() && AutoPlay.isPaused();
   AutoPlay.onSceneChange();
 
-  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 next 방향이며 직접 이동이 아닌 경우
+  /* Case B: stanza 전환 — 현재 씬에 stanzaTransition:true 필드가 있고 직접 이동이 아닌 경우
      #95 — 산개 진행 중(_stanzaInProgress)에는 일반 전환으로 처리
-     forceNav:true — 키보드 입력 시 산개 즉시 중단하고 일반 전환 */
-  if (direction === 'next' && !opts.direct && !opts.forceNav && _currentScene && _currentScene.stanzaTransition && !_stanzaInProgress) {
-    _stanzaTransition(url);
+     forceNav:true — 키보드 입력 시 산개 즉시 중단하고 일반 전환
+     오토모드: 입자 산개 + fade 2000ms / 수동모드: prev/next 모두 1000ms 대기 후 fade 1500ms, 검정 2000ms */
+  var _destScene = NavigationManager.getCachedScene(url);
+  var _hasStanza = (_currentScene && _currentScene.stanzaTransition);
+  if (!opts.direct && !opts.forceNav && _hasStanza && !_stanzaInProgress) {
+    if (AutoPlay.isActive()) {
+      _stanzaTransition(url);    /* 오토모드: 입자 산개 + fade 2000ms */
+    } else {
+      setTimeout(function() { _stanzaGoToDest(url, 1500, 2000); }, 1000); /* 수동모드: 1000ms 대기 후 fade 1500ms, 검정 2000ms */
+    }
     return;
   }
   /* forceNav 시 산개 진행 중이면 즉시 정리 */
@@ -1864,19 +1871,23 @@ function _stanzaTransition(destURL) {
   }, 1000);
 }
 
-function _stanzaGoToDest(destURL) {
-  /* 스탄자 전환: Fade to Black (정사각형 기준, 모바일은 photo-area 기준) */
+function _stanzaGoToDest(destURL, fadeDuration, holdDuration) {
+  /* 스탄자 전환: Fade to Black (정사각형 기준, 모바일은 photo-area 기준)
+     fadeDuration: fade in/out 시간(ms). 오토모드 2000, 수동모드 1500
+     holdDuration: 검정 유지 시간(ms). 오토모드 4000, 수동모드 2000 */
+  fadeDuration = fadeDuration || 2000;
+  holdDuration = holdDuration || (fadeDuration * 2);
   var _startURL = _currentURL; /* #95 fix — 산개 중 nav 이동 감지용 */
   var app = $id('app');
   var sq = app && (app.querySelector('.square-frame') || app.querySelector('.photo-area'));
   var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity 2000ms ease;';
+  overlay.style.cssText = 'position:absolute;inset:0;background:#000;opacity:0;z-index:9999;pointer-events:none;transition:opacity ' + fadeDuration + 'ms ease;';
   if (sq) sq.appendChild(overlay);
 
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     overlay.style.opacity = '1';
     setTimeout(function(){
-      /* 2000ms fadeIn + 2000ms 정지 후 씬 교체 */
+      /* fadeIn + 동일 시간 정지 후 씬 교체 */
       /* #95 fix — 산개 중 nav 이동 발생 시 취소 */
       if (_currentURL !== _startURL) {
         _navigating = false; _stanzaInProgress = false;
@@ -1897,13 +1908,13 @@ function _stanzaGoToDest(destURL) {
           overlay.style.opacity = '1';
           newSq.appendChild(overlay);
           requestAnimationFrame(function(){ requestAnimationFrame(function(){
-            overlay.style.transition = 'opacity 4000ms ease';
+            overlay.style.transition = 'opacity ' + (fadeDuration * 2) + 'ms ease';
             overlay.style.opacity = '0';
-            setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 4000);
+            setTimeout(function(){ if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, fadeDuration * 2);
           }); });
         }
       }).catch(function(){ _navigating=false; _stanzaInProgress=false; console.warn('[MOL] stanza fetchScene 실패:', destURL); });
-    }, 4000);
+    }, holdDuration);
   }); });
 }
 
@@ -4853,6 +4864,213 @@ function _introModeBar_btn() {
 }
 */
 
+/* ── 데스크탑 인트로 원형 버튼 공통 스타일 ── */
+var _INTRO_BTN_BASE = 'position:absolute;width:52px;height:52px;border-radius:999px;' +
+  'display:grid;place-items:center;' +
+  'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);' +
+  'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);' +
+  'color:rgba(235,235,235,0.35);cursor:pointer;user-select:none;' +
+  '-webkit-tap-highlight-color:transparent;' +
+  'opacity:0;pointer-events:none;' +
+  'transition:opacity 2000ms ease,transform 200ms ease,background 200ms ease,border-color 200ms ease,box-shadow 200ms ease;';
+var _INTRO_BTN_HOVER_ON = function(el) {
+  el.style.background = 'rgba(255,255,255,0.08)';
+  el.style.borderColor = 'rgba(255,255,255,0.22)';
+  el.style.color = 'rgba(235,235,235,0.90)';
+  el.style.boxShadow = '0 0 14px 4px rgba(255,255,255,0.10)';
+  el.style.transform = 'scale(1.04)';
+};
+var _INTRO_BTN_HOVER_OFF = function(el) {
+  el.style.background = 'rgba(255,255,255,0.02)';
+  el.style.borderColor = 'rgba(255,255,255,0.07)';
+  el.style.color = 'rgba(235,235,235,0.35)';
+  el.style.boxShadow = '';
+  el.style.transform = '';
+};
+
+/* 상태 툴팁 (오토/수동, KR/EN) */
+function _makeStatusTip(optA, optB) {
+  var tip = document.createElement('div');
+  tip.style.cssText = 'position:absolute;display:flex;gap:6px;align-items:center;' +
+    'background:rgba(20,20,20,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:20px;' +
+    'padding:7px 18px;opacity:0;pointer-events:none;' +
+    'transition:opacity 200ms ease;white-space:nowrap;z-index:9999;';
+  var spanA = document.createElement('span');
+  spanA.style.cssText = 'font-size:18px;font-family:"Nanum Pen Script",cursive;color:rgba(235,235,235,0.35);' +
+    'padding:2px 8px;border-radius:999px;transition:color 150ms,background 150ms;';
+  spanA.textContent = optA;
+  var divider = document.createElement('span');
+  divider.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.15);';
+  divider.textContent = '|';
+  var spanB = document.createElement('span');
+  spanB.style.cssText = 'font-size:18px;font-family:"Nanum Pen Script",cursive;color:rgba(235,235,235,0.35);' +
+    'padding:2px 8px;border-radius:999px;transition:color 150ms,background 150ms;';
+  spanB.textContent = optB;
+  tip.appendChild(spanA); tip.appendChild(divider); tip.appendChild(spanB);
+  tip._spanA = spanA; tip._spanB = spanB;
+  tip._highlightNext = function(currentIsA) {
+    /* 다음 상태 하이라이트 */
+    spanA.style.background = currentIsA ? '' : 'rgba(255,255,255,0.15)';
+    spanA.style.color = currentIsA ? 'rgba(235,235,235,0.35)' : 'rgba(235,235,235,0.90)';
+    spanB.style.background = currentIsA ? 'rgba(255,255,255,0.15)' : '';
+    spanB.style.color = currentIsA ? 'rgba(235,235,235,0.90)' : 'rgba(235,235,235,0.35)';
+    tip.style.opacity = '1';
+  };
+  tip._hide = function() { tip.style.opacity = '0'; };
+  return tip;
+}
+
+/* 데스크탑 인트로 — 모드 원형 버튼 (▶/■) */
+function _introModeBtn() {
+  var savedMode = 'AUTO';
+  try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
+  var isManual = (savedMode === 'MANUAL');
+
+  var btn = document.createElement('div');
+  btn.style.cssText = _INTRO_BTN_BASE;
+  btn.style.left = '6%';
+  btn.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
+
+  /* ▶ CSS 아이콘 */
+  var triEl = document.createElement('div');
+  triEl.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
+    'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:7px 0 7px 11px;';
+  /* ■ CSS 아이콘 */
+  var sqEl = document.createElement('div');
+  sqEl.style.cssText = 'width:10px;height:10px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;display:none;';
+
+  btn.appendChild(triEl); btn.appendChild(sqEl);
+
+  /* 상태 툴팁 */
+  var tip = _makeStatusTip('오토', '수동');
+  tip.style.bottom = 'calc(6% + env(safe-area-inset-bottom) + 62px)';
+  tip.style.left = 'calc(6% + 26px)';
+  tip.style.transform = 'translateX(-50%)';
+
+  var applyState = function(manual) {
+    triEl.style.display = manual ? 'none' : '';
+    sqEl.style.display  = manual ? ''     : 'none';
+  };
+  applyState(isManual);
+
+  btn.addEventListener('mouseenter', function() {
+    _INTRO_BTN_HOVER_ON(btn);
+    /* 아이콘: 다음 상태 미리보기 */
+    triEl.style.display = isManual ? ''     : 'none';
+    sqEl.style.display  = isManual ? 'none' : '';
+    /* 툴팁: 다음 상태 하이라이트 */
+    tip._highlightNext(!isManual);
+  });
+  btn.addEventListener('mouseleave', function() {
+    _INTRO_BTN_HOVER_OFF(btn, isManual);
+    applyState(isManual);
+    tip._hide();
+  });
+  btn.addEventListener('click', function() {
+    isManual = !isManual;
+    applyState(isManual);
+    tip._hide();
+    try { sessionStorage.setItem('intro_mode', isManual ? 'MANUAL' : 'AUTO'); } catch(e) {}
+  });
+
+  btn._tip = tip;
+  return btn;
+}
+
+/* 데스크탑 인트로 — 언어 원형 버튼 (KR/EN) */
+function _introLangBtn() {
+  var isKR = (curLang === 'KR');
+
+  var btn = document.createElement('div');
+  btn.style.cssText = _INTRO_BTN_BASE;
+  btn.style.right = '6%';
+  btn.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
+
+  var label = document.createElement('span');
+  label.style.cssText = 'font-size:13px;font-family:sans-serif;font-weight:700;letter-spacing:0.03em;';
+  label.textContent = isKR ? 'KR' : 'EN';
+  btn.appendChild(label);
+
+  /* 상태 툴팁 */
+  var tip = _makeStatusTip('KR', 'EN');
+  tip.style.bottom = 'calc(6% + env(safe-area-inset-bottom) + 62px)';
+  tip.style.left = 'calc(100% - 6% - 26px)';
+  tip.style.transform = 'translateX(-50%)';
+
+  btn.addEventListener('mouseenter', function() {
+    _INTRO_BTN_HOVER_ON(btn);
+    label.textContent = isKR ? 'EN' : 'KR';
+    tip._highlightNext(isKR);
+  });
+  btn.addEventListener('mouseleave', function() {
+    _INTRO_BTN_HOVER_OFF(btn, isKR);
+    label.textContent = isKR ? 'KR' : 'EN';
+    tip._hide();
+  });
+  btn.addEventListener('click', function() {
+    tip._hide();
+    saveLang(isKR ? 'EN' : 'KR');
+    location.reload();
+  });
+
+  btn._tip = tip;
+  return btn;
+}
+
+/* 데스크탑 인트로 — 작가의 말 원형 버튼 (i 아이콘) */
+function _introAboutBtn() {
+  var btn = document.createElement('div');
+  btn.style.cssText = _INTRO_BTN_BASE;
+  btn.style.left = '6%';
+  btn.style.top = '6%';
+
+  btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>' +
+    '</svg>';
+
+  /* 라벨 툴팁 */
+  var tip = document.createElement('div');
+  tip.style.cssText = 'position:absolute;top:calc(6% + 62px);left:calc(6% + 26px);transform:translateX(-50%);' +
+    'background:rgba(20,20,20,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:20px;' +
+    'padding:7px 18px;font-size:18px;font-family:"Nanum Pen Script",cursive;' +
+    'color:rgba(235,235,235,0.90);opacity:0;pointer-events:none;' +
+    'transition:opacity 200ms ease;white-space:nowrap;z-index:9999;';
+  tip.textContent = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang].aboutTitle || '작가의 말' : '작가의 말';
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); tip.style.opacity = '1'; });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); tip.style.opacity = '0'; });
+  btn.addEventListener('click', function() { tip.style.opacity = '0'; AboutManager.open(); });
+  btn._tip = tip;
+  return btn;
+}
+
+/* 데스크탑 인트로 — 이용 안내 원형 버튼 (? 아이콘, 플레이스홀더) */
+function _introHelpBtn() {
+  var btn = document.createElement('div');
+  btn.style.cssText = _INTRO_BTN_BASE;
+  btn.style.right = '6%';
+  btn.style.top = '6%';
+
+  btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008z"/>' +
+    '</svg>';
+
+  /* 라벨 툴팁 */
+  var tip = document.createElement('div');
+  tip.style.cssText = 'position:absolute;top:calc(6% + 62px);left:calc(100% - 6% - 26px);transform:translateX(-50%);' +
+    'background:rgba(20,20,20,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:20px;' +
+    'padding:7px 18px;font-size:18px;font-family:"Nanum Pen Script",cursive;' +
+    'color:rgba(235,235,235,0.90);opacity:0;pointer-events:none;' +
+    'transition:opacity 200ms ease;white-space:nowrap;z-index:9999;';
+  tip.textContent = '이용 안내';
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); tip.style.opacity = '1'; });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); tip.style.opacity = '0'; });
+  btn.addEventListener('click', function() { tip.style.opacity = '0'; HelpManager.open(); });
+  btn._tip = tip;
+  return btn;
+}
+
 /* 모드 선택 스위치 (AUTO ←→ MANUAL) — 52×34, knob rgba(255,255,255,0.18)
    AUTO  : ▶ CSS아이콘 (knob 왼쪽)
    MANUAL: ■ CSS아이콘 (knob 오른쪽) */
@@ -5152,15 +5370,13 @@ function _renderIntroMobile(app, introText, TARGET) {
 
   /* skip bar */
   var skipBar = document.createElement('div');
-  skipBar.style.cssText = 'position:absolute;left:50%;top:calc(50% - 21px);transform:translate(-50%,-50%);' +
-    'opacity:0;transition:opacity 2000ms ease;pointer-events:none;z-index:1;';
+  skipBar.style.cssText = 'opacity:0;transition:opacity 2000ms ease;pointer-events:none;';
   var skipBtn = document.createElement('button'); skipBtn.type = 'button'; skipBtn.textContent = 'skip';
   skipBtn.style.cssText = 'width:36px;height:36px;border-radius:999px;display:grid;place-items:center;' +
     'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);' +
     'color:rgba(235,235,235,0.70);font-family:"Nanum Pen Script",cursive;font-size:13px;' +
     'cursor:pointer;-webkit-tap-highlight-color:transparent;';
   skipBar.appendChild(skipBtn);
-  bottom.appendChild(skipBar);
 
   /* lock wrap + pulse rings */
   var lockWrap = document.createElement('div');
@@ -5190,7 +5406,7 @@ function _renderIntroMobile(app, introText, TARGET) {
   modeBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
   var langBar = _introLangBar();
   langBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
-  row.appendChild(modeBar); row.appendChild(langBar);
+  row.appendChild(modeBar); row.appendChild(skipBar); row.appendChild(langBar);
   bottom.appendChild(row);
   app.appendChild(bottom);
   /* 검정 flash 방지 — 인트로 콘텐츠 완성 후 즉시 표시 */
@@ -5466,7 +5682,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
   /* skip bar */
   var skipBar = document.createElement('div');
   skipBar.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);' +
-    'bottom:calc(6% + env(safe-area-inset-bottom));opacity:0;transition:opacity 2000ms ease;pointer-events:none;';
+    'bottom:calc(6% + env(safe-area-inset-bottom) + 8px);opacity:0;transition:opacity 2000ms ease;pointer-events:none;';
   var skipBtn = document.createElement('button'); skipBtn.type = 'button'; skipBtn.textContent = 'skip';
   skipBtn.style.cssText = 'width:36px;height:36px;border-radius:999px;display:grid;place-items:center;' +
     'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);' +
@@ -5475,27 +5691,25 @@ function _renderIntroDesktop(app, introText, TARGET) {
   skipBar.appendChild(skipBtn);
   sq.appendChild(skipBar);
 
-  /* lang 스위치 (K 왼쪽 / E 오른쪽) */
-  var langBar = _introLangBar();
-  langBar.style.position = 'absolute';
-  langBar.style.right = '6%';
-  langBar.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
-  langBar.style.opacity = '0';
-  langBar.style.transform = 'translateY(6px)';
-  langBar.style.transition = 'opacity 2000ms ease,transform 2000ms ease';
-  langBar.style.pointerEvents = 'none';
-  sq.appendChild(langBar);
-
-  /* mode 스위치 (▶ 왼쪽 / ■ 오른쪽) — cssText 금지, 개별 property로만 설정 */
-  var modeBar = _introModeBar();
-  modeBar.style.position = 'absolute';
-  modeBar.style.left = '6%';
-  modeBar.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
-  modeBar.style.opacity = '0';
-  modeBar.style.transform = 'translateY(6px)';
-  modeBar.style.transition = 'opacity 2000ms ease,transform 2000ms ease';
-  modeBar.style.pointerEvents = 'none';
+  /* 하단 좌: 모드 원형 버튼 */
+  var modeBar = _introModeBtn();
   sq.appendChild(modeBar);
+  sq.appendChild(modeBar._tip);
+
+  /* 하단 우: 언어 원형 버튼 */
+  var langBar = _introLangBtn();
+  sq.appendChild(langBar);
+  sq.appendChild(langBar._tip);
+
+  /* 상단 좌: 작가의 말 버튼 */
+  var aboutBtn = _introAboutBtn();
+  sq.appendChild(aboutBtn);
+  sq.appendChild(aboutBtn._tip);
+
+  /* 상단 우: 이용 안내 버튼 */
+  var helpBtn = _introHelpBtn();
+  sq.appendChild(helpBtn);
+  sq.appendChild(helpBtn._tip);
 
   bgWrap.appendChild(sq);
   app.appendChild(bgWrap);
@@ -5508,12 +5722,18 @@ function _renderIntroDesktop(app, introText, TARGET) {
   var _deskIntroOnInteract = null;
   var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
   var showBars = function() {
-    langBar.style.opacity = '1'; langBar.style.transform = 'translateY(0)'; langBar.style.pointerEvents = '';
-    modeBar.style.opacity = '1'; modeBar.style.transform = 'translateY(0)'; modeBar.style.pointerEvents = '';
+    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
+      el.style.opacity = '1'; el.style.pointerEvents = '';
+    });
+    [modeBar._tip, langBar._tip].forEach(function(el) { el.style.pointerEvents = ''; });
   };
   var hideBars = function() {
-    langBar.style.opacity = '0'; langBar.style.pointerEvents = 'none';
-    modeBar.style.opacity = '0'; modeBar.style.pointerEvents = 'none';
+    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
+      el.style.opacity = '0'; el.style.pointerEvents = 'none';
+    });
+    [modeBar._tip, langBar._tip].forEach(function(el) {
+      el.style.opacity = '0'; el.style.pointerEvents = 'none';
+    });
   };
   var showLockFn = function() {
     if (lockShown) return; lockShown = true;
@@ -5604,7 +5824,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
       var lineR = lineEl.getBoundingClientRect();
       var sqR   = sq.getBoundingClientRect();
       /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
-      [lineEl, lockWrap, langBar, modeBar, skipBar].forEach(function(el) {
+      [lineEl, lockWrap, langBar, modeBar, langBar._tip, modeBar._tip, aboutBtn, aboutBtn._tip, helpBtn, helpBtn._tip, skipBar].forEach(function(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
