@@ -3341,20 +3341,20 @@ function _renderScene(scene, sceneURL, transDir, onNavDone) {
   } catch(e) {}
   var sceneTransCfg = previewCfg || (scene.transition && scene.transition[isMobile ? 'mobile' : 'desktop']);
   var transType, transDuration;
+  var BLINK_CFG = { closeMs:1200, openMs:1600, holdMs:300, gradArea:18,
+                    closeEase:'cubic-bezier(0.4,0,1,1)', openEase:'linear' };
   if (transDir === 'none') {
     transType = 'none';
     transDuration = 0;
+  } else if (!isLSN) {
+    /* LPL/LDR — 항상 blink (sceneTransCfg 무시) */
+    transType = 'blink';
+    transDuration = BLINK_CFG;
   } else if (sceneTransCfg) {
-    transType     = sceneTransCfg.type     || (isLSN ? 'fadeBlack' : (isMobile ? 'fade' : 'slide'));
-    transDuration = sceneTransCfg.duration !== undefined
-      ? sceneTransCfg.duration
-      : 2000;
-  } else if (isLSN) {
-    transType = 'fadeBlack'; transDuration = 2000;
-  } else if (!isMobile) {
-    transType = 'slide';     transDuration = 2000;
+    transType     = sceneTransCfg.type     || 'fadeBlack';
+    transDuration = sceneTransCfg.duration !== undefined ? sceneTransCfg.duration : 2000;
   } else {
-    transType = 'slide';     transDuration = 2000; /* #88 — 모바일도 slide로 통일 */
+    transType = 'fadeBlack'; transDuration = 2000;
   }
 
   /* 현재 씬 루트 엘리먼트 (old) */
@@ -3478,7 +3478,99 @@ var TransitionManager = {
     else if (type === 'scale')       TransitionManager._scale(app, oldEl, newShell, duration, onDone);
     else if (type === 'parallax')    TransitionManager._parallax(app, oldEl, newShell, transDir, duration, onDone);
     else if (type === 'skew')        TransitionManager._skew(app, oldEl, newShell, transDir, duration, onDone);
+    else if (type === 'blink')       TransitionManager._blink(app, newShell, duration, onDone);
     else                             TransitionManager._none(app, newShell, onDone);
+  },
+
+  _ensureLids: function() {
+    /* lid를 body에 직접 배치 — _mountNew의 app.innerHTML='' 영향 없음
+       데스크탑: 정사각형 크기 wrapper (square-frame과 동일 위치/크기)
+       모바일: photo-area 크기 (aspect-ratio 1:1, 화면 상단) */
+    if (document.getElementById('_molLidWrap')) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = '_molLidWrap';
+    if (isMobile) {
+      wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;aspect-ratio:1/1;' +
+                           'z-index:9000;pointer-events:none;overflow:hidden;';
+    } else {
+      wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
+                           'transform:translate(-50%,-50%);' +
+                           'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
+                           'z-index:9000;pointer-events:none;overflow:hidden;';
+    }
+
+    var top = document.createElement('div'); top.id = '_molLidTop';
+    var bot = document.createElement('div'); bot.id = '_molLidBot';
+    top.style.cssText = 'position:absolute;left:0;right:0;top:0;transform:translateY(-100%);';
+    bot.style.cssText = 'position:absolute;left:0;right:0;bottom:0;transform:translateY(100%);';
+
+    wrap.appendChild(top); wrap.appendChild(bot);
+    document.body.appendChild(wrap);
+  },
+
+  _blink: function(app, newShell, cfg, onDone) {
+    TransitionManager._ensureLids();
+    var top = document.getElementById('_molLidTop');
+    var bot = document.getElementById('_molLidBot');
+    if (!top || !bot) { TransitionManager._none(app, newShell, onDone); return; }
+    var closeMs   = cfg.closeMs   || 1200;
+    var openMs    = cfg.openMs    || 1600;
+    var holdMs    = cfg.holdMs    || 300;
+    var gradArea  = cfg.gradArea  || 0;
+    var closeEase = cfg.closeEase || 'ease-in';
+    var openEase  = cfg.openEase  || 'linear';
+    var color     = '#000000';
+
+    /* 높이 — gradArea만큼 바깥으로 확장해 fade가 화면 밖에 위치 */
+    var extH = (50 + gradArea) + '%';
+    top.style.height = extH; bot.style.height = extH;
+    top.style.top    = '-' + gradArea + '%';
+    bot.style.bottom = '-' + gradArea + '%';
+
+    /* 그라데이션 — 바깥(fade) → 안쪽(solid) */
+    if (gradArea > 0) {
+      var gradPct = (gradArea / (50 + gradArea) * 100).toFixed(1) + '%';
+      top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+      bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+    } else {
+      top.style.background = color;
+      bot.style.background = color;
+    }
+
+    /* 초기 위치로 리셋 */
+    top.style.transition = 'none'; bot.style.transition = 'none';
+    top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
+
+    /* 눈 감기 */
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      top.style.transition = 'transform ' + closeMs + 'ms ' + closeEase;
+      bot.style.transition = 'transform ' + closeMs + 'ms ' + closeEase;
+      top.style.transform  = 'translateY(0%)'; bot.style.transform = 'translateY(0%)';
+
+      setTimeout(function() {
+        /* 씬 교체 */
+        TransitionManager._mountNew(app, newShell);
+
+        /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기 */
+        var holdDone = false, imgDone = false;
+        function tryOpen() {
+          if (!holdDone || !imgDone) return;
+          top.style.transition = 'transform ' + openMs + 'ms ' + openEase;
+          bot.style.transition = 'transform ' + openMs + 'ms ' + openEase;
+          top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
+          setTimeout(function() { if (onDone) onDone(); }, openMs);
+        }
+        setTimeout(function() { holdDone = true; tryOpen(); }, holdMs);
+        var img = app.querySelector('img');
+        if (!img || img.complete) {
+          imgDone = true;
+        } else {
+          img.addEventListener('load',  function() { imgDone = true; tryOpen(); }, {once:true});
+          img.addEventListener('error', function() { imgDone = true; tryOpen(); }, {once:true});
+        }
+      }, closeMs);
+    }); });
   },
 
   _mountNew: function(app, newShell) {
