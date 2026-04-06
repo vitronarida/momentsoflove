@@ -3491,7 +3491,7 @@ var TransitionManager = {
     var wrap = document.createElement('div');
     wrap.id = '_molLidWrap';
     if (isMobile) {
-      wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;aspect-ratio:1/1;' +
+      wrap.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vw;' +
                            'z-index:9000;pointer-events:none;overflow:hidden;';
     } else {
       wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
@@ -4043,8 +4043,16 @@ var TypingEngine = (function() {
       }
       setTimeout(next, 150);
     }
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(startTyping);
+    /* 폰트 실제 글자 미리 로딩 후 타이핑 시작
+       fonts.ready는 파싱 완료만 보장 — 특정 글자 첫 렌더 시 폰트 교체 현상 방지를 위해
+       실제 사용 글자셋으로 fonts.load() 명시 호출 */
+    var _fontTestStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
+                       '0123456789가나다라마바사아자차카타파하거너더러머버서어저처커터퍼허' +
+                       '고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후' +
+                       '그느드르므브스으즈츠크트프흐기니디리미비시이지치키티피히' +
+                       '.,!?…\'" ';
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('24px "Nanum Pen Script"', _fontTestStr).then(startTyping).catch(startTyping);
     } else {
       startTyping();
     }
