@@ -3496,9 +3496,12 @@ var TransitionManager = {
       top.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
       bot.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
       var photoArea = app.querySelector('.photo-area');
-      if (photoArea && photoArea.nextSibling) {
-        app.insertBefore(top, photoArea.nextSibling);
-        app.insertBefore(bot, photoArea.nextSibling);
+      var controlArea = app.querySelector('.control-area');
+      if (controlArea) {
+        app.insertBefore(top, controlArea);
+        app.insertBefore(bot, controlArea);
+      } else if (photoArea) {
+        app.appendChild(top); app.appendChild(bot);
       } else {
         app.appendChild(top); app.appendChild(bot);
       }
@@ -3537,8 +3540,9 @@ var TransitionManager = {
                bot lid: photoTop + half (fade 아래 부분은 control-area z-index:2에 가려짐)
        데스크탑: wrap 기준 % 단위 유지 */
     if (isMobile) {
-      var photoEl = app.querySelector('.photo-area');
-      var rect    = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
+      /* test7 데모와 동일 */
+      var photoEl  = app.querySelector('.photo-area');
+      var rect     = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
       var photoTop = rect.top;
       var photoH   = rect.height;
       var half     = photoH / 2;
@@ -3548,26 +3552,17 @@ var TransitionManager = {
       top.style.height = extH + 'px';
       bot.style.top    = (photoTop + half) + 'px';
       bot.style.height = extH + 'px';
-      /* 모바일 그라데이션 — px 기반 계산 */
       var gradPct = (grad / extH * 100).toFixed(1) + '%';
-      if (gradArea > 0) {
-        top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
-        bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
-      } else {
-        top.style.background = color;
-        bot.style.background = color;
-      }
+      top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+      bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
       top.style.transition = 'none'; bot.style.transition = 'none';
       top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
-      top.style.display = 'block';
-      bot.style.display = 'block';
+      top.style.display = 'block'; bot.style.display = 'block';
     } else {
       var extH = (50 + gradArea) + '%';
       top.style.height = extH; bot.style.height = extH;
       top.style.top    = '-' + gradArea + '%';
       bot.style.bottom = '-' + gradArea + '%';
-
-      /* 데스크탑 그라데이션 */
       if (gradArea > 0) {
         var gradPct = (gradArea / (50 + gradArea) * 100).toFixed(1) + '%';
         top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
