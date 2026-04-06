@@ -43,6 +43,7 @@ touch-action: manipulation;
 }
 .control-area {
 position: relative;
+z-index: 2;
 flex: 1;
 min-height: 0;
 width: 100%;
@@ -3457,17 +3458,17 @@ else                             TransitionManager._none(app, newShell, onDone);
 
 _ensureLids: function() {
 /* lid를 body에 직접 배치 — _mountNew의 app.innerHTML=’’ 영향 없음
-데스크탑: wrap 안에 absolute 배치 (square-frame과 동일 위치/크기)
-모바일: top/bot 각각 position:fixed 독립 배치
-— iOS Safari에서 position:fixed 부모의 overflow:hidden이 무시되는 버그 우회 */
+데스크탑: wrap 안에 absolute 배치 (square-frame과 동일 위치/크기, overflow:hidden)
+모바일: top/bot 각각 position:fixed 독립 배치, z-index:1
+control-area가 z-index:2로 lid 위에 올라와 lid가 photo-area에서만 보임
+위치/높이는 _blink에서 getBoundingClientRect()로 직접 계산 */
 if (document.getElementById(’_molLidWrap’)) return;
 
 ```
 var wrap = document.createElement('div');
 wrap.id = '_molLidWrap';
 if (isMobile) {
-  wrap.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;' +
-                       'z-index:9000;pointer-events:none;';
+  wrap.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;';
 } else {
   wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
                        'transform:translate(-50%,-50%);' +
@@ -3478,9 +3479,8 @@ if (isMobile) {
 var top = document.createElement('div'); top.id = '_molLidTop';
 var bot = document.createElement('div'); bot.id = '_molLidBot';
 if (isMobile) {
-  /* 모바일: position:fixed 독립 배치. 높이/위치는 _blink에서 vw 단위로 직접 지정 */
-  top.style.cssText = 'position:fixed;left:0;width:100vw;z-index:9000;pointer-events:none;';
-  bot.style.cssText = 'position:fixed;left:0;width:100vw;z-index:9000;pointer-events:none;';
+  top.style.cssText = 'position:fixed;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
+  bot.style.cssText = 'position:fixed;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
 } else {
   top.style.cssText = 'position:absolute;left:0;right:0;top:0;transform:translateY(-100%);';
   bot.style.cssText = 'position:absolute;left:0;right:0;bottom:0;transform:translateY(100%);';
@@ -3507,19 +3507,27 @@ var color     = ‘#000000’;
 
 ```
 /* 높이/위치 설정
-   모바일: position:fixed 독립 배치이므로 vw 단위로 직접 계산
-           top lid:  top = -gradArea vw, height = (50+gradArea) vw
-           bot lid:  top = (50) vw (photo-area 중앙), height = (50+gradArea) vw
+   모바일: getBoundingClientRect()로 photo-area 실제 viewport 위치 측정 후 px 직접 계산
+           — vw/% 단위는 iOS Safari position:fixed에서 좌표계 불일치 문제 있음
+           top lid: photo-area 상단에서 grad만큼 위, height = half + grad
+           bot lid: photo-area 중앙에서 시작, height = half + grad
+           z-index:1 < control-area z-index:2 → lid가 control-area 뒤로 가려짐
    데스크탑: wrap 기준 % 단위 유지 */
 if (isMobile) {
-  var extHvw = (50 + gradArea) + 'vw';
-  top.style.height = extHvw;
-  top.style.top    = '-' + gradArea + 'vw';
-  bot.style.height = extHvw;
-  bot.style.top    = '50vw';
-  /* 초기 위치: 완전히 화면 밖 */
+  var photoEl = document.getElementById('mPhotoArea') || app.querySelector('.photo-area');
+  var rect = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
+  var photoTop  = rect.top;
+  var photoH    = rect.height;
+  var grad      = photoH * gradArea / 100;
+  var extHpx    = (photoH / 2 + grad) + 'px';
+  top.style.height = extHpx;
+  top.style.top    = (photoTop - grad) + 'px';
+  bot.style.height = extHpx;
+  bot.style.top    = (photoTop + photoH / 2) + 'px';
   top.style.transform = 'translateY(-100%)';
   bot.style.transform = 'translateY(100%)';
+  top.style.display = 'block';
+  bot.style.display = 'block';
 } else {
   var extH = (50 + gradArea) + '%';
   top.style.height = extH; bot.style.height = extH;
@@ -3558,7 +3566,10 @@ requestAnimationFrame(function() { requestAnimationFrame(function() {
       top.style.transition = 'transform ' + openMs + 'ms ' + openEase;
       bot.style.transition = 'transform ' + openMs + 'ms ' + openEase;
       top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
-      setTimeout(function() { if (onDone) onDone(); }, openMs);
+      setTimeout(function() {
+        if (isMobile) { top.style.display = 'none'; bot.style.display = 'none'; }
+        if (onDone) onDone();
+      }, openMs);
     }
     setTimeout(function() { holdDone = true; tryOpen(); }, holdMs);
     var img = app.querySelector('img');
