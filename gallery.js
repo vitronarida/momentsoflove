@@ -3483,41 +3483,43 @@ var TransitionManager = {
     else                             TransitionManager._none(app, newShell, onDone);
   },
 
-  _ensureLids: function() {
-    /* lid를 body에 직접 배치 — _mountNew의 app.innerHTML='' 영향 없음
-       데스크탑: wrap 안에 absolute 배치 (square-frame과 동일 위치/크기, overflow:hidden)
-       모바일: top/bot 각각 position:fixed 독립 배치, z-index:1
-               control-area가 z-index:2로 lid 위에 올라와 lid가 photo-area에서만 보임
+  _ensureLids: function(app) {
+    /* 데스크탑: body에 wrap 배치 (position:fixed, overflow:hidden)
+       모바일: app 안에 photo-area와 control-area 사이에 배치 (position:absolute, z-index:1)
+               control-area z-index:2 > lid z-index:1 → lid가 control-area 뒤로 가려짐
                위치/높이는 _blink에서 getBoundingClientRect()로 직접 계산 */
-    if (document.getElementById('_molLidWrap')) return;
+    if (document.getElementById('_molLidTop')) return;
 
-    var wrap = document.createElement('div');
-    wrap.id = '_molLidWrap';
     if (isMobile) {
-      wrap.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;';
+      var top = document.createElement('div'); top.id = '_molLidTop';
+      var bot = document.createElement('div'); bot.id = '_molLidBot';
+      top.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
+      bot.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
+      var photoArea = app.querySelector('.photo-area');
+      if (photoArea && photoArea.nextSibling) {
+        app.insertBefore(top, photoArea.nextSibling);
+        app.insertBefore(bot, photoArea.nextSibling);
+      } else {
+        app.appendChild(top); app.appendChild(bot);
+      }
     } else {
+      var wrap = document.createElement('div');
+      wrap.id = '_molLidWrap';
       wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
                            'transform:translate(-50%,-50%);' +
                            'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
                            'z-index:9000;pointer-events:none;overflow:hidden;';
-    }
-
-    var top = document.createElement('div'); top.id = '_molLidTop';
-    var bot = document.createElement('div'); bot.id = '_molLidBot';
-    if (isMobile) {
-      top.style.cssText = 'position:fixed;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
-      bot.style.cssText = 'position:fixed;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
-    } else {
+      var top = document.createElement('div'); top.id = '_molLidTop';
+      var bot = document.createElement('div'); bot.id = '_molLidBot';
       top.style.cssText = 'position:absolute;left:0;right:0;top:0;transform:translateY(-100%);';
       bot.style.cssText = 'position:absolute;left:0;right:0;bottom:0;transform:translateY(100%);';
+      wrap.appendChild(top); wrap.appendChild(bot);
+      document.body.appendChild(wrap);
     }
-
-    wrap.appendChild(top); wrap.appendChild(bot);
-    document.body.appendChild(wrap);
   },
 
   _blink: function(app, newShell, cfg, onDone) {
-    TransitionManager._ensureLids();
+    TransitionManager._ensureLids(app);
     var top = document.getElementById('_molLidTop');
     var bot = document.getElementById('_molLidBot');
     if (!top || !bot) { TransitionManager._none(app, newShell, onDone); return; }
@@ -3530,23 +3532,22 @@ var TransitionManager = {
     var color     = '#000000';
 
     /* 높이/위치 설정
-       모바일: getBoundingClientRect()로 photo-area 실제 viewport 위치 측정 후 px 직접 계산
-               — vw/% 단위는 iOS Safari position:fixed에서 좌표계 불일치 문제 있음
-               top lid: photo-area 상단에서 grad만큼 위, height = half + grad
-               bot lid: photo-area 중앙에서 시작, height = half + grad
-               z-index:1 < control-area z-index:2 → lid가 control-area 뒤로 가려짐
+       모바일: position:absolute (app 기준), getBoundingClientRect()로 photo-area 위치 측정
+               top lid: photoTop - grad (fade 위 부분은 #app overflow:hidden으로 잘림)
+               bot lid: photoTop + half (fade 아래 부분은 control-area z-index:2에 가려짐)
        데스크탑: wrap 기준 % 단위 유지 */
     if (isMobile) {
-      var photoEl = document.getElementById('mPhotoArea') || app.querySelector('.photo-area');
-      var rect = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
-      var photoTop  = rect.top;
-      var photoH    = rect.height;
-      var grad      = photoH * gradArea / 100;
-      var extHpx    = (photoH / 2 + grad) + 'px';
-      top.style.height = extHpx;
+      var photoEl = app.querySelector('.photo-area');
+      var rect    = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
+      var photoTop = rect.top;
+      var photoH   = rect.height;
+      var half     = photoH / 2;
+      var grad     = photoH * gradArea / 100;
+      var extH     = half + grad;
       top.style.top    = (photoTop - grad) + 'px';
-      bot.style.height = extHpx;
-      bot.style.top    = (photoTop + photoH / 2) + 'px';
+      top.style.height = extH + 'px';
+      bot.style.top    = (photoTop + half) + 'px';
+      bot.style.height = extH + 'px';
       top.style.transform = 'translateY(-100%)';
       bot.style.transform = 'translateY(100%)';
       top.style.display = 'block';
@@ -3607,13 +3608,18 @@ var TransitionManager = {
   },
 
   _mountNew: function(app, newShell) {
-    app.innerHTML = '';
     if (isMobile) {
+      /* lid 보존 — app.innerHTML=''로 삭제되지 않도록 먼저 꺼냄 */
+      var lidTop = document.getElementById('_molLidTop');
+      var lidBot = document.getElementById('_molLidBot');
+      app.innerHTML = '';
       app.appendChild(newShell.photoArea);
+      if (lidTop) app.appendChild(lidTop);
+      if (lidBot) app.appendChild(lidBot);
       app.appendChild(newShell.controlArea);
     } else {
+      app.innerHTML = '';
       app.appendChild(newShell.screen);
-      
     }
   },
 
