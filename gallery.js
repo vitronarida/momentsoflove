@@ -3548,8 +3548,17 @@ var TransitionManager = {
       top.style.height = extH + 'px';
       bot.style.top    = (photoTop + half) + 'px';
       bot.style.height = extH + 'px';
-      top.style.transform = 'translateY(-100%)';
-      bot.style.transform = 'translateY(100%)';
+      /* 모바일 그라데이션 — px 기반 계산 */
+      var gradPct = (grad / extH * 100).toFixed(1) + '%';
+      if (gradArea > 0) {
+        top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+        bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+      } else {
+        top.style.background = color;
+        bot.style.background = color;
+      }
+      top.style.transition = 'none'; bot.style.transition = 'none';
+      top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
       top.style.display = 'block';
       bot.style.display = 'block';
     } else {
@@ -3557,21 +3566,19 @@ var TransitionManager = {
       top.style.height = extH; bot.style.height = extH;
       top.style.top    = '-' + gradArea + '%';
       bot.style.bottom = '-' + gradArea + '%';
-    }
 
-    /* 그라데이션 — 바깥(fade) → 안쪽(solid) */
-    if (gradArea > 0) {
-      var gradPct = (gradArea / (50 + gradArea) * 100).toFixed(1) + '%';
-      top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
-      bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
-    } else {
-      top.style.background = color;
-      bot.style.background = color;
+      /* 데스크탑 그라데이션 */
+      if (gradArea > 0) {
+        var gradPct = (gradArea / (50 + gradArea) * 100).toFixed(1) + '%';
+        top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+        bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+      } else {
+        top.style.background = color;
+        bot.style.background = color;
+      }
+      top.style.transition = 'none'; bot.style.transition = 'none';
+      top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
     }
-
-    /* 초기 위치로 리셋 */
-    top.style.transition = 'none'; bot.style.transition = 'none';
-    top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
 
     /* 눈 감기 */
     requestAnimationFrame(function() { requestAnimationFrame(function() {
