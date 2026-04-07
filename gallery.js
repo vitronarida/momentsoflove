@@ -2716,6 +2716,13 @@ function buildSceneShell(scene) {
     var photoArea = document.createElement('div');
     photoArea.className = 'photo-area';
     photoArea.id = 'mPhotoArea';
+    /* lid를 photo-area 안에 배치 — overflow:hidden이 클리핑, z-index 문제 없음 */
+    var lidTop = document.createElement('div'); lidTop.id = '_molLidTop';
+    var lidBot = document.createElement('div'); lidBot.id = '_molLidBot';
+    lidTop.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:0;z-index:9;pointer-events:none;display:none;background:#000;';
+    lidBot.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:50%;z-index:9;pointer-events:none;display:none;background:#000;';
+    photoArea.appendChild(lidTop);
+    photoArea.appendChild(lidBot);
     var controlArea = document.createElement('div');
     controlArea.className = 'control-area';
     return { photoArea: photoArea, controlArea: controlArea };
@@ -3521,21 +3528,8 @@ var TransitionManager = {
                bot lid: photoTop + half (fade 아래 부분은 control-area z-index:2에 가려짐)
        데스크탑: wrap 기준 % 단위 유지 */
     if (isMobile) {
-      /* test7 데모와 동일 */
-      var photoEl  = app.querySelector('.photo-area');
-      var rect     = photoEl ? photoEl.getBoundingClientRect() : {top:0, height: window.innerWidth};
-      var photoTop = rect.top;
-      var photoH   = rect.height;
-      var half     = photoH / 2;
-      var grad     = photoH * gradArea / 100;
-      var extH     = half + grad;
-      top.style.top    = (photoTop - grad) + 'px';
-      top.style.height = extH + 'px';
-      bot.style.top    = (photoTop + half) + 'px';
-      bot.style.height = extH + 'px';
-      var gradPct = (grad / extH * 100).toFixed(1) + '%';
-      top.style.background = 'linear-gradient(to bottom,rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
-      bot.style.background = 'linear-gradient(to top,   rgba(0,0,0,0) 0%,#000 ' + gradPct + ',#000 100%)';
+      /* lid가 photo-area 안에 있고 overflow:hidden으로 클리핑됨
+         위치/높이는 buildSceneShell에서 고정 설정, translateY만 제어 */
       top.style.transition = 'none'; bot.style.transition = 'none';
       top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
       top.style.display = 'block'; bot.style.display = 'block';
@@ -3569,16 +3563,10 @@ var TransitionManager = {
         /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기
            모바일: _mountNew에서 새 lid 생성 → 새 참조로 업데이트 */
         if (isMobile) {
-          /* _mountNew에서 새로 생성된 lid 참조 — 데모 blink_mobile_final과 동일 */
+          /* buildSceneShell에서 새로 생성된 lid 참조 */
           var top2 = document.getElementById('_molLidTop');
           var bot2 = document.getElementById('_molLidBot');
           if (top2 && bot2) {
-            top2.style.top        = top.style.top;
-            top2.style.height     = top.style.height;
-            top2.style.background = top.style.background;
-            bot2.style.top        = bot.style.top;
-            bot2.style.height     = bot.style.height;
-            bot2.style.background = bot.style.background;
             top2.style.transition = 'none'; bot2.style.transition = 'none';
             top2.style.transform  = 'translateY(0%)'; bot2.style.transform = 'translateY(0%)';
             top2.style.display = 'block'; bot2.style.display = 'block';
@@ -3610,16 +3598,9 @@ var TransitionManager = {
 
   _mountNew: function(app, newShell) {
     if (isMobile) {
-      /* 씬 교체 시 lid를 항상 새로 생성 — blink_mobile_final 데모와 동일 방식
-         photo-area → lidTop → lidBot → control-area 순서 */
-      var lidTop = document.createElement('div'); lidTop.id = '_molLidTop';
-      var lidBot = document.createElement('div'); lidBot.id = '_molLidBot';
-      lidTop.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
-      lidBot.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
+      /* lid는 buildSceneShell에서 photo-area 안에 이미 생성됨 */
       app.innerHTML = '';
       app.appendChild(newShell.photoArea);
-      app.appendChild(lidTop);
-      app.appendChild(lidBot);
       app.appendChild(newShell.controlArea);
     } else {
       app.innerHTML = '';
