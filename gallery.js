@@ -2718,13 +2718,8 @@ function buildSceneShell(scene) {
     var photoArea = document.createElement('div');
     photoArea.className = 'photo-area';
     photoArea.id = 'mPhotoArea';
-    /* lid를 photo-area 안에 배치 — overflow:hidden이 클리핑, z-index 문제 없음 */
-    var lidTop = document.createElement('div'); lidTop.id = '_molLidTop';
-    var lidBot = document.createElement('div'); lidBot.id = '_molLidBot';
-    lidTop.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:0;z-index:9;pointer-events:none;display:none;background:#000;transform:scaleY(0);transform-origin:top center;';
-    lidBot.style.cssText = 'position:absolute;left:0;width:100%;height:50%;bottom:0;top:auto;z-index:9;pointer-events:none;display:none;background:#000;transform:scaleY(0);transform-origin:bottom center;';
-    photoArea.appendChild(lidTop);
-    photoArea.appendChild(lidBot);
+    /* lid는 _ensureLids에서 body에 position:fixed 오버레이로 생성 — photo-area 밖에 배치하여
+       iOS Safari GPU 합성 레이어 z-index 버그 우회 (photo-area translateZ(0) 스태킹 컨텍스트 무관) */
     var controlArea = document.createElement('div');
     controlArea.className = 'control-area';
     return { photoArea: photoArea, controlArea: controlArea };
@@ -2841,6 +2836,8 @@ var _initRipple, _initRippleTop;
 
 /* ripple 효과 초기화 — LPL_03(하단 물결), LPL_04(상단 물결) */
 function _initRippleForScene(img, container, scene) {
+  /* iOS Safari에서 feDisplacementMap SVG 필터가 검정 배경 아티팩트를 발생시킴 — 모바일 비활성화 */
+  if (isMobile) return;
   if (scene.id === 'prague' || scene.id === 'LPL_03') _initRipple(img, container);
   else if (scene.id === 'dreams' || scene.id === 'LPL_04') _initRippleTop(img, container);
 }
@@ -3493,9 +3490,34 @@ var TransitionManager = {
   },
 
   _ensureLids: function(app) {
-    /* 모바일: lid는 _mountNew에서 씬마다 새로 생성 — 여기서는 처리 없음
-       데스크탑: body에 wrap 배치 (position:fixed, overflow:hidden) */
-    if (isMobile) return;
+    if (isMobile) {
+      /* 모바일: body에 position:fixed 오버레이 생성 (photo-area 밖 — iOS Safari GPU 합성 z-index 버그 우회)
+         scaleY 방식이므로 overflow:hidden 불필요
+         wrap은 최초 1회만 생성, 매 전환마다 getBoundingClientRect로 photo-area에 정렬 */
+      var wrap = document.getElementById('_molLidWrap');
+      if (!wrap) {
+        wrap = document.createElement('div');
+        wrap.id = '_molLidWrap';
+        wrap.style.cssText = 'position:fixed;z-index:9000;pointer-events:none;overflow:hidden;';
+        var mTop = document.createElement('div'); mTop.id = '_molLidTop';
+        var mBot = document.createElement('div'); mBot.id = '_molLidBot';
+        mTop.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:0;background:#000;transform:scaleY(0);transform-origin:top center;';
+        mBot.style.cssText = 'position:absolute;left:0;width:100%;height:50%;bottom:0;background:#000;transform:scaleY(0);transform-origin:bottom center;';
+        wrap.appendChild(mTop); wrap.appendChild(mBot);
+        document.body.appendChild(wrap);
+      }
+      /* photo-area 위치/크기로 wrap 정렬 */
+      var pa = app.querySelector('.photo-area');
+      if (pa) {
+        var r = pa.getBoundingClientRect();
+        wrap.style.top    = r.top    + 'px';
+        wrap.style.left   = r.left   + 'px';
+        wrap.style.width  = r.width  + 'px';
+        wrap.style.height = r.height + 'px';
+      }
+      return;
+    }
+    /* 데스크탑: body에 wrap 배치 (position:fixed, 정중앙 정렬, overflow:hidden) */
     if (document.getElementById('_molLidWrap')) return;
     var wrap = document.createElement('div');
     wrap.id = '_molLidWrap';
@@ -3525,18 +3547,15 @@ var TransitionManager = {
     var color     = '#000000';
 
     /* 높이/위치 설정
-       모바일: position:absolute (app 기준), getBoundingClientRect()로 photo-area 위치 측정
-               top lid: photoTop - grad (fade 위 부분은 #app overflow:hidden으로 잘림)
-               bot lid: photoTop + half (fade 아래 부분은 control-area z-index:2에 가려짐)
+       모바일: _ensureLids에서 position:fixed 오버레이로 photo-area에 정렬 완료
+               lid는 photo-area 밖에 있으므로 iOS Safari GPU 합성 z-index 버그 무관
        데스크탑: wrap 기준 % 단위 유지 */
     if (isMobile) {
-      /* scaleY 방식 — lid가 photo-area 경계를 절대 벗어나지 않음
-         iOS Safari overflow:hidden + translateY 클리핑 버그 우회
-         top lid: transform-origin top   → scaleY(0→1) = 위에서 아래로 닫힘
-         bot lid: transform-origin bottom→ scaleY(0→1) = 아래에서 위로 닫힘 */
+      /* scaleY 방식 — wrap이 photo-area에 정렬되어 있으므로 overflow 불필요
+         top lid: transform-origin top    → scaleY(0→1) = 위에서 아래로 닫힘
+         bot lid: transform-origin bottom → scaleY(0→1) = 아래에서 위로 닫힘 */
       top.style.transition = 'none'; bot.style.transition = 'none';
       top.style.transform  = 'scaleY(0)'; bot.style.transform = 'scaleY(0)';
-      top.style.display = 'block'; bot.style.display = 'block';
     } else {
       var extH = (50 + gradArea) + '%';
       top.style.height = extH; bot.style.height = extH;
@@ -3566,29 +3585,22 @@ var TransitionManager = {
         TransitionManager._mountNew(app, newShell);
 
         /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기
-           모바일: _mountNew에서 새 lid 생성 → 새 참조로 업데이트 */
-        if (isMobile) {
-          /* buildSceneShell에서 새로 생성된 lid 참조 */
-          var top2 = document.getElementById('_molLidTop');
-          var bot2 = document.getElementById('_molLidBot');
-          if (top2 && bot2) {
-            top2.style.transition = 'none'; bot2.style.transition = 'none';
-            top2.style.transform  = 'scaleY(1)'; bot2.style.transform = 'scaleY(1)';
-            top2.style.display = 'block'; bot2.style.display = 'block';
-            top = top2; bot = bot2;
-          }
-        }
+           모바일: lid는 body의 _molLidWrap에 고정 — _mountNew 후 재참조 불필요 */
         var holdDone = false, imgDone = false;
         function tryOpen() {
           if (!holdDone || !imgDone) return;
-          top.style.transition = 'transform ' + openMs + 'ms ' + openEase;
-          bot.style.transition = 'transform ' + openMs + 'ms ' + openEase;
-          top.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(-100%)';
-          bot.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(100%)';
-          setTimeout(function() {
-            if (isMobile) { top.style.display = 'none'; bot.style.display = 'none'; }
-            if (onDone) onDone();
-          }, openMs);
+          /* iOS Safari: transition:none → transform 변경 직후 transition 재활성화 시
+             이전 상태가 확정되지 않아 애니메이션이 발화하지 않는 버그 대응.
+             double rAF로 브라우저가 scaleY(1) 상태를 실제 paint한 뒤 transition 시작 */
+          requestAnimationFrame(function() { requestAnimationFrame(function() {
+            top.style.transition = 'transform ' + openMs + 'ms ' + openEase;
+            bot.style.transition = 'transform ' + openMs + 'ms ' + openEase;
+            top.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(-100%)';
+            bot.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(100%)';
+            setTimeout(function() {
+              if (onDone) onDone();
+            }, openMs);
+          }); });
         }
         setTimeout(function() { holdDone = true; tryOpen(); }, holdMs);
         var img = app.querySelector('img');
