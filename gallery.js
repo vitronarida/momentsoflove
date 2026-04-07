@@ -2721,8 +2721,8 @@ function buildSceneShell(scene) {
     /* lid를 photo-area 안에 배치 — overflow:hidden이 클리핑, z-index 문제 없음 */
     var lidTop = document.createElement('div'); lidTop.id = '_molLidTop';
     var lidBot = document.createElement('div'); lidBot.id = '_molLidBot';
-    lidTop.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:0;z-index:9;pointer-events:none;display:none;background:#000;';
-    lidBot.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:50%;z-index:9;pointer-events:none;display:none;background:#000;';
+    lidTop.style.cssText = 'position:absolute;left:0;width:100%;height:50%;top:0;z-index:9;pointer-events:none;display:none;background:#000;transform:scaleY(0);transform-origin:top center;';
+    lidBot.style.cssText = 'position:absolute;left:0;width:100%;height:50%;bottom:0;top:auto;z-index:9;pointer-events:none;display:none;background:#000;transform:scaleY(0);transform-origin:bottom center;';
     photoArea.appendChild(lidTop);
     photoArea.appendChild(lidBot);
     var controlArea = document.createElement('div');
@@ -3530,10 +3530,12 @@ var TransitionManager = {
                bot lid: photoTop + half (fade 아래 부분은 control-area z-index:2에 가려짐)
        데스크탑: wrap 기준 % 단위 유지 */
     if (isMobile) {
-      /* lid가 photo-area 안에 있고 overflow:hidden으로 클리핑됨
-         위치/높이는 buildSceneShell에서 고정 설정, translateY만 제어 */
+      /* scaleY 방식 — lid가 photo-area 경계를 절대 벗어나지 않음
+         iOS Safari overflow:hidden + translateY 클리핑 버그 우회
+         top lid: transform-origin top   → scaleY(0→1) = 위에서 아래로 닫힘
+         bot lid: transform-origin bottom→ scaleY(0→1) = 아래에서 위로 닫힘 */
       top.style.transition = 'none'; bot.style.transition = 'none';
-      top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
+      top.style.transform  = 'scaleY(0)'; bot.style.transform = 'scaleY(0)';
       top.style.display = 'block'; bot.style.display = 'block';
     } else {
       var extH = (50 + gradArea) + '%';
@@ -3556,7 +3558,8 @@ var TransitionManager = {
     requestAnimationFrame(function() { requestAnimationFrame(function() {
       top.style.transition = 'transform ' + closeMs + 'ms ' + closeEase;
       bot.style.transition = 'transform ' + closeMs + 'ms ' + closeEase;
-      top.style.transform  = 'translateY(0%)'; bot.style.transform = 'translateY(0%)';
+      top.style.transform  = isMobile ? 'scaleY(1)' : 'translateY(0%)';
+      bot.style.transform  = isMobile ? 'scaleY(1)' : 'translateY(0%)';
 
       setTimeout(function() {
         /* 씬 교체 */
@@ -3570,7 +3573,7 @@ var TransitionManager = {
           var bot2 = document.getElementById('_molLidBot');
           if (top2 && bot2) {
             top2.style.transition = 'none'; bot2.style.transition = 'none';
-            top2.style.transform  = 'translateY(0%)'; bot2.style.transform = 'translateY(0%)';
+            top2.style.transform  = 'scaleY(1)'; bot2.style.transform = 'scaleY(1)';
             top2.style.display = 'block'; bot2.style.display = 'block';
             top = top2; bot = bot2;
           }
@@ -3580,7 +3583,8 @@ var TransitionManager = {
           if (!holdDone || !imgDone) return;
           top.style.transition = 'transform ' + openMs + 'ms ' + openEase;
           bot.style.transition = 'transform ' + openMs + 'ms ' + openEase;
-          top.style.transform  = 'translateY(-100%)'; bot.style.transform = 'translateY(100%)';
+          top.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(-100%)';
+          bot.style.transform  = isMobile ? 'scaleY(0)' : 'translateY(100%)';
           setTimeout(function() {
             if (isMobile) { top.style.display = 'none'; bot.style.display = 'none'; }
             if (onDone) onDone();
