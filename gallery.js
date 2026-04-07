@@ -3384,6 +3384,14 @@ function _renderScene(scene, sceneURL, transDir, onNavDone) {
     _initRippleForScene(imgEl, photoContainer, scene);
   }
 
+  /* #5 — 씬 실제 텍스트로 폰트 subset 미리 워밍업
+     blink 전환(closeMs+openMs≈2800ms) 동안 subset fetch 완료 보장
+     .then() 없이 호출 — 타이핑 시작은 _typeText 내부에서 별도 대기 */
+  if (document.fonts && document.fonts.load) {
+    var _warmStr = (curLang === 'KR' ? scene.textKR : scene.textEN) || '';
+    document.fonts.load('24px "Nanum Pen Script"', _warmStr);
+  }
+
   renderPhotoLayer(photoContainer, scene, imgSrc, function(img) {
     imgEl = img;
     initRippleIfReady();
