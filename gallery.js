@@ -2836,8 +2836,6 @@ var _initRipple, _initRippleTop;
 
 /* ripple 효과 초기화 — LPL_03(하단 물결), LPL_04(상단 물결) */
 function _initRippleForScene(img, container, scene) {
-  /* iOS Safari에서 feDisplacementMap SVG 필터가 검정 배경 아티팩트를 발생시킴 — 모바일 비활성화 */
-  if (isMobile) return;
   if (scene.id === 'prague' || scene.id === 'LPL_03') _initRipple(img, container);
   else if (scene.id === 'dreams' || scene.id === 'LPL_04') _initRippleTop(img, container);
 }
