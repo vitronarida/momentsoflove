@@ -3484,41 +3484,22 @@ var TransitionManager = {
   },
 
   _ensureLids: function(app) {
-    /* 데스크탑: body에 wrap 배치 (position:fixed, overflow:hidden)
-       모바일: app 안에 photo-area와 control-area 사이에 배치 (position:absolute, z-index:1)
-               control-area z-index:2 > lid z-index:1 → lid가 control-area 뒤로 가려짐
-               위치/높이는 _blink에서 getBoundingClientRect()로 직접 계산 */
-    if (document.getElementById('_molLidTop')) return;
-
-    if (isMobile) {
-      var top = document.createElement('div'); top.id = '_molLidTop';
-      var bot = document.createElement('div'); bot.id = '_molLidBot';
-      top.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
-      bot.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
-      var photoArea = app.querySelector('.photo-area');
-      var controlArea = app.querySelector('.control-area');
-      if (controlArea) {
-        app.insertBefore(top, controlArea);
-        app.insertBefore(bot, controlArea);
-      } else if (photoArea) {
-        app.appendChild(top); app.appendChild(bot);
-      } else {
-        app.appendChild(top); app.appendChild(bot);
-      }
-    } else {
-      var wrap = document.createElement('div');
-      wrap.id = '_molLidWrap';
-      wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
-                           'transform:translate(-50%,-50%);' +
-                           'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
-                           'z-index:9000;pointer-events:none;overflow:hidden;';
-      var top = document.createElement('div'); top.id = '_molLidTop';
-      var bot = document.createElement('div'); bot.id = '_molLidBot';
-      top.style.cssText = 'position:absolute;left:0;right:0;top:0;transform:translateY(-100%);';
-      bot.style.cssText = 'position:absolute;left:0;right:0;bottom:0;transform:translateY(100%);';
-      wrap.appendChild(top); wrap.appendChild(bot);
-      document.body.appendChild(wrap);
-    }
+    /* 모바일: lid는 _mountNew에서 씬마다 새로 생성 — 여기서는 처리 없음
+       데스크탑: body에 wrap 배치 (position:fixed, overflow:hidden) */
+    if (isMobile) return;
+    if (document.getElementById('_molLidWrap')) return;
+    var wrap = document.createElement('div');
+    wrap.id = '_molLidWrap';
+    wrap.style.cssText = 'position:fixed;top:50%;left:50%;' +
+                         'transform:translate(-50%,-50%);' +
+                         'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
+                         'z-index:9000;pointer-events:none;overflow:hidden;';
+    var top = document.createElement('div'); top.id = '_molLidTop';
+    var bot = document.createElement('div'); bot.id = '_molLidBot';
+    top.style.cssText = 'position:absolute;left:0;right:0;top:0;transform:translateY(-100%);';
+    bot.style.cssText = 'position:absolute;left:0;right:0;bottom:0;transform:translateY(100%);';
+    wrap.appendChild(top); wrap.appendChild(bot);
+    document.body.appendChild(wrap);
   },
 
   _blink: function(app, newShell, cfg, onDone) {
@@ -3585,7 +3566,25 @@ var TransitionManager = {
         /* 씬 교체 */
         TransitionManager._mountNew(app, newShell);
 
-        /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기 */
+        /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기
+           모바일: _mountNew에서 새 lid 생성 → 새 참조로 업데이트 */
+        if (isMobile) {
+          /* _mountNew에서 새로 생성된 lid 참조 — 데모 blink_mobile_final과 동일 */
+          var top2 = document.getElementById('_molLidTop');
+          var bot2 = document.getElementById('_molLidBot');
+          if (top2 && bot2) {
+            top2.style.top        = top.style.top;
+            top2.style.height     = top.style.height;
+            top2.style.background = top.style.background;
+            bot2.style.top        = bot.style.top;
+            bot2.style.height     = bot.style.height;
+            bot2.style.background = bot.style.background;
+            top2.style.transition = 'none'; bot2.style.transition = 'none';
+            top2.style.transform  = 'translateY(0%)'; bot2.style.transform = 'translateY(0%)';
+            top2.style.display = 'block'; bot2.style.display = 'block';
+            top = top2; bot = bot2;
+          }
+        }
         var holdDone = false, imgDone = false;
         function tryOpen() {
           if (!holdDone || !imgDone) return;
@@ -3611,13 +3610,16 @@ var TransitionManager = {
 
   _mountNew: function(app, newShell) {
     if (isMobile) {
-      /* lid 보존 — app.innerHTML=''로 삭제되지 않도록 먼저 꺼냄 */
-      var lidTop = document.getElementById('_molLidTop');
-      var lidBot = document.getElementById('_molLidBot');
+      /* 씬 교체 시 lid를 항상 새로 생성 — blink_mobile_final 데모와 동일 방식
+         photo-area → lidTop → lidBot → control-area 순서 */
+      var lidTop = document.createElement('div'); lidTop.id = '_molLidTop';
+      var lidBot = document.createElement('div'); lidBot.id = '_molLidBot';
+      lidTop.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
+      lidBot.style.cssText = 'position:absolute;left:0;width:100%;z-index:1;pointer-events:none;display:none;';
       app.innerHTML = '';
       app.appendChild(newShell.photoArea);
-      if (lidTop) app.appendChild(lidTop);
-      if (lidBot) app.appendChild(lidBot);
+      app.appendChild(lidTop);
+      app.appendChild(lidBot);
       app.appendChild(newShell.controlArea);
     } else {
       app.innerHTML = '';
