@@ -40,6 +40,8 @@ html, body {
   width: 100%;
   aspect-ratio: 1 / 1;
   touch-action: manipulation;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 .control-area {
   position: relative;
