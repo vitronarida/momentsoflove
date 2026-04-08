@@ -4836,8 +4836,7 @@ var _IBTN = 'font-family:"Nanum Pen Script",cursive;width:36px;height:36px;borde
   'color:rgba(235,235,235,0.35);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
 var _IBTN_ACT = 'opacity:1;border-color:rgba(255,255,255,0.40);background:rgba(255,255,255,0.10);';
 
-/* 구버전 _introLangBar — 버튼 방식 (스위치 전환 전 보관)
-function _introLangBar_btn() {
+function _introLangBar() {
   var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
   var mk = function(lang, svg, tip) {
     var isAct = curLang === lang;
@@ -4866,151 +4865,7 @@ function _introLangBar_btn() {
     'English'));
   return bar;
 }
-*/
 
-/* 언어 선택 스위치 (EN ←→ KR) — 52×34, knob rgba(255,255,255,0.18) */
-function _introLangBar() {
-  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
-    'display:flex;align-items:center;justify-content:space-between;' +
-    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
-    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
-  var _SW_OFF   = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
-  var _SW_ON    = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
-  var _SW_HOVER = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);opacity:0.35;';
-  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
-    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
-  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
-    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
-    'display:flex;align-items:center;justify-content:center;';
-
-  /* knob 안 레이블 — 진하게 / 사이드 레이블은 leftSpan/rightSpan에 textContent 직접 설정 (중앙정렬 보장) */
-  var _LANG_LABEL_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.80);font-weight:700;';
-  var makeEnEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'E'; return el; };
-  var makeKrEl = function() { var el = document.createElement('span'); el.style.cssText = _LANG_LABEL_CSS; el.textContent = 'K'; return el; };
-
-  var isOn = (curLang === 'KR'); /* off=EN, on=KR */
-  var track = document.createElement('div');
-  track.className = 'intro-sw';
-  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF); /* 기본 스타일 초기 설정 — applyState는 변경분만 개별 속성으로 업데이트 */
-  track.setAttribute('data-tip', isOn ? '한국어' : 'ENGLISH');
-  /* 사이드 레이블: textContent 직접 설정으로 세로 중앙정렬 보장 */
-  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.textContent = 'E';
-  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.textContent = 'K';
-  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
-
-  /* applyState: cssText 전체 재설정 금지 — 외부 position/right/bottom 등 유지를 위해 개별 속성만 변경
-     animate=true 시 knob 이동 완료(transitionend) 후 아이콘·사이드레이블 교체 — 클릭 시에만 사용 */
-  var applyState = function(on, hover, animate) {
-    if (hover) {
-      track.style.background = 'rgba(255,255,255,0.04)';
-      track.style.borderColor = 'rgba(255,255,255,0.12)';
-      track.style.opacity = '0.35';
-    } else if (on) {
-      track.style.background = 'rgba(255,255,255,0.10)';
-      track.style.borderColor = 'rgba(255,255,255,0.40)';
-      track.style.opacity = '';
-      track.setAttribute('data-tip', '한국어');
-    } else {
-      track.style.background = 'rgba(255,255,255,0.02)';
-      track.style.borderColor = 'rgba(255,255,255,0.22)';
-      track.style.opacity = '';
-      track.setAttribute('data-tip', 'ENGLISH');
-    }
-    knob.style.left = on ? '22px' : '4px';
-    if (animate) {
-      knob.addEventListener('transitionend', function handler(e) {
-        if (e.propertyName !== 'left') return;
-        knob.removeEventListener('transitionend', handler);
-        knob.innerHTML = '';
-        knob.appendChild(on ? makeKrEl() : makeEnEl());
-        /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
-        leftSpan.style.opacity  = on ? '1' : '0';
-        rightSpan.style.opacity = on ? '0' : '1';
-      });
-    } else {
-      knob.innerHTML = '';
-      knob.appendChild(on ? makeKrEl() : makeEnEl());
-      /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
-      leftSpan.style.opacity  = on ? '1' : '0';
-      rightSpan.style.opacity = on ? '0' : '1';
-    }
-  };
-  applyState(isOn, false);
-
-  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
-  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
-  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
-  track.addEventListener('click', function() {
-    isOn = !isOn;
-    applyState(isOn, false, true);
-    saveLang(isOn ? 'KR' : 'EN');
-    location.reload();
-  });
-  return track;
-}
-
-/* #85 — 디바이스 버튼 주석 처리 (오토/매뉴얼 버튼으로 교체)
-function _introDeviceBar() {
-  var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
-  var mk = function(dev, svg, isActive) {
-    var b = document.createElement('button'); b.type = 'button';
-    b.style.cssText = _IBTN + (isActive ? _IBTN_ACT : '');
-    b.innerHTML = svg;
-    b.addEventListener('click', function() {
-      try { sessionStorage.setItem('force_device', dev); } catch(e) {}
-      location.reload();
-    });
-    return b;
-  };
-  bar.appendChild(mk('PC',
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.5m6-1.5v1.5M3 4.5h18v10.5a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V4.5Z"/></svg>',
-    !isMobile));
-  bar.appendChild(mk('M',
-    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5h3m-6 3h9A1.5 1.5 0 0 1 18 6v12a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V6a1.5 1.5 0 0 1 1.5-1.5Z"/>' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 18.75h1.5"/></svg>',
-    isMobile));
-  return bar;
-}
-*/
-
-/* 구버전 _introModeBar — 버튼 방식 (스위치 전환 전 보관)
-function _introModeBar_btn() {
-  var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
-  var savedMode = 'AUTO';
-  try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
-  var _IBTN_HOVER = 'opacity:0.35;border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);';
-  var buttons = [];
-  var mk = function(mode, svg, tip) {
-    var b = document.createElement('button'); b.type = 'button';
-    b.dataset.mode = mode;
-    b.style.cssText = _IBTN + 'position:relative;' + (savedMode === mode ? _IBTN_ACT : '');
-    b.className = 'intro-bar-btn';
-    b.setAttribute('data-tip', tip);
-    b.innerHTML = svg;
-    b.addEventListener('mouseenter', function() {
-      if (b.dataset.active !== '1') b.style.cssText = _IBTN + 'position:relative;' + _IBTN_HOVER;
-    });
-    b.addEventListener('mouseleave', function() {
-      b.style.cssText = _IBTN + 'position:relative;' + (b.dataset.active === '1' ? _IBTN_ACT : '');
-    });
-    b.addEventListener('click', function() {
-      try { sessionStorage.setItem('intro_mode', mode); } catch(e) {}
-      buttons.forEach(function(el) {
-        el.dataset.active = (el === b) ? '1' : '';
-        el.style.cssText = _IBTN + 'position:relative;' + (el === b ? _IBTN_ACT : '');
-      });
-    });
-    if (savedMode === mode) b.dataset.active = '1';
-    return b;
-  };
-  buttons.push(mk('AUTO', '', curLang === 'KR' ? '자동 감상' : 'Auto Play'));
-  buttons.push(mk('MANUAL', '', curLang === 'KR' ? '직접 감상' : 'Manual'));
-  buttons.forEach(function(b) { bar.appendChild(b); });
-  return bar;
-}
-*/
 
 /* ── 데스크탑 인트로 원형 버튼 공통 스타일 ── */
 var _INTRO_BTN_BASE = 'position:absolute;width:52px;height:52px;border-radius:999px;' +
@@ -5219,109 +5074,316 @@ function _introHelpBtn() {
   return btn;
 }
 
-/* 모드 선택 스위치 (AUTO ←→ MANUAL) — 52×34, knob rgba(255,255,255,0.18)
-   AUTO  : ▶ CSS아이콘 (knob 왼쪽)
-   MANUAL: ■ CSS아이콘 (knob 오른쪽) */
-function _introModeBar() {
-  var _SW_BASE = 'width:52px;height:34px;border-radius:999px;position:relative;' +
-    'display:flex;align-items:center;justify-content:space-between;' +
-    'padding:0 10px;box-sizing:border-box;cursor:pointer;user-select:none;' +
-    '-webkit-tap-highlight-color:transparent;transition:all 300ms ease;';
-  var _SW_OFF   = 'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.22);';
-  var _SW_ON    = 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.40);';
-  var _SW_HOVER = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);opacity:0.35;';
-  var _SIDE_CSS = 'font-size:11px;font-family:sans-serif;color:rgba(235,235,235,0.30);' +
-    'transition:opacity 180ms;z-index:1;line-height:1;pointer-events:none;display:flex;align-items:center;';
-  var _KNOB_CSS = 'position:absolute;top:50%;transform:translateY(-50%);left:4px;width:26px;height:26px;border-radius:50%;' +
-    'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
-    'display:flex;align-items:center;justify-content:center;';
-
-  /* CSS 아이콘 빌더 */
-  var makeTriEl = function() { /* ▶ — 150% */
-    var el = document.createElement('div');
-    el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
-      'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:6px 0 6px 9.75px;';
-    return el;
-  };
-  var makeSqEl = function() { /* ■ — 150% */
-    var el = document.createElement('div');
-    el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;';
-    return el;
-  };
-  var makeTriSide = function() { /* 사이드용 ▶ — knob과 동일 크기(높이 12px) */
-    var el = document.createElement('div');
-    el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
-      'border-color:transparent transparent transparent rgba(235,235,235,0.30);border-width:6px 0 6px 9.75px;';
-    return el;
-  };
-  var makeSqSide = function() { /* 사이드용 ■ — knob과 동일 크기(9px) */
-    var el = document.createElement('div');
-    el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.30);border-radius:1px;flex-shrink:0;';
-    return el;
-  };
-
-  var savedMode = 'AUTO';
-  try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
-  var isOn = (savedMode === 'MANUAL'); /* off=AUTO, on=MANUAL */
-
-  var track = document.createElement('div');
-  track.className = 'intro-sw';
-  track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF); /* 기본 스타일 초기 설정 — applyState는 변경분만 개별 속성으로 업데이트 */
-  track.setAttribute('data-tip', isOn ? '수동' : '자동');
-  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS;
-  leftSpan.appendChild(makeTriSide());
-  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS;
-  rightSpan.appendChild(makeSqSide());
-  var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
-
-  /* applyState: cssText 전체 재설정 금지 — 외부 position/left/bottom 등 유지를 위해 개별 속성만 변경
-     animate=true 시 knob 이동 완료(transitionend) 후 아이콘·사이드레이블 교체 — 클릭 시에만 사용 */
-  var applyState = function(on, hover, animate) {
-    if (hover) {
-      track.style.background = 'rgba(255,255,255,0.04)';
-      track.style.borderColor = 'rgba(255,255,255,0.12)';
-      track.style.opacity = '0.35';
-    } else if (on) {
-      track.style.background = 'rgba(255,255,255,0.10)';
-      track.style.borderColor = 'rgba(255,255,255,0.40)';
-      track.style.opacity = '';
-      track.setAttribute('data-tip', '수동');
-    } else {
-      track.style.background = 'rgba(255,255,255,0.02)';
-      track.style.borderColor = 'rgba(255,255,255,0.22)';
-      track.style.opacity = '';
-      track.setAttribute('data-tip', '자동');
-    }
-    knob.style.left = on ? '22px' : '4px';
-    if (animate) {
-      knob.addEventListener('transitionend', function handler(e) {
-        if (e.propertyName !== 'left') return;
-        knob.removeEventListener('transitionend', handler);
-        knob.innerHTML = '';
-        knob.appendChild(on ? makeSqEl() : makeTriEl());
-        /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
-        leftSpan.style.opacity = on ? '1' : '0';
-        rightSpan.style.opacity = on ? '0' : '1';
-      });
-    } else {
-      knob.innerHTML = '';
-      knob.appendChild(on ? makeSqEl() : makeTriEl());
-      /* knob과 반대편 side label만 표시 — 같은 쪽 표시 시 겹침 발생 */
-      leftSpan.style.opacity = on ? '1' : '0';
-      rightSpan.style.opacity = on ? '0' : '1';
-    }
-  };
-  applyState(isOn, false);
-
-  track.appendChild(leftSpan); track.appendChild(knob); track.appendChild(rightSpan);
-  track.addEventListener('mouseenter', function() { applyState(isOn, true); });
-  track.addEventListener('mouseleave', function() { applyState(isOn, false); });
-  track.addEventListener('click', function() {
-    isOn = !isOn;
-    applyState(isOn, false, true);
-    try { sessionStorage.setItem('intro_mode', isOn ? 'MANUAL' : 'AUTO'); } catch(e) {}
+/* 데스크탑 인트로 — 들어가기 전에 읽기 버튼 */
+function _introWelcomeBtn() {
+  var btn = document.createElement('div');
+  btn.style.cssText = 'position:absolute;top:6%;left:50%;transform:translateX(-50%);' +
+    'padding:0 20px;height:52px;border-radius:999px;display:flex;align-items:center;justify-content:center;' +
+    'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);' +
+    'backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);' +
+    'color:rgba(235,235,235,0.35);cursor:pointer;user-select:none;white-space:nowrap;' +
+    '-webkit-tap-highlight-color:transparent;' +
+    'opacity:0;pointer-events:none;' +
+    'font-family:"Nanum Pen Script",cursive;font-size:18px;letter-spacing:0.3px;' +
+    'transition:opacity 2000ms ease,background 200ms ease,border-color 200ms ease,color 200ms ease,box-shadow 200ms ease;';
+  btn.textContent = '들어가기 전에';
+  btn.addEventListener('mouseenter', function() {
+    btn.style.background = 'rgba(255,255,255,0.08)';
+    btn.style.borderColor = 'rgba(255,255,255,0.22)';
+    btn.style.color = 'rgba(235,235,235,0.90)';
+    btn.style.boxShadow = '0 0 14px 4px rgba(255,255,255,0.10)';
   });
-  return track;
+  btn.addEventListener('mouseleave', function() {
+    btn.style.background = 'rgba(255,255,255,0.02)';
+    btn.style.borderColor = 'rgba(255,255,255,0.07)';
+    btn.style.color = 'rgba(235,235,235,0.35)';
+    btn.style.boxShadow = '';
+  });
+  btn.addEventListener('click', function() { WelcomeManager.open(); });
+  return btn;
+}
+
+/* WelcomeManager — 들어가기 전에 오버레이 */
+var WelcomeManager = (function() {
+  var _el = null;
+
+  function _build() {
+    if (_el) return _el;
+
+    /* CSS 애니메이션 주입 */
+    if (!document.getElementById('wGlowStyle')) {
+      var style = document.createElement('style');
+      style.id = 'wGlowStyle';
+      style.textContent = '@keyframes wGlow{0%,100%{box-shadow:0 0 4px 1px rgba(255,255,255,0.08)}50%{box-shadow:0 0 16px 6px rgba(255,255,255,0.28)}}';
+      document.head.appendChild(style);
+    }
+
+    var ov = document.createElement('div');
+    ov.id = 'welcomeOverlay';
+    ov.className = 'overlay-panel';
+    ov.setAttribute('aria-hidden', 'true');
+    ov.style.alignItems = 'center';
+    ov.style.justifyContent = 'center';
+
+    /* backdrop */
+    var backdrop = document.createElement('div');
+    backdrop.className = 'overlay-backdrop';
+    backdrop.addEventListener('click', function() { WelcomeManager.close(); });
+    ov.appendChild(backdrop);
+
+    var sq = document.createElement('div');
+    sq.className = 'panel-box';
+    sq.style.cssText = 'width:min(860px,90vmin);max-height:90vmin;display:flex;flex-direction:column;overflow:hidden;background:#131313;border-radius:16px;position:relative;';
+
+    /* ── 헤더 (공통) ── */
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
+    var hTitle = document.createElement('span');
+    hTitle.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(22px,3.2vmin,30px);color:rgba(235,235,235,0.90);';
+    hTitle.textContent = '들어가기 전에';
+    var hSub = document.createElement('span');
+    hSub.style.cssText = 'font-family:sans-serif;font-size:clamp(13px,1.6vmin,16px);color:rgba(255,255,255,0.28);font-weight:300;letter-spacing:2px;';
+    hSub.textContent = 'MOL · Moments of Love';
+    var closeBtn = document.createElement('div');
+    closeBtn.className = 'toc-close';
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:16px;';
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', function() { WelcomeManager.close(); });
+    hdr.appendChild(hTitle); hdr.appendChild(hSub); hdr.appendChild(closeBtn);
+
+    if (isMobile) {
+      /* ── 모바일: 환영+감상방법 단일 페이지 ── */
+      sq.style.cssText = 'width:92vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;background:#131313;border-radius:16px;position:relative;';
+      sq.appendChild(hdr);
+
+      var page = document.createElement('div');
+      page.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:6% 7%;';
+
+      var wLabel = document.createElement('div');
+      wLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
+      wLabel.textContent = 'Welcome';
+      var wText = document.createElement('p');
+      wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,4.5vw,22px);color:rgba(235,235,235,0.70);line-height:2.0;margin-bottom:8%;';
+      wText.innerHTML = curLang === 'KR'
+        ? '나리다 갤러리를 방문해주셔서 반갑고 감사하고 환영합니다.<br>갤러리를 감상하는 두 가지 방법을 간단히 소개드립니다.'
+        : 'Welcome to Narida Gallery.<br>Here are two ways to enjoy the gallery.';
+      var mLabel = document.createElement('div');
+      mLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:5%;';
+      mLabel.textContent = curLang === 'KR' ? '감상 방법' : 'How to Enjoy';
+
+      var ICON_BASE2 = 'width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:wGlow 4800ms ease-in-out infinite;';
+      var PLAY_SVG2 = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
+      var STOP_SVG2 = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
+
+      function makeModeM(iconSvg, delay, descKR, descEN, nameKR, nameEN) {
+        var item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:14px;margin-bottom:6%;';
+        var icon = document.createElement('div'); icon.style.cssText = ICON_BASE2;
+        if (delay) icon.style.animationDelay = delay;
+        icon.innerHTML = iconSvg;
+        var content = document.createElement('div');
+        var desc = document.createElement('div');
+        desc.style.cssText = 'font-family:sans-serif;font-size:clamp(12px,3.2vw,15px);color:rgba(235,235,235,0.55);font-weight:300;line-height:1.6;';
+        desc.innerHTML = curLang === 'KR' ? descKR : descEN;
+        var name = document.createElement('div');
+        name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(16px,4vw,20px);color:rgba(235,235,235,0.90);margin-top:2px;';
+        name.textContent = curLang === 'KR' ? nameKR : nameEN;
+        content.appendChild(desc); content.appendChild(name);
+        item.appendChild(icon); item.appendChild(content);
+        return item;
+      }
+
+      var autoItem2 = makeModeM(PLAY_SVG2, null,
+        '자물쇠 버튼을 클릭하면<br>이야기 흐름에 따라 자동으로 감상됩니다.',
+        'Click the lock button<br>to enjoy automatically.', '오토모드', 'Auto');
+      var manualItem2 = makeModeM(STOP_SVG2, '2400ms',
+        '자물쇠 버튼 클릭 후<br>화살표로 원하는 장면을 직접 넘기세요.',
+        'Click the lock button,<br>then navigate with arrows.', '수동모드', 'Manual');
+
+      page.appendChild(wLabel); page.appendChild(wText);
+      page.appendChild(mLabel); page.appendChild(autoItem2); page.appendChild(manualItem2);
+      sq.appendChild(page);
+
+    } else {
+
+    /* 메인 */
+    var main = document.createElement('div');
+    main.style.cssText = 'flex:1;display:grid;grid-template-columns:0.8fr 1px 1.5fr;padding:0 6%;min-height:0;';
+
+    /* 왼쪽 — 작가의 말 */
+    var left = document.createElement('div');
+    left.style.cssText = 'padding:5vmin 7% 4% 0;display:flex;flex-direction:column;';
+    var t = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang] : {};
+    var aLabel = document.createElement('div');
+    aLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
+    aLabel.textContent = curLang === 'KR' ? "Artist's Note" : "Artist's Note";
+    var aText = document.createElement('p');
+    aText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.82);line-height:2.0;white-space:pre-line;';
+    aText.textContent = t.aboutBody || '';
+    left.appendChild(aLabel); left.appendChild(aText);
+
+    /* 구분선 */
+    var divider = document.createElement('div');
+    divider.style.cssText = 'background:rgba(255,255,255,0.07);margin:5% 0;';
+
+    /* 오른쪽 — 환영 + 감상 방법 */
+    var right = document.createElement('div');
+    right.style.cssText = 'padding:5vmin 0 4% 7%;display:flex;flex-direction:column;justify-content:flex-start;';
+
+    var wLabel = document.createElement('div');
+    wLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
+    wLabel.textContent = 'Welcome';
+
+    var wText = document.createElement('p');
+    wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.70);line-height:2.0;';
+    wText.innerHTML = curLang === 'KR'
+      ? '나리다 갤러리를 방문해주셔서 반갑고 감사하고 환영합니다.<br>갤러리를 감상하는 두 가지 방법을 간단히 소개드립니다.'
+      : 'Welcome to Narida Gallery.<br>Here are two ways to enjoy the gallery.';
+
+    var mLabel = document.createElement('div');
+    mLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-top:8vmin;margin-bottom:6%;';
+    mLabel.textContent = curLang === 'KR' ? '감상 방법' : 'How to Enjoy';
+
+    var ICON_BASE = 'width:clamp(36px,4.5vmin,46px);height:clamp(36px,4.5vmin,46px);border-radius:50%;' +
+      'border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);' +
+      'display:flex;align-items:center;justify-content:center;flex-shrink:0;' +
+      'animation:wGlow 4800ms ease-in-out infinite;';
+
+    var PLAY_SVG = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:clamp(16px,2vmin,20px);height:clamp(16px,2vmin,20px);">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
+    var STOP_SVG = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:clamp(16px,2vmin,20px);height:clamp(16px,2vmin,20px);">' +
+      '<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
+
+    function makeMode(iconSvg, delay, descKR, descEN) {
+      var item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:5%;';
+      var icon = document.createElement('div');
+      icon.style.cssText = ICON_BASE;
+      if (delay) icon.style.animationDelay = delay;
+      icon.innerHTML = iconSvg;
+      var content = document.createElement('div');
+      content.style.cssText = 'font-family:"Nanum Pen Script",cursive;line-height:1.8;';
+      var desc = document.createElement('span');
+      desc.style.cssText = 'font-family:sans-serif;font-size:clamp(13px,1.5vmin,16px);color:rgba(235,235,235,0.55);font-weight:300;';
+      desc.innerHTML = curLang === 'KR' ? descKR : descEN;
+      var name = document.createElement('span');
+      name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.1vmin,22px);color:rgba(235,235,235,0.90);';
+      name.textContent = curLang === 'KR' ? (delay ? ' - 수동모드' : ' - 오토모드') : (delay ? ' - Manual' : ' - Auto');
+      content.appendChild(desc); content.appendChild(name);
+      item.appendChild(icon); item.appendChild(content);
+      return item;
+    }
+
+    var autoItem = makeMode(PLAY_SVG, null,
+      '자물쇠 버튼을 클릭하면<br>이야기 흐름에 따라 자동으로 감상됩니다.',
+      'Click the lock button<br>to enjoy automatically.');
+    var manualItem = makeMode(STOP_SVG, '2400ms',
+      '자물쇠 버튼 클릭 후<br>화살표로 원하는 장면을 직접 넘기세요.',
+      'Click the lock button,<br>then navigate with arrows.');
+
+    right.appendChild(wLabel); right.appendChild(wText);
+    right.appendChild(mLabel); right.appendChild(autoItem); right.appendChild(manualItem);
+
+    main.appendChild(left); main.appendChild(divider); main.appendChild(right);
+
+    /* 하단 닫기 버튼 */
+    var footer = document.createElement('div');
+    footer.style.cssText = 'padding:2.5% 6% 4%;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;';
+    var closeFooter = document.createElement('button');
+    closeFooter.type = 'button';
+    closeFooter.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(15px,1.8vmin,19px);' +
+      'padding:1.8% 5%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.20);' +
+      'color:rgba(235,235,235,0.85);border-radius:999px;cursor:pointer;' +
+      'transition:all 250ms ease;animation:wGlow 4800ms ease-in-out infinite;animation-delay:1200ms;';
+    closeFooter.textContent = curLang === 'KR' ? '닫기' : 'Close';
+    closeFooter.addEventListener('mouseenter', function() {
+      closeFooter.style.background = 'rgba(255,255,255,0.12)';
+      closeFooter.style.borderColor = 'rgba(255,255,255,0.35)';
+      closeFooter.style.transform = 'translateX(4px)';
+    });
+    closeFooter.addEventListener('mouseleave', function() {
+      closeFooter.style.background = 'rgba(255,255,255,0.07)';
+      closeFooter.style.borderColor = 'rgba(255,255,255,0.20)';
+      closeFooter.style.transform = '';
+    });
+    closeFooter.addEventListener('click', function() { WelcomeManager.close(); });
+    footer.appendChild(closeFooter);
+
+    sq.appendChild(hdr); sq.appendChild(main); sq.appendChild(footer);
+
+    } /* end else (desktop) */
+
+    ov.appendChild(sq);
+    document.body.appendChild(ov);
+    _el = ov;
+    return _el;
+  }
+
+  return {
+    open: function() {
+      var ov = _build();
+      requestAnimationFrame(function() { ov.classList.add('on'); ov.setAttribute('aria-hidden','false'); });
+    },
+    close: function() {
+      if (_el) InputManager.closeOverlay(_el);
+    }
+  };
+})();
+
+/* #85 — 오토/매뉴얼 모드 선택 버튼 바
+   AUTO  : video-camera 아이콘 → sessionStorage intro_mode='AUTO'
+   MANUAL: camera 아이콘        → sessionStorage intro_mode='MANUAL'
+   자물쇠/엔터 진입 시 intro_mode 값으로 AutoPlay 여부 결정 */
+function _introModeBar() {
+  var bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:10px;';
+  var savedMode = 'AUTO'; /* 기본값 AUTO */
+  try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
+
+  var _IBTN_HOVER = 'opacity:0.35;border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);';
+  var buttons = [];
+
+  var mk = function(mode, svg, tip) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.dataset.mode = mode;
+    b.style.cssText = _IBTN + 'position:relative;' + (savedMode === mode ? _IBTN_ACT : '');
+    b.className = 'intro-bar-btn';
+    b.setAttribute('data-tip', tip);
+    b.innerHTML = svg;
+    b.addEventListener('mouseenter', function() {
+      if (b.dataset.active !== '1') b.style.cssText = _IBTN + 'position:relative;' + _IBTN_HOVER;
+    });
+    b.addEventListener('mouseleave', function() {
+      b.style.cssText = _IBTN + 'position:relative;' + (b.dataset.active === '1' ? _IBTN_ACT : '');
+    });
+    b.addEventListener('click', function() {
+      try { sessionStorage.setItem('intro_mode', mode); } catch(e) {}
+      buttons.forEach(function(el) {
+        el.dataset.active = (el === b) ? '1' : '';
+        el.style.cssText = _IBTN + 'position:relative;' + (el === b ? _IBTN_ACT : '');
+      });
+    });
+    if (savedMode === mode) b.dataset.active = '1';
+    return b;
+  };
+
+  /* AUTO — video-camera */
+  var btnAuto = mk('AUTO',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>',
+    curLang === 'KR' ? '자동 감상' : 'Auto Play');
+
+  /* MANUAL — camera */
+  var btnManual = mk('MANUAL',
+    '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;display:block;">' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"/>' +
+    '<path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"/></svg>',
+    curLang === 'KR' ? '직접 감상' : 'Manual');
+
+  buttons.push(btnAuto, btnManual);
+  bar.appendChild(btnAuto);
+  bar.appendChild(btnManual);
+
+  return bar;
 }
 
 /* ──────────────────────────────────────────
@@ -5510,11 +5572,10 @@ function _renderIntroMobile(app, introText, TARGET) {
   frame.appendChild(lineEl);
   app.appendChild(frame);
 
-  /* ── bottom (control-area와 동일 레이아웃) ── */
+  /* ── bottom — control-area 그대로 ── */
   var bottom = document.createElement('div');
-  bottom.style.cssText = 'flex:1;width:100%;display:flex;flex-direction:column;align-items:center;' +
-    'justify-content:center;background:#333;position:relative;' +
-    'padding:8px 24px;box-sizing:border-box;padding-bottom:max(env(safe-area-inset-bottom),8px);';
+  bottom.className = 'control-area';
+  bottom.style.paddingBottom = 'max(env(safe-area-inset-bottom), 0px)';
 
   /* skip bar */
   var skipBar = document.createElement('div');
@@ -5528,7 +5589,7 @@ function _renderIntroMobile(app, introText, TARGET) {
 
   /* lock wrap + pulse rings */
   var lockWrap = document.createElement('div');
-  lockWrap.style.cssText = 'display:inline-grid;place-items:center;position:relative;margin-bottom:6px;';
+  lockWrap.style.cssText = 'display:inline-grid;place-items:center;position:relative;';
   lockWrap.style.visibility = 'hidden';
 
   var ring1 = document.createElement('div');
@@ -5544,18 +5605,88 @@ function _renderIntroMobile(app, introText, TARGET) {
     'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);' +
     'cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;opacity:0;pointer-events:none;';
   lockBtn.innerHTML = LOCK_SVG;
-  lockWrap.appendChild(lockBtn);
-  bottom.appendChild(lockWrap);
 
-  /* bottom row: device-bar + lang-bar */
-  var row = document.createElement('div');
-  row.style.cssText = 'display:flex;width:100%;justify-content:space-between;align-items:center;';
-  var modeBar = _introModeBar();
-  modeBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
-  var langBar = _introLangBar();
-  langBar.style.cssText += ';opacity:0;transform:translateY(6px);transition:opacity 2000ms ease,transform 2000ms ease;pointer-events:none;';
-  row.appendChild(modeBar); row.appendChild(skipBar); row.appendChild(langBar);
-  bottom.appendChild(row);
+  /* _buildMobileNav 그대로 */
+  var codeEl = document.createElement('div'); codeEl.className = 'work-code';
+  bottom.appendChild(codeEl);
+
+  lockWrap.appendChild(lockBtn);
+  var textEl = document.createElement('div'); textEl.className = 'scene-text';
+  textEl.style.minHeight = 'calc(clamp(22px, 3vw, 28px) * 1.6 * 2)';
+  textEl.classList.add('show');
+  textEl.appendChild(lockWrap);
+  bottom.appendChild(textEl);
+
+  /* navBar — _buildMobileNav 동일, 버튼만 교체 */
+  var navBar = document.createElement('div'); navBar.className = 'nav-bar';
+  navBar.style.cssText = 'display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:space-between;width:100%;padding:0 24px;gap:12px;opacity:0;transition:opacity 600ms ease;';
+
+  /* ? — 들어가기 전에 */
+  var btnQ = document.createElement('div'); btnQ.className = 'nav-btn';
+  btnQ.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008z"/></svg>';
+  btnQ.addEventListener('click', function(e) { e.stopPropagation(); WelcomeManager.open(); });
+  btnQ.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); WelcomeManager.open(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); }, {passive:false});
+
+  /* ! — 작가의 말 */
+  var btnI = document.createElement('div'); btnI.className = 'nav-btn';
+  btnI.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>';
+  btnI.addEventListener('click', function(e) { e.stopPropagation(); AboutManager.open(); });
+  btnI.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); AboutManager.open(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); }, {passive:false});
+
+  /* ▶/■ — 모드 토글 */
+  var _mMode = 'AUTO'; try { _mMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
+  var isManualM = (_mMode === 'MANUAL');
+  var btnMode = document.createElement('div'); btnMode.className = 'nav-btn';
+  var triEl = document.createElement('div');
+  triEl.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
+    'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:7px 0 7px 11px;';
+  var sqEl = document.createElement('div');
+  sqEl.style.cssText = 'width:10px;height:10px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;';
+  var applyModeM = function() {
+    triEl.style.display = isManualM ? 'none' : '';
+    sqEl.style.display  = isManualM ? ''     : 'none';
+  };
+  applyModeM();
+  btnMode.appendChild(triEl); btnMode.appendChild(sqEl);
+  var toggleModeM = function(e) {
+    e.stopPropagation();
+    isManualM = !isManualM;
+    applyModeM();
+    try { sessionStorage.setItem('intro_mode', isManualM ? 'MANUAL' : 'AUTO'); } catch(err) {}
+    clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
+  };
+  btnMode.addEventListener('click', toggleModeM);
+  btnMode.addEventListener('touchend', function(e) { e.preventDefault(); toggleModeM(e); }, {passive:false});
+
+  /* KR/EN — 언어 토글 */
+  var isKRM = (curLang !== 'EN');
+  var btnLang = document.createElement('div'); btnLang.className = 'nav-btn';
+  var langLabel = document.createElement('span');
+  langLabel.style.cssText = 'font-family:sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);';
+  langLabel.textContent = isKRM ? 'KR' : 'EN';
+  btnLang.appendChild(langLabel);
+  var toggleLangM = function(e) {
+    e.stopPropagation();
+    saveLang(isKRM ? 'EN' : 'KR');
+    location.reload();
+  };
+  btnLang.addEventListener('click', toggleLangM);
+  btnLang.addEventListener('touchend', function(e) { e.preventDefault(); toggleLangM(e); }, {passive:false});
+
+  navBar.append(btnQ, btnI, btnMode, btnLang);
+
+  var navWrap = document.createElement('div');
+  navWrap.style.cssText = 'position:relative;width:100%;';
+  skipBar.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:10;' +
+    'opacity:0;transition:opacity 2000ms ease;pointer-events:none;';
+  navWrap.appendChild(skipBar);
+  navWrap.appendChild(navBar);
+  bottom.appendChild(navWrap);
+
+  var counter = document.createElement('div'); counter.className = 'page-counter';
+  counter.style.visibility = 'hidden';
+  counter.textContent = 'P.1 / 32';
+  bottom.appendChild(counter);
   app.appendChild(bottom);
   /* 검정 flash 방지 — 인트로 콘텐츠 완성 후 즉시 표시 */
   app.style.opacity = '1';
@@ -5568,12 +5699,10 @@ function _renderIntroMobile(app, introText, TARGET) {
   var _mobIntroOnInteract = null;
   var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
   var showBars = function() {
-    langBar.style.opacity = '1'; langBar.style.transform = 'translateY(0)'; langBar.style.pointerEvents = '';
-    modeBar.style.opacity = '1'; modeBar.style.transform = 'translateY(0)'; modeBar.style.pointerEvents = '';
+    navBar.style.opacity = '1';
   };
   var hideBars = function() {
-    langBar.style.opacity = '0'; langBar.style.pointerEvents = 'none';
-    modeBar.style.opacity = '0'; modeBar.style.pointerEvents = 'none';
+    navBar.style.opacity = '0';
   };
   /* onDone/skip 양쪽에서 호출 — 이중 등록 방지 가드 포함 */
   var setupBarInteraction = function() {
@@ -5676,7 +5805,7 @@ function _renderIntroMobile(app, introText, TARGET) {
       var frameR = frame.getBoundingClientRect();
 
       /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
-      [lineEl, lockWrap, skipBar, modeBar, langBar].forEach(function(el) {
+      [lineEl, lockWrap, skipBar, navBar].forEach(function(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
@@ -5859,6 +5988,10 @@ function _renderIntroDesktop(app, introText, TARGET) {
   sq.appendChild(helpBtn);
   sq.appendChild(helpBtn._tip);
 
+  /* 하단 중앙: 들어가기 전에 읽기 버튼 */
+  var welcomeBtn = _introWelcomeBtn();
+  sq.appendChild(welcomeBtn);
+
   bgWrap.appendChild(sq);
   app.appendChild(bgWrap);
   /* introApp(정적 플레이스홀더) fade-out 후 제거 */
@@ -5870,13 +6003,13 @@ function _renderIntroDesktop(app, introText, TARGET) {
   var _deskIntroOnInteract = null;
   var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
   var showBars = function() {
-    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
+    [modeBar, langBar, aboutBtn, helpBtn, welcomeBtn].forEach(function(el) {
       el.style.opacity = '1'; el.style.pointerEvents = '';
     });
     [modeBar._tip, langBar._tip].forEach(function(el) { el.style.pointerEvents = ''; });
   };
   var hideBars = function() {
-    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
+    [modeBar, langBar, aboutBtn, helpBtn, welcomeBtn].forEach(function(el) {
       el.style.opacity = '0'; el.style.pointerEvents = 'none';
     });
     [modeBar._tip, langBar._tip].forEach(function(el) {
@@ -5972,7 +6105,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
       var lineR = lineEl.getBoundingClientRect();
       var sqR   = sq.getBoundingClientRect();
       /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
-      [lineEl, lockWrap, langBar, modeBar, langBar._tip, modeBar._tip, aboutBtn, aboutBtn._tip, helpBtn, helpBtn._tip, skipBar].forEach(function(el) {
+      [lineEl, lockWrap, langBar, modeBar, langBar._tip, modeBar._tip, aboutBtn, aboutBtn._tip, helpBtn, helpBtn._tip, skipBar, welcomeBtn].forEach(function(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
