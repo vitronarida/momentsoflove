@@ -385,19 +385,6 @@ html, body {
   align-items: center;
   justify-content: center;
 }
-#aboutOverlay .index-panel {
-  width: min(480px, 90vw);
-  height: auto;
-  max-height: 80dvh;
-  border-radius: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 20px 24px 32px;
-  transform: translateY(20px);
-}
-#aboutOverlay .index-title { font-weight: 700; }
-#aboutOverlay.on .index-panel {
-  transform: translateY(0);
-}
 #aboutGrid {
   display: block !important;
   width: 100%;
@@ -1177,11 +1164,6 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
 #indexGrid.about-mode .about-body p:last-child,
 #aboutGrid.about-mode .about-body p:last-child{ margin-bottom:0; }
 
-#aboutOverlay .index-panel{
-  width: min(510px, 88vw);
-  padding: 24px 32px 40px;
-}
-#aboutOverlay .index-title{ font-weight: 700; }
 #aboutGrid{
   display: block !important;
   width: 100%;
@@ -2258,7 +2240,7 @@ function buildOverlayHTML() {
       +'<div class="index-panel panel-box">'
       +'<div class="toc-header" style="margin-bottom:8px;"><h2 class="index-title" id="aboutTitle"></h2>'
       +'<div class="toc-close" id="aboutClose">✕</div></div>'
-      +'<div id="aboutBody" style="font-size:clamp(20px,5vw,26px);line-height:1.8;color:rgba(235,235,235,0.90);white-space:pre-line;padding:0 4px;font-family:\'Nanum Pen Script\',cursive;"></div>'
+      +'<div id="aboutBody" style="font-size:clamp(20px,5vw,26px);line-height:1.8;color:rgba(235,235,235,0.90);white-space:pre-line;padding:0 4px 0 4%;font-family:\'Nanum Pen Script\',cursive;"></div>'
       +'</div></div>'
       /* Poem */
       +'<div id="poemOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
@@ -2358,10 +2340,14 @@ function buildOverlayHTML() {
       /* About */
       +'<div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
       +'<div class="overlay-backdrop" id="aboutBackdrop"></div>'
-      +'<div class="index-panel panel-box" style="width:min(510px,88vw);padding:24px 32px 40px;">'
+      +'<div class="panel-box" style="width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;">'
+      +'<div style="padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">'
+      +'<span id="aboutTitle" style="font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;"></span>'
       +'<div class="toc-close" id="aboutClose" style="position:absolute;top:12px;right:16px;">✕</div>'
-      +'<h2 id="aboutTitle" style="font-size:26px;margin:0 0 16px;font-family:\'Nanum Pen Script\',cursive;"></h2>'
-      +'<div id="aboutBody" style="font-size:clamp(20px,2vw,22px);line-height:1.6;color:rgba(235,235,235,0.90);white-space:pre-line;font-family:\'Nanum Pen Script\',cursive;"></div>'
+      +'</div>'
+      +'<div style="flex:1;padding:3vmin 6% 4%;overflow-y:auto;">'
+      +'<div id="aboutBody" style="font-size:clamp(17px,2.2vmin,22px);line-height:1.7;color:rgba(235,235,235,0.70);white-space:pre-line;padding-left:4%;font-family:\'Nanum Pen Script\',cursive;"></div>'
+      +'</div>'
       +'</div></div>'
       /* Poem */
       +'<div id="poemOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
@@ -4181,6 +4167,7 @@ var InputManager = (function() {
   function _closeOverlay(el) {
     el.classList.remove('on'); el.setAttribute('aria-hidden','true');
     setTimeout(function(){ el.style.display='none'; }, 420);
+    _showIntroAfterModal();
   }
 
   function _closeTopOverlay() {
@@ -4321,8 +4308,27 @@ var SceneListManager = {
   }
 };
 
+/* ── 인트로 모달 잔상 숨기기 유틸 ── */
+var _introBodyBgBackup = null;
+function _hideIntroForModal() {
+  var c = $id('introSq') || $id('introFrame');
+  if (!c) return;
+  _introBodyBgBackup = document.body.style.background || '';
+  document.body.style.background = '#131313';
+  var app = $id('app');
+  if (app) { app.style.transition = 'opacity 250ms ease'; app.style.opacity = '0'; }
+}
+function _showIntroAfterModal() {
+  var c = $id('introSq') || $id('introFrame');
+  if (!c) return;
+  var app = $id('app');
+  if (app) { app.style.transition = 'opacity 250ms ease'; app.style.opacity = '1'; }
+  if (_introBodyBgBackup !== null) { document.body.style.background = _introBodyBgBackup; _introBodyBgBackup = null; }
+}
+
 var AboutManager = {
   open: function() {
+    _hideIntroForModal();
     history.pushState({overlay:'about'},'');
     var ov=$id('aboutOverlay'); if(!ov) return;
     var t=LANG_TEXTS[curLang];
@@ -4923,8 +4929,14 @@ function _makeStatusTip(optA, optB) {
   return tip;
 }
 
-/* 데스크탑 인트로 — 모드 원형 버튼 (▶/■) */
+/* 데스크탑 인트로 — 모드 원형 버튼 (A/M) + hover 카드 */
 function _introModeBtn() {
+  /* msGlow 키프레임 주입 */
+  if (!document.getElementById('modeSelGlowStyle')) {
+    var _s = document.createElement('style'); _s.id = 'modeSelGlowStyle';
+    _s.textContent = '@keyframes msGlow{0%,100%{box-shadow:0 0 4px 1px rgba(212,175,55,0.10)}50%{box-shadow:0 0 16px 6px rgba(212,175,55,0.30)}}';
+    document.head.appendChild(_s);
+  }
   var savedMode = 'AUTO';
   try { savedMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
   var isManual = (savedMode === 'MANUAL');
@@ -4934,53 +4946,94 @@ function _introModeBtn() {
   btn.style.left = '6%';
   btn.style.bottom = 'calc(6% + env(safe-area-inset-bottom))';
 
-  /* ▶ CSS 아이콘 */
-  var triEl = document.createElement('div');
-  triEl.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
-    'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:7px 0 7px 11px;';
-  /* ■ CSS 아이콘 */
-  var sqEl = document.createElement('div');
-  sqEl.style.cssText = 'width:10px;height:10px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;display:none;';
+  var label = document.createElement('span');
+  label.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:700;letter-spacing:0.03em;color:rgba(235,235,235,0.75);';
+  label.textContent = isManual ? 'M' : 'A';
+  btn.appendChild(label);
 
-  btn.appendChild(triEl); btn.appendChild(sqEl);
+  /* ── hover 카드 ── */
+  var card = document.createElement('div');
+  card.style.cssText = 'position:absolute;left:6%;bottom:calc(6% + env(safe-area-inset-bottom) + 62px);z-index:20;' +
+    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;min-width:220px;' +
+    'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(4px);';
 
-  /* 상태 툴팁 */
-  var tip = _makeStatusTip('오토', '수동');
-  tip.style.bottom = 'calc(6% + env(safe-area-inset-bottom) + 62px)';
-  tip.style.left = 'calc(6% + 26px)';
-  tip.style.transform = 'translateX(-50%)';
+  var CARD_ICON = 'width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var SEL = { icon:'rgba(235,235,235,0.90)', name:'rgba(235,235,235,0.90)', desc:'rgba(235,235,235,0.55)', glow:true };
+  var DIM = { icon:'rgba(235,235,235,0.40)', name:'rgba(235,235,235,0.35)', desc:'rgba(235,235,235,0.20)', glow:false };
 
-  var applyState = function(manual) {
-    triEl.style.display = manual ? 'none' : '';
-    sqEl.style.display  = manual ? ''     : 'none';
-  };
-  applyState(isManual);
+  var cTitle = document.createElement('div');
+  cTitle.style.cssText = 'font-family:sans-serif;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
+  cTitle.textContent = 'Viewing Mode';
+  card.appendChild(cTitle);
 
-  btn.addEventListener('mouseenter', function() {
-    _INTRO_BTN_HOVER_ON(btn);
-    /* 아이콘: 다음 상태 미리보기 */
-    triEl.style.display = isManual ? ''     : 'none';
-    sqEl.style.display  = isManual ? 'none' : '';
-    /* 툴팁: 다음 상태 하이라이트 */
-    tip._highlightNext(!isManual);
-  });
-  btn.addEventListener('mouseleave', function() {
-    _INTRO_BTN_HOVER_OFF(btn, isManual);
-    applyState(isManual);
-    tip._hide();
-  });
+  function makeOpt(letter, nameStr, descStr) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background 150ms ease;';
+    row.addEventListener('mouseenter', function() { row.style.background = 'rgba(255,255,255,0.06)'; });
+    row.addEventListener('mouseleave', function() { row.style.background = ''; });
+    var icon = document.createElement('div'); icon.style.cssText = CARD_ICON;
+    var iconSpan = document.createElement('span');
+    iconSpan.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;';
+    iconSpan.textContent = letter;
+    icon.appendChild(iconSpan);
+    var wrap = document.createElement('div');
+    var nm = document.createElement('div');
+    nm.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:18px;margin-bottom:1px;';
+    nm.textContent = nameStr;
+    var ds = document.createElement('div');
+    ds.style.cssText = 'font-family:sans-serif;font-size:12px;font-weight:300;line-height:1.4;';
+    ds.textContent = descStr;
+    wrap.appendChild(nm); wrap.appendChild(ds);
+    row.appendChild(icon); row.appendChild(wrap);
+    return { el: row, icon: icon, iconSpan: iconSpan, name: nm, desc: ds };
+  }
+
+  var optA = makeOpt('A', '\uC624\uD1A0\uBAA8\uB4DC', '\uC774\uC57C\uAE30 \uD750\uB984\uC5D0 \uB530\uB77C \uC790\uB3D9\uC73C\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.');
+  var optM = makeOpt('M', '\uC218\uB3D9\uBAA8\uB4DC', '\uC6D0\uD558\uB294 \uC7A5\uBA74\uC744 \uC9C1\uC811 \uB118\uAE30\uBA70 \uAC10\uC0C1\uD569\uB2C8\uB2E4.');
+  optM.el.style.marginTop = '4px';
+  card.appendChild(optA.el); card.appendChild(optM.el);
+
+  function applyVisual() {
+    var s = isManual ? DIM : SEL, d = isManual ? SEL : DIM;
+    optA.iconSpan.style.color = s.icon; optA.name.style.color = s.name; optA.desc.style.color = s.desc;
+    optA.icon.style.animation = s.glow ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+    optM.iconSpan.style.color = d.icon; optM.name.style.color = d.name; optM.desc.style.color = d.desc;
+    optM.icon.style.animation = d.glow ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+    label.textContent = isManual ? 'M' : 'A';
+  }
+  applyVisual();
+
+  /* hover 열기/닫기 */
+  var hideT = null;
+  function showCard() { clearTimeout(hideT); card.style.opacity = '1'; card.style.pointerEvents = 'auto'; card.style.transform = 'translateY(0)'; }
+  function scheduleHide() { hideT = setTimeout(function() { card.style.opacity = '0'; card.style.pointerEvents = 'none'; card.style.transform = 'translateY(4px)'; }, 200); }
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); showCard(); });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, isManual); scheduleHide(); });
+  card.addEventListener('mouseenter', showCard);
+  card.addEventListener('mouseleave', scheduleHide);
+
+  /* 버튼 직접 클릭 → 토글 */
   btn.addEventListener('click', function() {
-    isManual = !isManual;
-    applyState(isManual);
-    tip._hide();
+    isManual = !isManual; applyVisual();
     try { sessionStorage.setItem('intro_mode', isManual ? 'MANUAL' : 'AUTO'); } catch(e) {}
   });
+  /* 카드 옵션 클릭 */
+  optA.el.addEventListener('click', function(e) {
+    e.stopPropagation(); isManual = false; applyVisual();
+    try { sessionStorage.setItem('intro_mode', 'AUTO'); } catch(e) {}
+  });
+  optM.el.addEventListener('click', function(e) {
+    e.stopPropagation(); isManual = true; applyVisual();
+    try { sessionStorage.setItem('intro_mode', 'MANUAL'); } catch(e) {}
+  });
 
-  btn._tip = tip;
+  btn._tip = card;
   return btn;
 }
 
-/* 데스크탑 인트로 — 언어 원형 버튼 (KR/EN) */
+/* 데스크탑 인트로 — 언어 원형 버튼 (K/E) + hover 카드 */
 function _introLangBtn() {
   var isKR = (curLang === 'KR');
 
@@ -4991,86 +5044,192 @@ function _introLangBtn() {
 
   var label = document.createElement('span');
   label.style.cssText = 'font-size:13px;font-family:sans-serif;font-weight:700;letter-spacing:0.03em;';
-  label.textContent = isKR ? 'KR' : 'EN';
+  label.textContent = isKR ? 'K' : 'E';
   btn.appendChild(label);
 
-  /* 상태 툴팁 */
-  var tip = _makeStatusTip('KR', 'EN');
-  tip.style.bottom = 'calc(6% + env(safe-area-inset-bottom) + 62px)';
-  tip.style.left = 'calc(100% - 6% - 26px)';
-  tip.style.transform = 'translateX(-50%)';
+  /* ── hover 카드 ── */
+  var card = document.createElement('div');
+  card.style.cssText = 'position:absolute;right:6%;bottom:calc(6% + env(safe-area-inset-bottom) + 62px);z-index:20;' +
+    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;min-width:220px;' +
+    'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(4px);';
 
-  btn.addEventListener('mouseenter', function() {
-    _INTRO_BTN_HOVER_ON(btn);
-    label.textContent = isKR ? 'EN' : 'KR';
-    tip._highlightNext(isKR);
-  });
-  btn.addEventListener('mouseleave', function() {
-    _INTRO_BTN_HOVER_OFF(btn, isKR);
-    label.textContent = isKR ? 'KR' : 'EN';
-    tip._hide();
-  });
+  var CARD_ICON = 'width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+  var SEL = { icon:'rgba(235,235,235,0.90)', name:'rgba(235,235,235,0.90)', desc:'rgba(235,235,235,0.55)', glow:true };
+  var DIM = { icon:'rgba(235,235,235,0.40)', name:'rgba(235,235,235,0.35)', desc:'rgba(235,235,235,0.20)', glow:false };
+
+  var cTitle = document.createElement('div');
+  cTitle.style.cssText = 'font-family:sans-serif;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
+  cTitle.textContent = 'Language';
+  card.appendChild(cTitle);
+
+  function makeOpt(letter, nameStr, descStr) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background 150ms ease;';
+    row.addEventListener('mouseenter', function() { row.style.background = 'rgba(255,255,255,0.06)'; });
+    row.addEventListener('mouseleave', function() { row.style.background = ''; });
+    var icon = document.createElement('div'); icon.style.cssText = CARD_ICON;
+    var iconSpan = document.createElement('span');
+    iconSpan.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;';
+    iconSpan.textContent = letter;
+    icon.appendChild(iconSpan);
+    var wrap = document.createElement('div');
+    var nm = document.createElement('div');
+    nm.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:18px;margin-bottom:1px;';
+    nm.textContent = nameStr;
+    var ds = document.createElement('div');
+    ds.style.cssText = 'font-family:sans-serif;font-size:12px;font-weight:300;line-height:1.4;';
+    ds.textContent = descStr;
+    wrap.appendChild(nm); wrap.appendChild(ds);
+    row.appendChild(icon); row.appendChild(wrap);
+    return { el: row, icon: icon, iconSpan: iconSpan, name: nm, desc: ds };
+  }
+
+  var optK = makeOpt('K', '\uD55C\uAD6D\uC5B4', '\uD55C\uAD6D\uC5B4\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.');
+  var optE = makeOpt('E', 'English', '\uC601\uC5B4\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.');
+  optE.el.style.marginTop = '4px';
+  card.appendChild(optK.el); card.appendChild(optE.el);
+
+  function applyVisual() {
+    var s = isKR ? SEL : DIM, d = isKR ? DIM : SEL;
+    optK.iconSpan.style.color = s.icon; optK.name.style.color = s.name; optK.desc.style.color = s.desc;
+    optK.icon.style.animation = s.glow ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+    optE.iconSpan.style.color = d.icon; optE.name.style.color = d.name; optE.desc.style.color = d.desc;
+    optE.icon.style.animation = d.glow ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+    label.textContent = isKR ? 'K' : 'E';
+  }
+  applyVisual();
+
+  /* hover 열기/닫기 */
+  var hideT = null;
+  function showCard() { clearTimeout(hideT); card.style.opacity = '1'; card.style.pointerEvents = 'auto'; card.style.transform = 'translateY(0)'; }
+  function scheduleHide() { hideT = setTimeout(function() { card.style.opacity = '0'; card.style.pointerEvents = 'none'; card.style.transform = 'translateY(4px)'; }, 200); }
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); showCard(); });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, isKR); scheduleHide(); });
+  card.addEventListener('mouseenter', showCard);
+  card.addEventListener('mouseleave', scheduleHide);
+
+  /* 버튼 직접 클릭 → 토글 */
   btn.addEventListener('click', function() {
-    tip._hide();
     saveLang(isKR ? 'EN' : 'KR');
     location.reload();
   });
+  /* 카드 옵션 클릭 */
+  optK.el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!isKR) { saveLang('KR'); location.reload(); }
+  });
+  optE.el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (isKR) { saveLang('EN'); location.reload(); }
+  });
 
-  btn._tip = tip;
+  btn._tip = card;
   return btn;
 }
 
-/* 데스크탑 인트로 — 작가의 말 원형 버튼 (i 아이콘) */
+/* 데스크탑 인트로 — 작가의 말 원형 버튼 (V) + hover 미리보기 카드 */
 function _introAboutBtn() {
-  var btn = document.createElement('div');
-  btn.style.cssText = _INTRO_BTN_BASE;
-  btn.style.left = '6%';
-  btn.style.top = '6%';
-
-  btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/>' +
-    '</svg>';
-
-  /* 라벨 툴팁 */
-  var tip = document.createElement('div');
-  tip.style.cssText = 'position:absolute;top:calc(6% + 62px);left:calc(6% + 26px);transform:translateX(-50%);' +
-    'background:rgba(20,20,20,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:20px;' +
-    'padding:7px 18px;font-size:18px;font-family:"Nanum Pen Script",cursive;' +
-    'color:rgba(235,235,235,0.90);opacity:0;pointer-events:none;' +
-    'transition:opacity 200ms ease;white-space:nowrap;z-index:9999;';
-  tip.textContent = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang].aboutTitle || '작가의 말' : '작가의 말';
-
-  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); tip.style.opacity = '1'; });
-  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); tip.style.opacity = '0'; });
-  btn.addEventListener('click', function() { tip.style.opacity = '0'; AboutManager.open(); });
-  btn._tip = tip;
-  return btn;
-}
-
-/* 데스크탑 인트로 — 이용 안내 원형 버튼 (? 아이콘, 플레이스홀더) */
-function _introHelpBtn() {
   var btn = document.createElement('div');
   btn.style.cssText = _INTRO_BTN_BASE;
   btn.style.right = '6%';
   btn.style.top = '6%';
 
-  btn.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:22px;height:22px;">' +
-    '<path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008z"/>' +
-    '</svg>';
+  btn.innerHTML = '<span style="font-family:sans-serif;font-size:15px;font-weight:700;letter-spacing:0.03em;">V</span>';
 
-  /* 라벨 툴팁 */
-  var tip = document.createElement('div');
-  tip.style.cssText = 'position:absolute;top:calc(6% + 62px);left:calc(100% - 6% - 26px);transform:translateX(-50%);' +
-    'background:rgba(20,20,20,0.88);border:1px solid rgba(255,255,255,0.12);border-radius:20px;' +
-    'padding:7px 18px;font-size:18px;font-family:"Nanum Pen Script",cursive;' +
-    'color:rgba(235,235,235,0.90);opacity:0;pointer-events:none;' +
-    'transition:opacity 200ms ease;white-space:nowrap;z-index:9999;';
-  tip.textContent = '이용 안내';
+  /* ── hover 미리보기 카드 ── */
+  var card = document.createElement('div');
+  card.style.cssText = 'position:absolute;top:calc(6% + 62px);right:6%;z-index:20;' +
+    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;width:min(260px,40vmin);' +
+    'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(-4px);';
 
-  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); tip.style.opacity = '1'; });
-  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); tip.style.opacity = '0'; });
-  btn.addEventListener('click', function() { tip.style.opacity = '0'; HelpManager.open(); });
-  btn._tip = tip;
+  var cTitle = document.createElement('div');
+  cTitle.style.cssText = 'font-family:sans-serif;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
+  cTitle.textContent = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang].aboutTitle || "Artist's Note" : "Artist's Note";
+  card.appendChild(cTitle);
+
+  var previewText = document.createElement('div');
+  previewText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:16px;color:rgba(235,235,235,0.60);line-height:1.7;margin-bottom:12px;';
+  var t = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang].aboutBody || '' : '';
+  var lines = t.split('\n').filter(function(l) { return l.trim(); });
+  previewText.textContent = lines.slice(0, 3).join('\n') + (lines.length > 3 ? ' …' : '');
+  previewText.style.whiteSpace = 'pre-line';
+  card.appendChild(previewText);
+
+  var more = document.createElement('div');
+  more.style.cssText = 'font-family:sans-serif;font-size:11px;color:rgba(255,255,255,0.35);cursor:pointer;transition:color 150ms ease;';
+  more.textContent = curLang === 'KR' ? '클릭하여 전체 보기 →' : 'Click to read more →';
+  more.addEventListener('mouseenter', function() { more.style.color = 'rgba(255,255,255,0.70)'; });
+  more.addEventListener('mouseleave', function() { more.style.color = 'rgba(255,255,255,0.35)'; });
+  more.addEventListener('click', function(e) { e.stopPropagation(); scheduleHide(); AboutManager.open(); });
+  card.appendChild(more);
+
+  /* hover 열기/닫기 */
+  var hideT = null;
+  function showCard() { clearTimeout(hideT); card.style.opacity = '1'; card.style.pointerEvents = 'auto'; card.style.transform = 'translateY(0)'; }
+  function scheduleHide() { hideT = setTimeout(function() { card.style.opacity = '0'; card.style.pointerEvents = 'none'; card.style.transform = 'translateY(-4px)'; }, 200); }
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); showCard(); });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); scheduleHide(); });
+  card.addEventListener('mouseenter', showCard);
+  card.addEventListener('mouseleave', scheduleHide);
+
+  btn.addEventListener('click', function() { scheduleHide(); AboutManager.open(); });
+  btn._tip = card;
+  return btn;
+}
+
+/* 데스크탑 인트로 — 들어가기 전에 원형 버튼 (W) + hover 미리보기 카드 */
+function _introHelpBtn() {
+  var btn = document.createElement('div');
+  btn.style.cssText = _INTRO_BTN_BASE;
+  btn.style.left = '6%';
+  btn.style.top = '6%';
+
+  btn.innerHTML = '<span style="font-family:sans-serif;font-size:15px;font-weight:700;letter-spacing:0.03em;">W</span>';
+
+  /* ── hover 미리보기 카드 ── */
+  var card = document.createElement('div');
+  card.style.cssText = 'position:absolute;top:calc(6% + 62px);left:6%;z-index:20;' +
+    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;width:min(260px,40vmin);' +
+    'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(-4px);';
+
+  var cTitle = document.createElement('div');
+  cTitle.style.cssText = 'font-family:sans-serif;font-size:10px;color:rgba(255,255,255,0.28);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
+  cTitle.textContent = 'Welcome';
+  card.appendChild(cTitle);
+
+  var previewText = document.createElement('div');
+  previewText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:16px;color:rgba(235,235,235,0.60);line-height:1.7;margin-bottom:12px;';
+  previewText.textContent = curLang === 'KR'
+    ? '설레던 기다림,\n문득 떠오르는 목소리,\n오래 머물렀던 온기,\n말하지 못했던 마음. …'
+    : 'A fluttering anticipation,\na voice that suddenly comes to mind,\na warmth that lingered,\nwords left unspoken. …';
+  previewText.style.whiteSpace = 'pre-line';
+  card.appendChild(previewText);
+
+  var more = document.createElement('div');
+  more.style.cssText = 'font-family:sans-serif;font-size:11px;color:rgba(255,255,255,0.35);cursor:pointer;transition:color 150ms ease;';
+  more.textContent = curLang === 'KR' ? '클릭하여 전체 보기 →' : 'Click to read more →';
+  more.addEventListener('mouseenter', function() { more.style.color = 'rgba(255,255,255,0.70)'; });
+  more.addEventListener('mouseleave', function() { more.style.color = 'rgba(255,255,255,0.35)'; });
+  more.addEventListener('click', function(e) { e.stopPropagation(); scheduleHide(); WelcomeManager.open(); });
+  card.appendChild(more);
+
+  /* hover 열기/닫기 */
+  var hideT = null;
+  function showCard() { clearTimeout(hideT); card.style.opacity = '1'; card.style.pointerEvents = 'auto'; card.style.transform = 'translateY(0)'; }
+  function scheduleHide() { hideT = setTimeout(function() { card.style.opacity = '0'; card.style.pointerEvents = 'none'; card.style.transform = 'translateY(-4px)'; }, 200); }
+
+  btn.addEventListener('mouseenter', function() { _INTRO_BTN_HOVER_ON(btn); showCard(); });
+  btn.addEventListener('mouseleave', function() { _INTRO_BTN_HOVER_OFF(btn, false); scheduleHide(); });
+  card.addEventListener('mouseenter', showCard);
+  card.addEventListener('mouseleave', scheduleHide);
+
+  btn.addEventListener('click', function() { scheduleHide(); WelcomeManager.open(); });
+  btn._tip = card;
   return btn;
 }
 
@@ -5133,183 +5292,69 @@ var WelcomeManager = (function() {
 
     var sq = document.createElement('div');
     sq.className = 'panel-box';
-    sq.style.cssText = 'width:min(860px,90vmin);max-height:90vmin;display:flex;flex-direction:column;overflow:hidden;background:#131313;border-radius:16px;position:relative;';
+    sq.style.cssText = 'width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
 
     /* ── 헤더 (공통) ── */
     var hdr = document.createElement('div');
     hdr.style.cssText = 'padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
     var hTitle = document.createElement('span');
-    hTitle.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(22px,3.2vmin,30px);color:rgba(235,235,235,0.90);';
-    hTitle.textContent = '들어가기 전에';
-    var hSub = document.createElement('span');
-    hSub.style.cssText = 'font-family:sans-serif;font-size:clamp(13px,1.6vmin,16px);color:rgba(255,255,255,0.28);font-weight:300;letter-spacing:2px;';
-    hSub.textContent = 'MOL · Moments of Love';
+    hTitle.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;';
+    hTitle.textContent = 'Welcome';
     var closeBtn = document.createElement('div');
     closeBtn.className = 'toc-close';
     closeBtn.style.cssText = 'position:absolute;top:12px;right:16px;';
     closeBtn.textContent = '✕';
     closeBtn.addEventListener('click', function() { WelcomeManager.close(); });
-    hdr.appendChild(hTitle); hdr.appendChild(hSub); hdr.appendChild(closeBtn);
+    hdr.appendChild(hTitle); hdr.appendChild(closeBtn);
 
     if (isMobile) {
-      /* ── 모바일: 환영+감상방법 단일 페이지 ── */
-      sq.style.cssText = 'width:92vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;background:#131313;border-radius:16px;position:relative;';
+      /* ── 모바일: 웰컴 문장 ── */
+      sq.style.cssText = 'width:92vw;max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
       sq.appendChild(hdr);
 
       var page = document.createElement('div');
-      page.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:6% 7%;';
+      page.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:4% 7% 6%;';
 
-      var wLabel = document.createElement('div');
-      wLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
-      wLabel.textContent = 'Welcome';
       var wText = document.createElement('p');
-      wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,4.5vw,22px);color:rgba(235,235,235,0.70);line-height:2.0;margin-bottom:8%;';
+      wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,4.5vw,22px);color:rgba(235,235,235,0.70);line-height:1.8;padding-left:4%;';
       wText.innerHTML = curLang === 'KR'
-        ? '나리다 갤러리를 방문해주셔서 반갑고 감사하고 환영합니다.<br>갤러리를 감상하는 두 가지 방법을 간단히 소개드립니다.'
-        : 'Welcome to Narida Gallery.<br>Here are two ways to enjoy the gallery.';
-      var mLabel = document.createElement('div');
-      mLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:5%;';
-      mLabel.textContent = curLang === 'KR' ? '감상 방법' : 'How to Enjoy';
+        ? '설레던 기다림,<br>문득 떠오르는 목소리,<br>오래 머물렀던 온기,<br>말하지 못했던 마음.<br><br>'
+          + '사랑의 순간들은 저마다 다른 모습으로 우리에게 찾아오지만,<br>우리 마음속에는 사랑이라는 이름으로 남습니다.<br><br>'
+          + '이 갤러리를 통해 당신의 소중한 순간들을 떠올려보세요.<br><br>'
+          + '잊고 있었던 감정들,<br>오래전에 스쳐간 기억들이 다시 떠오른다면,<br>그것으로 충분합니다.<br><br>'
+          + '그리고 앞으로도,<br>오래 기억될 사랑의 순간들이<br>당신의 삶 속에 가득하길 진심으로 바랍니다.'
+        : 'A fluttering anticipation,<br>a voice that suddenly comes to mind,<br>a warmth that lingered,<br>words left unspoken.<br><br>'
+          + 'Love\u2019s moments come to each of us in different forms,<br>yet they remain in our hearts under the same name: love.<br><br>'
+          + 'Through this gallery, recall your precious moments.<br><br>'
+          + 'If forgotten feelings,<br>memories that once passed you by, resurface\u2014<br>that is enough.<br><br>'
+          + 'And may your life ahead<br>be filled with moments of love<br>worth remembering forever.';
 
-      var ICON_BASE2 = 'width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:wGlow 4800ms ease-in-out infinite;';
-      var PLAY_SVG2 = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
-      var STOP_SVG2 = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
-
-      function makeModeM(iconSvg, delay, descKR, descEN, nameKR, nameEN) {
-        var item = document.createElement('div');
-        item.style.cssText = 'display:flex;align-items:center;gap:14px;margin-bottom:6%;';
-        var icon = document.createElement('div'); icon.style.cssText = ICON_BASE2;
-        if (delay) icon.style.animationDelay = delay;
-        icon.innerHTML = iconSvg;
-        var content = document.createElement('div');
-        var desc = document.createElement('div');
-        desc.style.cssText = 'font-family:sans-serif;font-size:clamp(12px,3.2vw,15px);color:rgba(235,235,235,0.55);font-weight:300;line-height:1.6;';
-        desc.innerHTML = curLang === 'KR' ? descKR : descEN;
-        var name = document.createElement('div');
-        name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(16px,4vw,20px);color:rgba(235,235,235,0.90);margin-top:2px;';
-        name.textContent = curLang === 'KR' ? nameKR : nameEN;
-        content.appendChild(desc); content.appendChild(name);
-        item.appendChild(icon); item.appendChild(content);
-        return item;
-      }
-
-      var autoItem2 = makeModeM(PLAY_SVG2, null,
-        '자물쇠 버튼을 클릭하면<br>이야기 흐름에 따라 자동으로 감상됩니다.',
-        'Click the lock button<br>to enjoy automatically.', '오토모드', 'Auto');
-      var manualItem2 = makeModeM(STOP_SVG2, '2400ms',
-        '자물쇠 버튼 클릭 후<br>화살표로 원하는 장면을 직접 넘기세요.',
-        'Click the lock button,<br>then navigate with arrows.', '수동모드', 'Manual');
-
-      page.appendChild(wLabel); page.appendChild(wText);
-      page.appendChild(mLabel); page.appendChild(autoItem2); page.appendChild(manualItem2);
+      page.appendChild(wText);
       sq.appendChild(page);
 
     } else {
 
-    /* 메인 */
+    /* 메인 — 웰컴 문장만 */
     var main = document.createElement('div');
-    main.style.cssText = 'flex:1;display:grid;grid-template-columns:0.8fr 1px 1.5fr;padding:0 6%;min-height:0;';
-
-    /* 왼쪽 — 작가의 말 */
-    var left = document.createElement('div');
-    left.style.cssText = 'padding:5vmin 7% 4% 0;display:flex;flex-direction:column;';
-    var t = (typeof LANG_TEXTS !== 'undefined' && LANG_TEXTS[curLang]) ? LANG_TEXTS[curLang] : {};
-    var aLabel = document.createElement('div');
-    aLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
-    aLabel.textContent = curLang === 'KR' ? "Artist's Note" : "Artist's Note";
-    var aText = document.createElement('p');
-    aText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.82);line-height:2.0;white-space:pre-line;';
-    aText.textContent = t.aboutBody || '';
-    left.appendChild(aLabel); left.appendChild(aText);
-
-    /* 구분선 */
-    var divider = document.createElement('div');
-    divider.style.cssText = 'background:rgba(255,255,255,0.07);margin:5% 0;';
-
-    /* 오른쪽 — 환영 + 감상 방법 */
-    var right = document.createElement('div');
-    right.style.cssText = 'padding:5vmin 0 4% 7%;display:flex;flex-direction:column;justify-content:flex-start;';
-
-    var wLabel = document.createElement('div');
-    wLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:12px;';
-    wLabel.textContent = 'Welcome';
+    main.style.cssText = 'flex:1;padding:3vmin 6% 4%;';
 
     var wText = document.createElement('p');
-    wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.70);line-height:2.0;';
+    wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.70);line-height:1.6;padding-left:4%;';
     wText.innerHTML = curLang === 'KR'
-      ? '나리다 갤러리를 방문해주셔서 반갑고 감사하고 환영합니다.<br>갤러리를 감상하는 두 가지 방법을 간단히 소개드립니다.'
-      : 'Welcome to Narida Gallery.<br>Here are two ways to enjoy the gallery.';
+      ? '설레던 기다림,<br>문득 떠오르는 목소리,<br>오래 머물렀던 온기,<br>말하지 못했던 마음.<br><br>'
+        + '사랑의 순간들은 저마다 다른 모습으로 우리에게 찾아오지만,<br>우리 마음속에는 사랑이라는 이름으로 남습니다.<br><br>'
+        + '이 갤러리를 통해 당신의 소중한 순간들을 떠올려보세요.<br><br>'
+        + '잊고 있었던 감정들,<br>오래전에 스쳐간 기억들이 다시 떠오른다면,<br>그것으로 충분합니다.<br><br>'
+        + '그리고 앞으로도,<br>오래 기억될 사랑의 순간들이<br>당신의 삶 속에 가득하길 진심으로 바랍니다.'
+      : 'A fluttering anticipation,<br>a voice that suddenly comes to mind,<br>a warmth that lingered,<br>words left unspoken.<br><br>'
+        + 'Love\u2019s moments come to each of us in different forms,<br>yet they remain in our hearts under the same name: love.<br><br>'
+        + 'Through this gallery, recall your precious moments.<br><br>'
+        + 'If forgotten feelings,<br>memories that once passed you by, resurface\u2014<br>that is enough.<br><br>'
+        + 'And may your life ahead<br>be filled with moments of love<br>worth remembering forever.';
 
-    var mLabel = document.createElement('div');
-    mLabel.style.cssText = 'font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;margin-top:8vmin;margin-bottom:6%;';
-    mLabel.textContent = curLang === 'KR' ? '감상 방법' : 'How to Enjoy';
+    main.appendChild(wText);
 
-    var ICON_BASE = 'width:clamp(36px,4.5vmin,46px);height:clamp(36px,4.5vmin,46px);border-radius:50%;' +
-      'border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);' +
-      'display:flex;align-items:center;justify-content:center;flex-shrink:0;' +
-      'animation:wGlow 4800ms ease-in-out infinite;';
-
-    var PLAY_SVG = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:clamp(16px,2vmin,20px);height:clamp(16px,2vmin,20px);">' +
-      '<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>';
-    var STOP_SVG = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="rgba(235,235,235,0.70)" style="width:clamp(16px,2vmin,20px);height:clamp(16px,2vmin,20px);">' +
-      '<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z"/></svg>';
-
-    function makeMode(iconSvg, delay, descKR, descEN) {
-      var item = document.createElement('div');
-      item.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:5%;';
-      var icon = document.createElement('div');
-      icon.style.cssText = ICON_BASE;
-      if (delay) icon.style.animationDelay = delay;
-      icon.innerHTML = iconSvg;
-      var content = document.createElement('div');
-      content.style.cssText = 'font-family:"Nanum Pen Script",cursive;line-height:1.8;';
-      var desc = document.createElement('span');
-      desc.style.cssText = 'font-family:sans-serif;font-size:clamp(13px,1.5vmin,16px);color:rgba(235,235,235,0.55);font-weight:300;';
-      desc.innerHTML = curLang === 'KR' ? descKR : descEN;
-      var name = document.createElement('span');
-      name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.1vmin,22px);color:rgba(235,235,235,0.90);';
-      name.textContent = curLang === 'KR' ? (delay ? ' - 수동모드' : ' - 오토모드') : (delay ? ' - Manual' : ' - Auto');
-      content.appendChild(desc); content.appendChild(name);
-      item.appendChild(icon); item.appendChild(content);
-      return item;
-    }
-
-    var autoItem = makeMode(PLAY_SVG, null,
-      '자물쇠 버튼을 클릭하면<br>이야기 흐름에 따라 자동으로 감상됩니다.',
-      'Click the lock button<br>to enjoy automatically.');
-    var manualItem = makeMode(STOP_SVG, '2400ms',
-      '자물쇠 버튼 클릭 후<br>화살표로 원하는 장면을 직접 넘기세요.',
-      'Click the lock button,<br>then navigate with arrows.');
-
-    right.appendChild(wLabel); right.appendChild(wText);
-    right.appendChild(mLabel); right.appendChild(autoItem); right.appendChild(manualItem);
-
-    main.appendChild(left); main.appendChild(divider); main.appendChild(right);
-
-    /* 하단 닫기 버튼 */
-    var footer = document.createElement('div');
-    footer.style.cssText = 'padding:2.5% 6% 4%;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;';
-    var closeFooter = document.createElement('button');
-    closeFooter.type = 'button';
-    closeFooter.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(15px,1.8vmin,19px);' +
-      'padding:1.8% 5%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.20);' +
-      'color:rgba(235,235,235,0.85);border-radius:999px;cursor:pointer;' +
-      'transition:all 250ms ease;animation:wGlow 4800ms ease-in-out infinite;animation-delay:1200ms;';
-    closeFooter.textContent = curLang === 'KR' ? '닫기' : 'Close';
-    closeFooter.addEventListener('mouseenter', function() {
-      closeFooter.style.background = 'rgba(255,255,255,0.12)';
-      closeFooter.style.borderColor = 'rgba(255,255,255,0.35)';
-      closeFooter.style.transform = 'translateX(4px)';
-    });
-    closeFooter.addEventListener('mouseleave', function() {
-      closeFooter.style.background = 'rgba(255,255,255,0.07)';
-      closeFooter.style.borderColor = 'rgba(255,255,255,0.20)';
-      closeFooter.style.transform = '';
-    });
-    closeFooter.addEventListener('click', function() { WelcomeManager.close(); });
-    footer.appendChild(closeFooter);
-
-    sq.appendChild(hdr); sq.appendChild(main); sq.appendChild(footer);
+    sq.appendChild(hdr); sq.appendChild(main);
 
     } /* end else (desktop) */
 
@@ -5321,11 +5366,273 @@ var WelcomeManager = (function() {
 
   return {
     open: function() {
+      _hideIntroForModal();
       var ov = _build();
+      ov.style.display = '';
       requestAnimationFrame(function() { ov.classList.add('on'); ov.setAttribute('aria-hidden','false'); });
     },
     close: function() {
       if (_el) InputManager.closeOverlay(_el);
+    }
+  };
+})();
+
+/* ModeSelectManager — 감상 모드 선택 모달 (A/M) */
+var ModeSelectManager = (function() {
+  var _el = null;
+
+  function _build() {
+    if (_el) return _el;
+
+    if (!document.getElementById('modeSelGlowStyle')) {
+      var style = document.createElement('style');
+      style.id = 'modeSelGlowStyle';
+      style.textContent = '@keyframes msGlow{0%,100%{box-shadow:0 0 4px 1px rgba(212,175,55,0.10)}50%{box-shadow:0 0 16px 6px rgba(212,175,55,0.30)}}';
+      document.head.appendChild(style);
+    }
+
+    var currentMode = 'AUTO';
+    try { currentMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
+
+    var ov = document.createElement('div');
+    ov.id = 'modeSelectOverlay';
+    ov.className = 'overlay-panel';
+    ov.style.alignItems = 'center'; ov.style.justifyContent = 'center';
+    ov.style.transition = 'opacity 1000ms ease';
+    ov.setAttribute('aria-hidden', 'true');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'overlay-backdrop';
+    backdrop.addEventListener('click', function() { ModeSelectManager.close(); });
+    ov.appendChild(backdrop);
+
+    var sq = document.createElement('div');
+    sq.className = 'panel-box';
+    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
+      'transform:scale(0.97);transition:transform 1000ms ease;';
+
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
+    var hTitle = document.createElement('span');
+    hTitle.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(20px,3.2vmin,28px);color:rgba(235,235,235,0.90);';
+    hTitle.textContent = curLang === 'KR' ? '\uAC10\uC0C1 \uBAA8\uB4DC' : 'Viewing Mode';
+    var closeBtn = document.createElement('div');
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:16px;width:32px;height:32px;display:grid;place-items:center;cursor:pointer;color:rgba(235,235,235,0.5);font-size:18px;';
+    closeBtn.textContent = '\u2715';
+    closeBtn.addEventListener('click', function() { ModeSelectManager.close(); });
+    hdr.appendChild(hTitle); hdr.appendChild(closeBtn);
+
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:6% 7%;display:flex;flex-direction:column;gap:0;';
+
+    var ICON_BASE = 'width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    var _allOpts = [];
+
+    function _makeOpt(iconLetter, nameKR, nameEN, descKR, descEN, modeValue) {
+      var isSel = (currentMode === modeValue);
+      var item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;gap:14px;padding:5% 4%;border-radius:12px;cursor:pointer;transition:background 200ms ease;-webkit-tap-highlight-color:transparent;';
+
+      var icon = document.createElement('div');
+      icon.style.cssText = ICON_BASE;
+      if (isSel) icon.style.animation = 'msGlow 4800ms ease-in-out infinite';
+      var iconText = document.createElement('span');
+      iconText.style.cssText = 'font-family:sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,' + (isSel ? '0.90' : '0.50') + ');';
+      iconText.textContent = iconLetter;
+      icon.appendChild(iconText);
+
+      var content = document.createElement('div');
+      var name = document.createElement('div');
+      name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(18px,4.5vw,22px);color:rgba(235,235,235,' + (isSel ? '0.90' : '0.45') + ');margin-bottom:2px;';
+      name.textContent = curLang === 'KR' ? nameKR : nameEN;
+      var desc = document.createElement('div');
+      desc.style.cssText = 'font-family:sans-serif;font-size:clamp(12px,3.2vw,14px);color:rgba(235,235,235,' + (isSel ? '0.55' : '0.25') + ');font-weight:300;line-height:1.5;';
+      desc.textContent = curLang === 'KR' ? descKR : descEN;
+      content.appendChild(name); content.appendChild(desc);
+      item.appendChild(icon); item.appendChild(content);
+
+      var opt = { el: item, icon: icon, iconText: iconText, name: name, desc: desc, mode: modeValue };
+      _allOpts.push(opt);
+      opt.setSelected = function(sel) {
+        opt.icon.style.animation = sel ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+        opt.iconText.style.color = 'rgba(235,235,235,' + (sel ? '0.90' : '0.50') + ')';
+        opt.name.style.color = 'rgba(235,235,235,' + (sel ? '0.90' : '0.45') + ')';
+        opt.desc.style.color = 'rgba(235,235,235,' + (sel ? '0.55' : '0.25') + ')';
+      };
+
+      var doSelect = function(e) {
+        e.stopPropagation();
+        currentMode = modeValue;
+        try { sessionStorage.setItem('intro_mode', currentMode); } catch(err) {}
+        _allOpts.forEach(function(o) { o.setSelected(o.mode === currentMode); });
+        if (ModeSelectManager._onSelect) ModeSelectManager._onSelect(currentMode);
+        setTimeout(function() { ModeSelectManager.close(); }, 1000);
+      };
+      item.addEventListener('click', doSelect);
+      item.addEventListener('touchend', function(e) { e.preventDefault(); doSelect(e); }, {passive:false});
+      return item;
+    }
+
+    body.appendChild(_makeOpt('A', '\uC624\uD1A0\uBAA8\uB4DC', 'Auto',
+      '\uC774\uC57C\uAE30 \uD750\uB984\uC5D0 \uB530\uB77C \uC790\uB3D9\uC73C\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.', 'Enjoy automatically following the story.', 'AUTO'));
+    body.appendChild(_makeOpt('M', '\uC218\uB3D9\uBAA8\uB4DC', 'Manual',
+      '\uC6D0\uD558\uB294 \uC7A5\uBA74\uC744 \uC9C1\uC811 \uB118\uAE30\uBA70 \uAC10\uC0C1\uD569\uB2C8\uB2E4.', 'Navigate scenes at your own pace.', 'MANUAL'));
+
+    sq.appendChild(hdr); sq.appendChild(body);
+    ov.appendChild(sq);
+    document.body.appendChild(ov);
+    _el = ov;
+    return _el;
+  }
+
+  return {
+    _onSelect: null,
+    open: function() {
+      _hideIntroForModal();
+      if (_el) { _el.remove(); _el = null; }
+      var el = _build();
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          el.classList.add('on');
+          el.querySelector('.panel-box').style.transform = 'scale(1)';
+          el.setAttribute('aria-hidden', 'false');
+        });
+      });
+    },
+    close: function() {
+      if (!_el) return;
+      _el.classList.remove('on');
+      _el.querySelector('.panel-box').style.transform = 'scale(0.97)';
+      _el.setAttribute('aria-hidden', 'true');
+      _showIntroAfterModal();
+    }
+  };
+})();
+
+/* LangSelectManager — 언어 선택 모달 (K/E) — 모바일 전용 */
+var LangSelectManager = (function() {
+  var _el = null;
+
+  function _build() {
+    if (_el) return _el;
+
+    if (!document.getElementById('modeSelGlowStyle')) {
+      var style = document.createElement('style');
+      style.id = 'modeSelGlowStyle';
+      style.textContent = '@keyframes msGlow{0%,100%{box-shadow:0 0 4px 1px rgba(212,175,55,0.10)}50%{box-shadow:0 0 16px 6px rgba(212,175,55,0.30)}}';
+      document.head.appendChild(style);
+    }
+
+    var ov = document.createElement('div');
+    ov.id = 'langSelectOverlay';
+    ov.className = 'overlay-panel';
+    ov.style.alignItems = 'center'; ov.style.justifyContent = 'center';
+    ov.style.transition = 'opacity 1000ms ease';
+    ov.setAttribute('aria-hidden', 'true');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'overlay-backdrop';
+    backdrop.addEventListener('click', function() { LangSelectManager.close(); });
+    ov.appendChild(backdrop);
+
+    var sq = document.createElement('div');
+    sq.className = 'panel-box';
+    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
+      'transform:scale(0.97);transition:transform 1000ms ease;';
+
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;';
+    var hTitle = document.createElement('span');
+    hTitle.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(20px,3.2vmin,28px);color:rgba(235,235,235,0.90);';
+    hTitle.textContent = curLang === 'KR' ? '\uC5B8\uC5B4 \uC120\uD0DD' : 'Language';
+    var closeBtn = document.createElement('div');
+    closeBtn.style.cssText = 'position:absolute;top:12px;right:16px;width:32px;height:32px;display:grid;place-items:center;cursor:pointer;color:rgba(235,235,235,0.5);font-size:18px;';
+    closeBtn.textContent = '\u2715';
+    closeBtn.addEventListener('click', function() { LangSelectManager.close(); });
+    hdr.appendChild(hTitle); hdr.appendChild(closeBtn);
+
+    var body = document.createElement('div');
+    body.style.cssText = 'padding:6% 7%;display:flex;flex-direction:column;gap:0;';
+
+    var ICON_BASE = 'width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    var _allOpts = [];
+
+    function _makeOpt(iconLetter, nameKR, nameEN, descKR, descEN, langValue) {
+      var isSel = (curLang === langValue);
+      var item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;gap:14px;padding:5% 4%;border-radius:12px;cursor:pointer;transition:background 200ms ease;-webkit-tap-highlight-color:transparent;';
+
+      var icon = document.createElement('div');
+      icon.style.cssText = ICON_BASE;
+      if (isSel) icon.style.animation = 'msGlow 4800ms ease-in-out infinite';
+      var iconText = document.createElement('span');
+      iconText.style.cssText = 'font-family:sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,' + (isSel ? '0.90' : '0.50') + ');';
+      iconText.textContent = iconLetter;
+      icon.appendChild(iconText);
+
+      var content = document.createElement('div');
+      var name = document.createElement('div');
+      name.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(18px,4.5vw,22px);color:rgba(235,235,235,' + (isSel ? '0.90' : '0.45') + ');margin-bottom:2px;';
+      name.textContent = curLang === 'KR' ? nameKR : nameEN;
+      var desc = document.createElement('div');
+      desc.style.cssText = 'font-family:sans-serif;font-size:clamp(12px,3.2vw,14px);color:rgba(235,235,235,' + (isSel ? '0.55' : '0.25') + ');font-weight:300;line-height:1.5;';
+      desc.textContent = curLang === 'KR' ? descKR : descEN;
+      content.appendChild(name); content.appendChild(desc);
+      item.appendChild(icon); item.appendChild(content);
+
+      var opt = { el: item, icon: icon, iconText: iconText, name: name, desc: desc, lang: langValue };
+      _allOpts.push(opt);
+      opt.setSelected = function(sel) {
+        opt.icon.style.animation = sel ? 'msGlow 4800ms ease-in-out infinite' : 'none';
+        opt.iconText.style.color = 'rgba(235,235,235,' + (sel ? '0.90' : '0.50') + ')';
+        opt.name.style.color = 'rgba(235,235,235,' + (sel ? '0.90' : '0.45') + ')';
+        opt.desc.style.color = 'rgba(235,235,235,' + (sel ? '0.55' : '0.25') + ')';
+      };
+
+      var doSelect = function(e) {
+        e.stopPropagation();
+        _allOpts.forEach(function(o) { o.setSelected(o.lang === langValue); });
+        setTimeout(function() {
+          LangSelectManager.close();
+          setTimeout(function() { saveLang(langValue); location.reload(); }, 1050);
+        }, 1000);
+      };
+      item.addEventListener('click', doSelect);
+      item.addEventListener('touchend', function(e) { e.preventDefault(); doSelect(e); }, {passive:false});
+      return item;
+    }
+
+    body.appendChild(_makeOpt('K', '\uD55C\uAD6D\uC5B4', 'Korean',
+      '\uD55C\uAD6D\uC5B4\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.', 'Experience in Korean.', 'KR'));
+    body.appendChild(_makeOpt('E', 'English', 'English',
+      '\uC601\uC5B4\uB85C \uAC10\uC0C1\uD569\uB2C8\uB2E4.', 'Experience in English.', 'EN'));
+
+    sq.appendChild(hdr); sq.appendChild(body);
+    ov.appendChild(sq);
+    document.body.appendChild(ov);
+    _el = ov;
+    return _el;
+  }
+
+  return {
+    open: function() {
+      _hideIntroForModal();
+      if (_el) { _el.remove(); _el = null; }
+      var el = _build();
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          el.classList.add('on');
+          el.querySelector('.panel-box').style.transform = 'scale(1)';
+          el.setAttribute('aria-hidden', 'false');
+        });
+      });
+    },
+    close: function() {
+      if (!_el) return;
+      _el.classList.remove('on');
+      _el.querySelector('.panel-box').style.transform = 'scale(0.97)';
+      _el.setAttribute('aria-hidden', 'true');
+      _showIntroAfterModal();
     }
   };
 })();
@@ -5557,6 +5864,7 @@ function _renderIntroMobile(app, introText, TARGET) {
 
   /* ── frame (photo-area와 동일 레이아웃) ── */
   var frame = document.createElement('div');
+  frame.id = 'introFrame';
   frame.style.cssText = 'position:relative;width:100%;aspect-ratio:1/1;flex-shrink:0;' +
     'background:linear-gradient(to bottom,#303030 0%,#222222 100%);display:grid;place-items:center;overflow:hidden;';
 
@@ -5623,55 +5931,47 @@ function _renderIntroMobile(app, introText, TARGET) {
 
   /* ? — 들어가기 전에 */
   var btnQ = document.createElement('div'); btnQ.className = 'nav-btn';
-  btnQ.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008z"/></svg>';
+  btnQ.innerHTML = '<span style="font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);">W</span>';
   btnQ.addEventListener('click', function(e) { e.stopPropagation(); WelcomeManager.open(); });
   btnQ.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); WelcomeManager.open(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); }, {passive:false});
 
-  /* ! — 작가의 말 */
+  /* V — 작가의 말 */
   var btnI = document.createElement('div'); btnI.className = 'nav-btn';
-  btnI.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:26px;height:26px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>';
+  btnI.innerHTML = '<span style="font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);">V</span>';
   btnI.addEventListener('click', function(e) { e.stopPropagation(); AboutManager.open(); });
   btnI.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); AboutManager.open(); clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000); }, {passive:false});
 
-  /* ▶/■ — 모드 토글 */
+  /* A/M — 모드 선택 모달 */
   var _mMode = 'AUTO'; try { _mMode = sessionStorage.getItem('intro_mode') || 'AUTO'; } catch(e) {}
-  var isManualM = (_mMode === 'MANUAL');
   var btnMode = document.createElement('div'); btnMode.className = 'nav-btn';
-  var triEl = document.createElement('div');
-  triEl.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;' +
-    'border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:7px 0 7px 11px;';
-  var sqEl = document.createElement('div');
-  sqEl.style.cssText = 'width:10px;height:10px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;';
-  var applyModeM = function() {
-    triEl.style.display = isManualM ? 'none' : '';
-    sqEl.style.display  = isManualM ? ''     : 'none';
-  };
-  applyModeM();
-  btnMode.appendChild(triEl); btnMode.appendChild(sqEl);
-  var toggleModeM = function(e) {
+  var modeLabelM = document.createElement('span');
+  modeLabelM.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);';
+  modeLabelM.textContent = (_mMode === 'MANUAL') ? 'M' : 'A';
+  btnMode.appendChild(modeLabelM);
+  var openModeM = function(e) {
     e.stopPropagation();
-    isManualM = !isManualM;
-    applyModeM();
-    try { sessionStorage.setItem('intro_mode', isManualM ? 'MANUAL' : 'AUTO'); } catch(err) {}
+    ModeSelectManager._onSelect = function(mode) {
+      modeLabelM.textContent = (mode === 'MANUAL') ? 'M' : 'A';
+    };
+    ModeSelectManager.open();
     clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
   };
-  btnMode.addEventListener('click', toggleModeM);
-  btnMode.addEventListener('touchend', function(e) { e.preventDefault(); toggleModeM(e); }, {passive:false});
+  btnMode.addEventListener('click', openModeM);
+  btnMode.addEventListener('touchend', function(e) { e.preventDefault(); openModeM(e); }, {passive:false});
 
-  /* KR/EN — 언어 토글 */
-  var isKRM = (curLang !== 'EN');
+  /* K/E — 언어 선택 모달 */
   var btnLang = document.createElement('div'); btnLang.className = 'nav-btn';
-  var langLabel = document.createElement('span');
-  langLabel.style.cssText = 'font-family:sans-serif;font-size:11px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);';
-  langLabel.textContent = isKRM ? 'KR' : 'EN';
-  btnLang.appendChild(langLabel);
-  var toggleLangM = function(e) {
+  var langLabelM = document.createElement('span');
+  langLabelM.style.cssText = 'font-family:sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;color:rgba(235,235,235,0.75);';
+  langLabelM.textContent = (curLang === 'KR') ? 'K' : 'E';
+  btnLang.appendChild(langLabelM);
+  var openLangM = function(e) {
     e.stopPropagation();
-    saveLang(isKRM ? 'EN' : 'KR');
-    location.reload();
+    LangSelectManager.open();
+    clearTimeout(idleTimer); idleTimer = setTimeout(hideBars, 5000);
   };
-  btnLang.addEventListener('click', toggleLangM);
-  btnLang.addEventListener('touchend', function(e) { e.preventDefault(); toggleLangM(e); }, {passive:false});
+  btnLang.addEventListener('click', openLangM);
+  btnLang.addEventListener('touchend', function(e) { e.preventDefault(); openLangM(e); }, {passive:false});
 
   navBar.append(btnQ, btnI, btnMode, btnLang);
 
@@ -5918,6 +6218,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
 
   /* 정사각형 프레임 */
   var sq = document.createElement('div');
+  sq.id = 'introSq';
   sq.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateZ(0);' +
     'width:min(100vw,var(--vh100,100vh));aspect-ratio:1/1;' +
     'background:linear-gradient(to bottom,#303030 0%,#222222 100%);overflow:hidden;';
@@ -5978,19 +6279,15 @@ function _renderIntroDesktop(app, introText, TARGET) {
   sq.appendChild(langBar);
   sq.appendChild(langBar._tip);
 
-  /* 상단 좌: 작가의 말 버튼 */
+  /* 상단 우: 작가의 말 버튼 */
   var aboutBtn = _introAboutBtn();
   sq.appendChild(aboutBtn);
   sq.appendChild(aboutBtn._tip);
 
-  /* 상단 우: 이용 안내 버튼 */
+  /* 상단 좌: 들어가기 전에 버튼 */
   var helpBtn = _introHelpBtn();
   sq.appendChild(helpBtn);
   sq.appendChild(helpBtn._tip);
-
-  /* 하단 중앙: 들어가기 전에 읽기 버튼 */
-  var welcomeBtn = _introWelcomeBtn();
-  sq.appendChild(welcomeBtn);
 
   bgWrap.appendChild(sq);
   app.appendChild(bgWrap);
@@ -6003,13 +6300,13 @@ function _renderIntroDesktop(app, introText, TARGET) {
   var _deskIntroOnInteract = null;
   var showIcon = function(name) { lockBtn.innerHTML = (name === 'lock') ? LOCK_SVG : UNLOCK_SVG; };
   var showBars = function() {
-    [modeBar, langBar, aboutBtn, helpBtn, welcomeBtn].forEach(function(el) {
+    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
       el.style.opacity = '1'; el.style.pointerEvents = '';
     });
     [modeBar._tip, langBar._tip].forEach(function(el) { el.style.pointerEvents = ''; });
   };
   var hideBars = function() {
-    [modeBar, langBar, aboutBtn, helpBtn, welcomeBtn].forEach(function(el) {
+    [modeBar, langBar, aboutBtn, helpBtn].forEach(function(el) {
       el.style.opacity = '0'; el.style.pointerEvents = 'none';
     });
     [modeBar._tip, langBar._tip].forEach(function(el) {
@@ -6105,7 +6402,7 @@ function _renderIntroDesktop(app, introText, TARGET) {
       var lineR = lineEl.getBoundingClientRect();
       var sqR   = sq.getBoundingClientRect();
       /* 잔상 방지 — opacity 숨김 대신 DOM에서 직접 제거 */
-      [lineEl, lockWrap, langBar, modeBar, langBar._tip, modeBar._tip, aboutBtn, aboutBtn._tip, helpBtn, helpBtn._tip, skipBar, welcomeBtn].forEach(function(el) {
+      [lineEl, lockWrap, langBar, modeBar, langBar._tip, modeBar._tip, aboutBtn, aboutBtn._tip, helpBtn, helpBtn._tip, skipBar].forEach(function(el) {
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
 
