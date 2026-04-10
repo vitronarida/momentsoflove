@@ -291,6 +291,7 @@ html, body {
   background: rgba(212,175,55,0.90);
   display: flex; align-items: center; justify-content: center;
   transition: left 250ms; pointer-events: none;
+  font-size: 10px; font-family: sans-serif; font-weight: 700; color: #1a1a1a;
 }
 .mob-sw-track.on .mob-sw-knob { left: 21px; }
 /* CSS 아이콘 — ■ 대체 (모바일 TOC knob) */
@@ -982,7 +983,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .overlay-panel.closing{ transition-duration: var(--menu-fade-out); }
   .overlay-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,0.55); 
   backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
-  .panel-box{ position:relative; border-radius:16px; background: rgba(255,255,255,0.18);
+  .panel-box{ position:relative; border-radius:16px; background: rgba(54,54,54,1);
   border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 3px 8px rgba(0,0,0,0.03);
   color:#e6e6e6; transform: translateY(6px) translateZ(0); }
 
@@ -1020,7 +1021,7 @@ var CSS_DESKTOP = `@import url('https://fonts.googleapis.com/css2?family=Nanum+P
   .mob-sw-track.on .mob-sw-right{ opacity:0; }
   .mob-sw-knob{ position:absolute; top:4px; left:4px; width:20px; height:20px; border-radius:50%;
     background:rgba(212,175,55,0.90); display:flex; align-items:center; justify-content:center;
-    transition:left 250ms; pointer-events:none; }
+    transition:left 250ms; pointer-events:none; font-size:10px; font-family:sans-serif; font-weight:700; color:#1a1a1a; }
   .mob-sw-track.on .mob-sw-knob{ left:21px; }
   .mob-sw-sq{ width:7px; height:7px; background:#1a1a1a; border-radius:1px; flex-shrink:0; }
   .mob-sw-tri{ width:0; height:0; border-style:solid; border-color:transparent transparent transparent #1a1a1a; border-width:4.5px 0 4.5px 7px; margin-left:1px; flex-shrink:0; }
@@ -2205,9 +2206,9 @@ function buildOverlayHTML() {
       +'<span class="mob-sw-side mob-sw-right">K</span>'
       +'</div>'
       +'<div id="tocModeSwitch" class="mob-sw-track'+(AutoPlay.isActive()?'':' on')+'" tabindex="0">'
-      +'<span class="mob-sw-side mob-sw-left">▶</span>'
-      +'<div class="mob-sw-knob">'+(AutoPlay.isActive()?'<div class="mob-sw-tri"></div>':'<div class="mob-sw-sq"></div>')+'</div>'
-      +'<span class="mob-sw-side mob-sw-right">■</span>'
+      +'<span class="mob-sw-side mob-sw-left">A</span>'
+      +'<div class="mob-sw-knob">'+(AutoPlay.isActive()?'A':'M')+'</div>'
+      +'<span class="mob-sw-side mob-sw-right">M</span>'
       +'</div>'
       +'<div id="tocInfoBtn" style="width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:rgba(235,235,235,0.55);flex-shrink:0;">'
       +'<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.064.852l-.708 2.836a.75.75 0 0 0 1.064.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></svg>'
@@ -2235,13 +2236,15 @@ function buildOverlayHTML() {
       +'<div class="slst-body" id="sceneListBody"></div>'
       +'</div></div>'
       /* About */
-      +'<div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
-      +'<div class="overlay-backdrop" id="aboutBackdrop"></div>'
-      +'<div class="index-panel panel-box">'
-      +'<div class="toc-header" style="margin-bottom:8px;"><h2 class="index-title" id="aboutTitle"></h2>'
-      +'<div class="toc-close" id="aboutClose">✕</div></div>'
-      +'<div id="aboutBody" style="font-size:clamp(20px,5vw,26px);line-height:1.8;color:rgba(235,235,235,0.90);white-space:pre-line;padding:0 4px 0 4%;font-family:\'Nanum Pen Script\',cursive;"></div>'
-      +'</div></div>'
+      +'<div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;align-items:center;">'
+      +'<div class="overlay-backdrop" id="aboutBackdrop" style="background:rgba(0,0,0,1);backdrop-filter:none;-webkit-backdrop-filter:none;"></div>'
+      +'<div class="panel-box" style="width:92vw;max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;">'
+      +'<div style="padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">'
+      +'<span id="aboutTitle" style="font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;"></span>'
+      +'<div class="toc-close" id="aboutClose" style="position:absolute;top:12px;right:16px;">✕</div></div>'
+      +'<div style="flex:1;overflow-y:auto;padding:4% 7% 6%;">'
+      +'<div id="aboutBody" style="font-size:clamp(17px,4.5vw,22px);line-height:1.8;color:rgba(235,235,235,0.70);white-space:pre-line;padding-left:4%;font-family:\'Nanum Pen Script\',cursive;"></div>'
+      +'</div></div></div>'
       /* Poem */
       +'<div id="poemOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
       +'<div class="overlay-backdrop" id="poemBackdrop"></div>'
@@ -2339,8 +2342,8 @@ function buildOverlayHTML() {
       +'</div></div>'
       /* About */
       +'<div id="aboutOverlay" class="overlay-panel" aria-hidden="true" style="display:none;">'
-      +'<div class="overlay-backdrop" id="aboutBackdrop"></div>'
-      +'<div class="panel-box" style="width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;">'
+      +'<div class="overlay-backdrop" id="aboutBackdrop" style="background:rgba(0,0,0,1);backdrop-filter:none;-webkit-backdrop-filter:none;"></div>'
+      +'<div class="panel-box" style="width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;">'
       +'<div style="padding:4.5% 6% 2%;display:flex;align-items:baseline;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">'
       +'<span id="aboutTitle" style="font-family:sans-serif;font-size:clamp(11px,1.3vmin,13px);color:rgba(255,255,255,0.28);letter-spacing:2.5px;text-transform:uppercase;"></span>'
       +'<div class="toc-close" id="aboutClose" style="position:absolute;top:12px;right:16px;">✕</div>'
@@ -2647,7 +2650,7 @@ var AutoPlay = (function(){
     }
     /* 데스크탑 TOC knob 스위치 동기화 */
     var dtms = document.getElementById('tocDesktopBar');
-    dtms = dtms && dtms.querySelector('.intro-sw');
+    dtms = dtms && dtms.querySelector('.intro-sw-mode');
     if (dtms && dtms._tocSync) dtms._tocSync(on);
   }
 
@@ -3575,6 +3578,8 @@ var TransitionManager = {
       setTimeout(function() {
         /* 씬 교체 */
         TransitionManager._mountNew(app, newShell);
+        /* #116 — 눈 감긴 상태에서 nav 버튼을 오토모드 아이콘으로 즉시 교체 */
+        if (AutoPlay.isActive()) AutoPlay.updateNavBar();
 
         /* holdMs 대기 + 이미지 로드 완료, 둘 다 충족 후 눈 뜨기
            모바일: lid는 body의 _molLidWrap에 고정 — _mountNew 후 재참조 불필요 */
@@ -4246,11 +4251,11 @@ var TOCManager = {
         var knob = sw.querySelector('.mob-sw-knob');
         var isActive = AutoPlay.isActive();
         isActive ? sw.classList.remove('on') : sw.classList.add('on');
-        if (knob) knob.innerHTML = isActive ? '<div class="mob-sw-tri"></div>' : '<div class="mob-sw-sq"></div>';
+        if (knob) knob.innerHTML = isActive ? 'A' : 'M';
       }
     } else {
       /* 데스크탑 TOC 모드 스위치 상태 동기화 */
-      var dtms = $id('tocDesktopBar') && $id('tocDesktopBar').querySelector('.intro-sw');
+      var dtms = $id('tocDesktopBar') && $id('tocDesktopBar').querySelector('.intro-sw-mode');
       if (dtms && dtms._tocSync) dtms._tocSync(AutoPlay.isActive());
     }
   },
@@ -4602,15 +4607,15 @@ function bindCommonEvents() {
     var sw = this;
     var knob = sw.querySelector('.mob-sw-knob');
     if (AutoPlay.isActive()) {
-      /* 오토 중(▶ 활성) → 클릭 시 수동으로 전환 */
+      /* 오토 중(A 활성) → 클릭 시 수동으로 전환 */
       sw.classList.add('on');
-      if (knob) knob.innerHTML = '<div class="mob-sw-sq"></div>';
+      if (knob) knob.innerHTML = 'M';
       TOCManager.close();
       setTimeout(function() { AutoPlay.stop(); }, 440);
     } else {
-      /* 수동(■ 활성) → 클릭 시 오토 시작 */
+      /* 수동(M 활성) → 클릭 시 오토 시작 */
       sw.classList.remove('on');
-      if (knob) knob.innerHTML = '<div class="mob-sw-tri"></div>';
+      if (knob) knob.innerHTML = 'A';
       TOCManager.close();
       setTimeout(function() { AutoPlay.start(NavigationManager.currentScene(), NavigationManager.currentSceneURL()); }, 440);
     }
@@ -4954,8 +4959,8 @@ function _introModeBtn() {
   /* ── hover 카드 ── */
   var card = document.createElement('div');
   card.style.cssText = 'position:absolute;left:6%;bottom:calc(6% + env(safe-area-inset-bottom) + 62px);z-index:20;' +
-    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
-    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;min-width:220px;' +
+    'background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'padding:14px 16px;min-width:220px;' +
     'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(4px);';
 
   var CARD_ICON = 'width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
@@ -5050,8 +5055,8 @@ function _introLangBtn() {
   /* ── hover 카드 ── */
   var card = document.createElement('div');
   card.style.cssText = 'position:absolute;right:6%;bottom:calc(6% + env(safe-area-inset-bottom) + 62px);z-index:20;' +
-    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
-    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;min-width:220px;' +
+    'background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'padding:14px 16px;min-width:220px;' +
     'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(4px);';
 
   var CARD_ICON = 'width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
@@ -5141,8 +5146,8 @@ function _introAboutBtn() {
   /* ── hover 미리보기 카드 ── */
   var card = document.createElement('div');
   card.style.cssText = 'position:absolute;top:calc(6% + 62px);right:6%;z-index:20;' +
-    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
-    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;width:min(260px,40vmin);' +
+    'background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'padding:14px 16px;width:min(260px,40vmin);' +
     'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(-4px);';
 
   var cTitle = document.createElement('div');
@@ -5193,8 +5198,8 @@ function _introHelpBtn() {
   /* ── hover 미리보기 카드 ── */
   var card = document.createElement('div');
   card.style.cssText = 'position:absolute;top:calc(6% + 62px);left:6%;z-index:20;' +
-    'background:rgba(10,10,10,0.82);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
-    'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:14px 16px;width:min(260px,40vmin);' +
+    'background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:14px;' +
+    'padding:14px 16px;width:min(260px,40vmin);' +
     'opacity:0;pointer-events:none;transition:opacity 250ms ease,transform 250ms ease;transform:translateY(-4px);';
 
   var cTitle = document.createElement('div');
@@ -5205,8 +5210,8 @@ function _introHelpBtn() {
   var previewText = document.createElement('div');
   previewText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:16px;color:rgba(235,235,235,0.60);line-height:1.7;margin-bottom:12px;';
   previewText.textContent = curLang === 'KR'
-    ? '설레던 기다림,\n문득 떠오르는 목소리,\n오래 머물렀던 온기,\n말하지 못했던 마음. …'
-    : 'A fluttering anticipation,\na voice that suddenly comes to mind,\na warmth that lingered,\nwords left unspoken. …';
+    ? '봄이 피어나면 \u2014 봉숭아 꽃잎에 마음을 담아 물들이고,\n여름이 빛나면 \u2014 밤하늘의 유성우에 소원을 빌며, …'
+    : 'When spring blooms \u2014 we dye our hearts into balsam petals,\nWhen summer shines \u2014 we wish upon shooting stars\u2026';
   previewText.style.whiteSpace = 'pre-line';
   card.appendChild(previewText);
 
@@ -5287,12 +5292,15 @@ var WelcomeManager = (function() {
     /* backdrop */
     var backdrop = document.createElement('div');
     backdrop.className = 'overlay-backdrop';
+    backdrop.style.background = 'rgba(0,0,0,1)';
+    backdrop.style.backdropFilter = 'none';
+    backdrop.style.webkitBackdropFilter = 'none';
     backdrop.addEventListener('click', function() { WelcomeManager.close(); });
     ov.appendChild(backdrop);
 
     var sq = document.createElement('div');
     sq.className = 'panel-box';
-    sq.style.cssText = 'width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
+    sq.style.cssText = 'width:min(600px,80vmin);max-height:96vh;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
 
     /* ── 헤더 (공통) ── */
     var hdr = document.createElement('div');
@@ -5309,7 +5317,7 @@ var WelcomeManager = (function() {
 
     if (isMobile) {
       /* ── 모바일: 웰컴 문장 ── */
-      sq.style.cssText = 'width:92vw;max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
+      sq.style.cssText = 'width:92vw;max-height:96dvh;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;';
       sq.appendChild(hdr);
 
       var page = document.createElement('div');
@@ -5318,16 +5326,18 @@ var WelcomeManager = (function() {
       var wText = document.createElement('p');
       wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,4.5vw,22px);color:rgba(235,235,235,0.70);line-height:1.8;padding-left:4%;';
       wText.innerHTML = curLang === 'KR'
-        ? '설레던 기다림,<br>문득 떠오르는 목소리,<br>오래 머물렀던 온기,<br>말하지 못했던 마음.<br><br>'
-          + '사랑의 순간들은 저마다 다른 모습으로 우리에게 찾아오지만,<br>우리 마음속에는 사랑이라는 이름으로 남습니다.<br><br>'
-          + '이 갤러리를 통해 당신의 소중한 순간들을 떠올려보세요.<br><br>'
-          + '잊고 있었던 감정들,<br>오래전에 스쳐간 기억들이 다시 떠오른다면,<br>그것으로 충분합니다.<br><br>'
-          + '그리고 앞으로도,<br>오래 기억될 사랑의 순간들이<br>당신의 삶 속에 가득하길 진심으로 바랍니다.'
-        : 'A fluttering anticipation,<br>a voice that suddenly comes to mind,<br>a warmth that lingered,<br>words left unspoken.<br><br>'
-          + 'Love\u2019s moments come to each of us in different forms,<br>yet they remain in our hearts under the same name: love.<br><br>'
-          + 'Through this gallery, recall your precious moments.<br><br>'
-          + 'If forgotten feelings,<br>memories that once passed you by, resurface\u2014<br>that is enough.<br><br>'
-          + 'And may your life ahead<br>be filled with moments of love<br>worth remembering forever.';
+        ? '봄이 피어나면 \u2014 봉숭아 꽃잎에 마음을 담아 물들이고,<br>'
+          + '여름이 빛나면 \u2014 밤하늘의 유성우에 소원을 빌며,<br>'
+          + '가을이 물들면 \u2014 서로에게 줄 가장 고운 잎 하나를 줍고,<br>'
+          + '겨울이 내리면 \u2014 새하얀 눈 위에 나란히 이름을 쓴다.<br><br>'
+          + '이 갤러리를 거닐며<br>사랑의 감정들이 다시 꽃피어<br>당신의 계절에 만발하기를.<br><br>'
+          + '<span style="font-style:italic;">Vitro Narida 드림</span>'
+        : 'When spring blooms \u2014 we dye our hearts into balsam petals,<br>'
+          + 'When summer shines \u2014 we wish upon shooting stars in the night sky,<br>'
+          + 'When autumn turns \u2014 we pick the finest leaf to give each other,<br>'
+          + 'When winter falls \u2014 we write our names side by side on fresh white snow.<br><br>'
+          + 'As you wander through this gallery,<br>may the feelings of love bloom again<br>and fill your every season.<br><br>'
+          + '<span style="font-style:italic;">With love, Vitro Narida</span>';
 
       page.appendChild(wText);
       sq.appendChild(page);
@@ -5341,16 +5351,18 @@ var WelcomeManager = (function() {
     var wText = document.createElement('p');
     wText.style.cssText = 'font-family:"Nanum Pen Script",cursive;font-size:clamp(17px,2.2vmin,22px);color:rgba(235,235,235,0.70);line-height:1.6;padding-left:4%;';
     wText.innerHTML = curLang === 'KR'
-      ? '설레던 기다림,<br>문득 떠오르는 목소리,<br>오래 머물렀던 온기,<br>말하지 못했던 마음.<br><br>'
-        + '사랑의 순간들은 저마다 다른 모습으로 우리에게 찾아오지만,<br>우리 마음속에는 사랑이라는 이름으로 남습니다.<br><br>'
-        + '이 갤러리를 통해 당신의 소중한 순간들을 떠올려보세요.<br><br>'
-        + '잊고 있었던 감정들,<br>오래전에 스쳐간 기억들이 다시 떠오른다면,<br>그것으로 충분합니다.<br><br>'
-        + '그리고 앞으로도,<br>오래 기억될 사랑의 순간들이<br>당신의 삶 속에 가득하길 진심으로 바랍니다.'
-      : 'A fluttering anticipation,<br>a voice that suddenly comes to mind,<br>a warmth that lingered,<br>words left unspoken.<br><br>'
-        + 'Love\u2019s moments come to each of us in different forms,<br>yet they remain in our hearts under the same name: love.<br><br>'
-        + 'Through this gallery, recall your precious moments.<br><br>'
-        + 'If forgotten feelings,<br>memories that once passed you by, resurface\u2014<br>that is enough.<br><br>'
-        + 'And may your life ahead<br>be filled with moments of love<br>worth remembering forever.';
+      ? '봄이 피어나면 \u2014 봉숭아 꽃잎에 마음을 담아 물들이고,<br>'
+        + '여름이 빛나면 \u2014 밤하늘의 유성우에 소원을 빌며,<br>'
+        + '가을이 물들면 \u2014 서로에게 줄 가장 고운 잎 하나를 줍고,<br>'
+        + '겨울이 내리면 \u2014 새하얀 눈 위에 나란히 이름을 쓴다.<br><br>'
+        + '이 갤러리를 거닐며<br>사랑의 감정들이 다시 꽃피어<br>당신의 계절에 만발하기를.<br><br>'
+        + '<span style="font-style:italic;">Vitro Narida 드림</span>'
+      : 'When spring blooms \u2014 we dye our hearts into balsam petals,<br>'
+        + 'When summer shines \u2014 we wish upon shooting stars in the night sky,<br>'
+        + 'When autumn turns \u2014 we pick the finest leaf to give each other,<br>'
+        + 'When winter falls \u2014 we write our names side by side on fresh white snow.<br><br>'
+        + 'As you wander through this gallery,<br>may the feelings of love bloom again<br>and fill your every season.<br><br>'
+        + '<span style="font-style:italic;">With love, Vitro Narida</span>';
 
     main.appendChild(wText);
 
@@ -5403,12 +5415,15 @@ var ModeSelectManager = (function() {
 
     var backdrop = document.createElement('div');
     backdrop.className = 'overlay-backdrop';
+    backdrop.style.background = 'rgba(0,0,0,1)';
+    backdrop.style.backdropFilter = 'none';
+    backdrop.style.webkitBackdropFilter = 'none';
     backdrop.addEventListener('click', function() { ModeSelectManager.close(); });
     ov.appendChild(backdrop);
 
     var sq = document.createElement('div');
     sq.className = 'panel-box';
-    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
+    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
       'transform:scale(0.97);transition:transform 1000ms ease;';
 
     var hdr = document.createElement('div');
@@ -5532,12 +5547,15 @@ var LangSelectManager = (function() {
 
     var backdrop = document.createElement('div');
     backdrop.className = 'overlay-backdrop';
+    backdrop.style.background = 'rgba(0,0,0,1)';
+    backdrop.style.backdropFilter = 'none';
+    backdrop.style.webkitBackdropFilter = 'none';
     backdrop.addEventListener('click', function() { LangSelectManager.close(); });
     ov.appendChild(backdrop);
 
     var sq = document.createElement('div');
     sq.className = 'panel-box';
-    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
+    sq.style.cssText = 'width:92vw;max-width:400px;display:flex;flex-direction:column;overflow:hidden;background:rgba(44,44,44,1);border:1px solid rgba(255,255,255,0.08);border-radius:16px;position:relative;' +
       'transform:scale(0.97);transition:transform 1000ms ease;';
 
     var hdr = document.createElement('div');
@@ -5711,20 +5729,21 @@ function _buildTocModeSwitch() {
     'background:rgba(255,255,255,0.18);transition:left 240ms cubic-bezier(0.4,0,0.2,1);' +
     'display:flex;align-items:center;justify-content:center;';
 
-  var makeTriEl  = function() { var el = document.createElement('div'); el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;border-color:transparent transparent transparent rgba(235,235,235,0.75);border-width:6px 0 6px 9.75px;'; return el; };
-  var makeSqEl   = function() { var el = document.createElement('div'); el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.75);border-radius:1px;flex-shrink:0;'; return el; };
-  var makeTriSide = function() { var el = document.createElement('div'); el.style.cssText = 'width:0;height:0;border-style:solid;margin-left:2px;flex-shrink:0;border-color:transparent transparent transparent rgba(235,235,235,0.30);border-width:6px 0 6px 9.75px;'; return el; };
-  var makeSqSide  = function() { var el = document.createElement('div'); el.style.cssText = 'width:9px;height:9px;background:rgba(235,235,235,0.30);border-radius:1px;flex-shrink:0;'; return el; };
+  var _LABEL_CSS = 'font-size:11px;font-family:sans-serif;font-weight:700;';
+  var makeAEl    = function() { var el = document.createElement('span'); el.style.cssText = _LABEL_CSS + 'color:rgba(235,235,235,0.80);'; el.textContent = 'A'; return el; };
+  var makeMEl    = function() { var el = document.createElement('span'); el.style.cssText = _LABEL_CSS + 'color:rgba(235,235,235,0.80);'; el.textContent = 'M'; return el; };
+  var makeASide  = function() { var el = document.createElement('span'); el.style.cssText = _LABEL_CSS + 'color:rgba(235,235,235,0.30);'; el.textContent = 'A'; return el; };
+  var makeMSide  = function() { var el = document.createElement('span'); el.style.cssText = _LABEL_CSS + 'color:rgba(235,235,235,0.30);'; el.textContent = 'M'; return el; };
 
-  /* off=AUTO(▶), on=MANUAL(■) */
+  /* off=AUTO(A), on=MANUAL(M) */
   var isOn = !AutoPlay.isActive();
 
   var track = document.createElement('div');
-  track.className = 'intro-sw';
+  track.className = 'intro-sw intro-sw-mode';
   track.style.cssText = _SW_BASE + (isOn ? _SW_ON : _SW_OFF);
   track.setAttribute('data-tip', isOn ? '수동' : '자동');
-  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.appendChild(makeTriSide());
-  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.appendChild(makeSqSide());
+  var leftSpan = document.createElement('span'); leftSpan.style.cssText = _SIDE_CSS; leftSpan.textContent = 'A';
+  var rightSpan = document.createElement('span'); rightSpan.style.cssText = _SIDE_CSS; rightSpan.textContent = 'M';
   var knob = document.createElement('div'); knob.style.cssText = _KNOB_CSS;
 
   var applyState = function(on, hover, animate) {
@@ -5748,12 +5767,12 @@ function _buildTocModeSwitch() {
       knob.addEventListener('transitionend', function handler(e) {
         if (e.propertyName !== 'left') return;
         knob.removeEventListener('transitionend', handler);
-        knob.innerHTML = ''; knob.appendChild(on ? makeSqEl() : makeTriEl());
+        knob.innerHTML = ''; knob.appendChild(on ? makeMEl() : makeAEl());
         leftSpan.style.opacity = on ? '1' : '0';
         rightSpan.style.opacity = on ? '0' : '1';
       });
     } else {
-      knob.innerHTML = ''; knob.appendChild(on ? makeSqEl() : makeTriEl());
+      knob.innerHTML = ''; knob.appendChild(on ? makeMEl() : makeAEl());
       leftSpan.style.opacity = on ? '1' : '0';
       rightSpan.style.opacity = on ? '0' : '1';
     }
